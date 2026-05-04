@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum Role {
+  CLIENT
+  LAWYER
+  ADMIN
+}
+
+enum LeadStatus {
+  NEW
+  ASSIGNED
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  phone         String    @unique
+  name          String?
+  city          String?
+  role          Role      @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lawyerProfile LawyerProfile?
+  leads         Lead[]
+  bookings      Booking[]
+}
+
+model LawyerProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  categories    String[]
+  experience    Int      @default(0)
+  rating        Float    @default(0.0)
+  bio           String?
+  fees          Int      @default(0)
+  verified      Boolean  @default(false)
+  availability  Json?    // Stores working hours, etc.
+  leads         Lead[]   @relation("LawyerLeads")
+  bookings      Booking[]
+}
+
+model Lead {
+  id              String     @id @default(uuid())
+  userId          String?    // Client user ID if logged in
+  user            User?      @relation(fields: [userId], references: [id])
+  name            String
+  phone           String
+  category        String
+  city            String
+  description     String
+  preferredTime   String     // "ASAP" or "LATER"
+  status          LeadStatus @default(NEW)
+  lawyerId        String?
+  lawyer          LawyerProfile? @relation("LawyerLeads", fields: [lawyerId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  booking         Booking?
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  leadId          String        @unique
+  lead            Lead          @relation(fields: [leadId], references: [id])
+  clientId        String
+  client          User          @relation(fields: [clientId], references: [id])
+  lawyerId        String
+  lawyer          LawyerProfile @relation(fields: [lawyerId], references: [id])
+  status          BookingStatus @default(PENDING)
+  paymentId       String?       @unique
+  payment         Payment?      @relation(fields: [paymentId], references: [id])
+  scheduledTime   DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Payment {
+  id                String   @id @default(uuid())
+  amount            Int
+  currency          String   @default("INR")
+  status            String   @default("created") // created, authorized, captured, refunded, failed
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String?  @unique
+  razorpaySignature String?
+  booking           Booking?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
