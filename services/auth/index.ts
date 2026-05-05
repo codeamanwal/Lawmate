@@ -3,7 +3,8 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import * as admin from 'firebase-admin';
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+
 
 
 
@@ -38,31 +39,41 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
     // 1. Verify Firebase ID Token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const phone = decodedToken.phone_number;
+    const email = decodedToken.email;
 
-    if (!phone) {
-      return reply.status(400).send({ error: 'Phone number missing in token' });
+    if (!phone && !email) {
+      return reply.status(400).send({ error: 'Identity info missing in token' });
     }
 
+    const identifier = phone || email!;
     // 2. Find or create user in PostgreSQL
-    let user = await prisma.user.findUnique({
-      where: { phone }
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone: phone || undefined },
+          { email: email || undefined }
+        ]
+      }
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          phone,
+          phone: phone || (email as string), // Use email as fallback for phone if needed by other services
+          email: email || undefined,
           role: 'CLIENT'
         }
       });
     }
+
 
     // 3. Issue our own JWT
     const token = fastify.jwt.sign({ 
       id: user.id, 
       phone: user.phone, 
       role: user.role 
-    });
+    }, { expiresIn: '7d' });
+
 
     return { token, user };
   } catch (error) {

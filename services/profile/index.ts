@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -40,6 +41,22 @@ fastify.get('/api/profiles/:id', async (request: any, reply: any) => {
   });
   return profile;
 });
+
+fastify.post('/api/profiles/update', async (request: any, reply: any) => {
+  const { userId, name, city } = request.body as { userId: string, name: string, city: string };
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { name, city }
+    });
+    return updatedUser;
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: 'Update failed' });
+  }
+});
+
 
 const start = async () => {
   try {

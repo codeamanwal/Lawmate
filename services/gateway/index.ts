@@ -71,6 +71,10 @@ fastify.register(async (instance) => {
     return reply.from(`${PROFILE_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
   });
 
+  instance.post('/api/profiles/update', (request, reply) => {
+    return reply.from(`${PROFILE_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
+  });
+
 });
 
 const start = async () => {

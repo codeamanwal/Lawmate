@@ -7,6 +7,7 @@ import IntakeForm from './pages/IntakeForm';
 import Dashboard from './pages/Dashboard';
 import PaymentPage from './pages/PaymentPage';
 import SuccessPage from './pages/SuccessPage';
+import EditProfile from './pages/EditProfile';
 import AuthPage from './pages/AuthPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -28,6 +29,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/success" element={<SuccessPage />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsAndConditions />} />
             </Routes>

@@ -4,8 +4,10 @@ import {
   onAuthStateChanged, 
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  signInWithEmailAndPassword,
   ConfirmationResult
 } from 'firebase/auth';
+
 
 import { initializeApp } from 'firebase/app';
 import axios from 'axios';
@@ -28,8 +30,10 @@ interface AuthContextType {
   loading: boolean;
   sendOtp: (phone: string) => Promise<ConfirmationResult>;
   verifyOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
+  loginWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -75,6 +79,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // onAuthStateChanged will handle the rest
   };
 
+  const loginWithEmail = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
+  };
+
   const logout = async () => {
     await auth.signOut();
     localStorage.removeItem('token');
@@ -82,7 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, logout }}>
+    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, loginWithEmail, logout }}>
+
       {children}
       <div id="recaptcha-container"></div>
     </AuthContext.Provider>

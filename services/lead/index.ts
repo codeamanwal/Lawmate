@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+
 import dotenv from 'dotenv';
 import { z } from 'zod';
 

@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import Razorpay from 'razorpay';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 
@@ -33,13 +34,25 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     });
 
     // Create Payment record in DB
-    await prisma.payment.create({
+    const payment = await prisma.payment.create({
       data: {
         amount: 99900,
         razorpayOrderId: order.id,
         status: 'created',
       }
     });
+
+    // Create Booking record in DB
+    await prisma.booking.create({
+      data: {
+        leadId: lead.id,
+        clientId: lead.userId || 'guest-user-id', // Handle guest users
+        lawyerId: lead.lawyerId || 'auto-assigned-lawyer-id',
+        status: 'PENDING',
+        paymentId: payment.id
+      }
+    });
+
 
     // Generate Payment Link
     const paymentLink = await razorpay.paymentLink.create({
@@ -83,17 +96,30 @@ fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
 
     if (event === 'payment.captured') {
       const orderId = payload.payment.entity.order_id;
-      await prisma.payment.update({
+      const updatedPayment = await prisma.payment.update({
         where: { razorpayOrderId: orderId },
         data: { 
           status: 'captured',
           razorpayPaymentId: payload.payment.entity.id,
           razorpaySignature: signature
-        }
+        },
+        include: { booking: true }
       });
       
-      // Also update Lead/Booking status here
+      // If there's a booking associated, update its status
+      if (updatedPayment.booking) {
+        await prisma.booking.update({
+          where: { id: updatedPayment.booking.id },
+          data: { status: 'CONFIRMED' }
+        });
+
+        await prisma.lead.update({
+          where: { id: updatedPayment.booking.leadId },
+          data: { status: 'COMPLETED' }
+        });
+      }
     }
+
   }
 
   return { status: 'ok' };

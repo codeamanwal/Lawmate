@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,7 +25,7 @@ const IntakeForm = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       preferredTime: 'ASAP',
@@ -32,11 +33,31 @@ const IntakeForm = () => {
     }
   });
 
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('intake_draft');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        reset(parsed);
+      } catch (e) {
+        console.error('Failed to parse draft');
+      }
+    }
+  }, [reset]);
+
+  // Save to localStorage on change
+  const formValues = watch();
+  useEffect(() => {
+    localStorage.setItem('intake_draft', JSON.stringify(formValues));
+  }, [formValues]);
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/leads`, data);
       localStorage.setItem('pendingLeadId', response.data.id);
+      localStorage.removeItem('intake_draft'); // Clear draft on success
       toast.success('Lead submitted successfully!');
       navigate('/auth'); // Redirect to auth for OTP verification
     } catch (error) {
@@ -45,6 +66,7 @@ const IntakeForm = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 py-12 px-6 flex items-center justify-center">

@@ -7,10 +7,11 @@ import axios from 'axios';
 
 
 const Dashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,26 +44,43 @@ const Dashboard = () => {
           <h1 className="text-4xl font-black text-gray-900 mb-2">My Profile</h1>
           <p className="text-gray-500 font-medium">Welcome back, {user?.name || user?.phone}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="bg-green-100 p-2 rounded-lg text-green-600">
-              <Phone className="w-5 h-5" />
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                <Phone className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Mobile</p>
+                <p className="font-bold text-gray-800">{user?.phone}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Mobile</p>
-              <p className="font-bold text-gray-800">{user?.phone}</p>
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">City</p>
+                <p className="font-bold text-gray-800">{user?.city || 'Not Set'}</p>
+              </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">City</p>
-              <p className="font-bold text-gray-800">{user?.city || 'Not Set'}</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/edit-profile')}
+              className="px-6 py-2 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors border border-indigo-100 shadow-sm"
+            >
+              Edit Profile
+            </button>
+            <button 
+              onClick={logout}
+              className="px-6 py-2 bg-white text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors border border-red-100 shadow-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
+
       </div>
 
       <div className="grid lg:grid-cols-3 gap-10">
@@ -145,6 +163,7 @@ const Dashboard = () => {
             <button className="w-full py-4 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-all shadow-lg">
               Upgrade Now
             </button>
+
           </div>
 
           <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">

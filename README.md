@@ -5,7 +5,10 @@ LawMate is a high-performance, PWA-based legal consultation platform designed to
 ## 🚀 Features
 - **Progressive Web App (PWA)**: Install on Android/iOS homescreens.
 - **Fast Lead Intake**: Minimalistic intake form with Zod validation.
+- **Dual Authentication**: Support for both Phone OTP and Email/Password via Firebase.
+- **Edit Profile**: Users can update their name and city from the dashboard.
 - **Real-time Notifications**: Web Push notifications via FCM.
+
 - **Secure Payments**: Integrated with Razorpay.
 - **Microservices Architecture**: Fastify-based backend services.
 
@@ -94,3 +97,7 @@ You need to start the API Gateway and the core microservices:
 
 Visit **`http://localhost:5173`** to use the application.
 
+---
+
+## 🛡️ Compliance
+The platform is built with **DPDP Act (India)** compliance in mind, featuring explicit consent checkboxes and clear Privacy/Terms documentation.
