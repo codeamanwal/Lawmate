@@ -10,7 +10,12 @@ dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
 const fastify = Fastify({ logger: true });
 
-fastify.register(cors);
+fastify.register(cors, {
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+});
+
 fastify.register(jwt, {
   secret: process.env.JWT_SECRET || 'super-secret-lawmate-key'
 });
@@ -37,8 +42,29 @@ fastify.all('/api/auth/*', (request, reply) => {
   return reply.from(`${AUTH_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
 });
 
-// Leads routes (public intake)
-fastify.post('/api/leads', (request, reply) => {
+// Leads routes (optional auth)
+fastify.post('/api/leads', async (request, reply) => {
+  let userHeaders = {};
+  try {
+    await request.jwtVerify();
+    const user = (request as any).user;
+    userHeaders = {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    };
+  } catch (err) {
+    // Public submission, continue without user headers
+  }
+
+  return reply.from(`${LEAD_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => ({
+      ...headers,
+      ...userHeaders
+    })
+  });
+});
+
+fastify.delete('/api/leads/:id', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
 });
 
@@ -59,22 +85,43 @@ fastify.register(async (instance) => {
       rewriteRequestHeaders: (req, headers) => ({
         ...headers,
         'x-user-id': user.id,
-        'x-user-phone': user.phone,
+        'x-user-email': user.email,
         'x-user-role': user.role
       })
     });
   });
 
   instance.post('/api/payments/*', (request, reply) => {
-    return reply.from(`${PAYMENT_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
+    const user = request.user as any;
+    return reply.from(`${PAYMENT_SERVICE}${request.url}`, {
+      rewriteRequestHeaders: (req, headers) => ({
+        ...headers,
+        'x-user-id': user.id,
+        'x-user-email': user.email
+      })
+    });
   });
 
   instance.get('/api/profiles/*', (request, reply) => {
-    return reply.from(`${PROFILE_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
+    const user = request.user as any;
+    return reply.from(`${PROFILE_SERVICE}${request.url}`, {
+      rewriteRequestHeaders: (req, headers) => ({
+        ...headers,
+        'x-user-id': user.id,
+        'x-user-email': user.email
+      })
+    });
   });
 
   instance.post('/api/profiles/update', (request, reply) => {
-    return reply.from(`${PROFILE_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
+    const user = request.user as any;
+    return reply.from(`${PROFILE_SERVICE}${request.url}`, {
+      rewriteRequestHeaders: (req, headers) => ({
+        ...headers,
+        'x-user-id': user.id,
+        'x-user-email': user.email
+      })
+    });
   });
 
 });

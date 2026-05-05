@@ -22,9 +22,12 @@ const Navbar = () => {
             <Link to="/dashboard" className="text-gray-600 hover:text-indigo-600 font-medium transition-colors">
               Dashboard
             </Link>
+            <Link to="/my-bookings" className="text-gray-600 hover:text-indigo-600 font-medium transition-colors">
+              My Bookings
+            </Link>
             <div className="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
               <User className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">{user.name || user.phone}</span>
+              <span className="text-sm font-medium text-gray-700">{user.name || user.email?.split('@')[0]}</span>
               <button 
                 onClick={() => { logout(); navigate('/'); }}
                 className="ml-2 p-1 hover:bg-gray-200 rounded-full text-gray-500 hover:text-red-600 transition-all"

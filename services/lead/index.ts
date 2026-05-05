@@ -13,12 +13,16 @@ dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
 const fastify = Fastify({ logger: true });
 
+fastify.register(cors, {
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+});
+
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
-fastify.register(cors);
 
 const leadSchema = z.object({
   fullName: z.string(),
@@ -27,11 +31,13 @@ const leadSchema = z.object({
   category: z.string(),
   description: z.string(),
   preferredTime: z.string(),
-});
+  userId: z.string().optional()
+}).passthrough();
 
 fastify.post('/api/leads', async (request: any, reply: any) => {
   try {
     const data = leadSchema.parse(request.body);
+    const authUserId = request.headers['x-user-id'] as string;
     
     // Check for duplicates (same phone + same category in last 1 hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -55,6 +61,7 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
         category: data.category,
         description: data.description,
         preferredTime: data.preferredTime,
+        userId: authUserId || data.userId || null,
         status: 'NEW'
       }
     });
@@ -67,19 +74,59 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
 });
 
 fastify.get('/api/leads/my', async (request: any, reply: any) => {
-  // In a real app, we'd verify JWT here or at Gateway
-  // For MVP, we'll assume the gateway passed user info in headers
-  const phone = request.headers['x-user-phone'] as string;
+  const userId = request.headers['x-user-id'] as string;
   
-  if (!phone) return reply.status(401).send({ error: 'Unauthorized' });
+  if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
 
   const leads = await prisma.lead.findMany({
-    where: { phone },
+    where: { userId },
     include: { lawyer: { include: { user: true } } },
     orderBy: { createdAt: 'desc' }
   });
 
   return leads;
+});
+
+fastify.post('/api/leads/:id/complete', async (request: any, reply: any) => {
+  const { id } = request.params as { id: string };
+  try {
+    const updatedLead = await prisma.lead.update({
+      where: { id },
+      data: { status: 'COMPLETED' }
+    });
+    return updatedLead;
+  } catch (error) {
+    return reply.status(500).send({ error: 'Update failed' });
+  }
+});
+
+fastify.delete('/api/leads/:id', async (request: any, reply: any) => {
+  const { id } = request.params as { id: string };
+  try {
+    // 1. Find the booking associated with this lead
+    const booking = await prisma.booking.findUnique({
+      where: { leadId: id }
+    });
+
+    if (booking) {
+      // 2. Delete the payment associated with the booking
+      if (booking.paymentId) {
+        await prisma.payment.delete({ where: { id: booking.paymentId } }).catch(() => {});
+      }
+      // 3. Delete the booking
+      await prisma.booking.delete({ where: { id: booking.id } });
+    }
+
+    // 4. Finally delete the lead
+    await prisma.lead.delete({
+      where: { id }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: 'Delete failed. This case might have active dependencies.' });
+  }
 });
 
 const start = async () => {

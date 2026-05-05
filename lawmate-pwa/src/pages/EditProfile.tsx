@@ -10,6 +10,7 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState(user?.city || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,15 +19,15 @@ const EditProfile = () => {
 
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
-        userId: user?.id,
         name,
-        city
+        city,
+        phone
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
       toast.success('Profile updated successfully');
-      updateUser({ name, city });
+      updateUser({ name, city, phone });
       navigate('/dashboard');
     } catch (error) {
       console.error('Update failed', error);
@@ -63,6 +64,21 @@ const EditProfile = () => {
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
                   placeholder="Enter your name"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
+                  placeholder="Mobile number"
                   required
                 />
               </div>

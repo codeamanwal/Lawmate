@@ -1,9 +1,22 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Home, Phone, MessageCircle } from 'lucide-react';
+import axios from 'axios';
 
 const SuccessPage = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const leadId = localStorage.getItem('pendingLeadId');
+    if (leadId) {
+      axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`)
+        .then(() => {
+          console.log('Lead marked as completed');
+        })
+        .catch(err => console.error('Failed to complete lead', err));
+    }
+  }, []);
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-6">

@@ -27,6 +27,9 @@ const PaymentPage = () => {
       return;
     }
 
+    const token = localStorage.getItem('token');
+    if (!token) return; // Wait for token to be available
+
     const createPayment = async () => {
       try {
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, {
@@ -37,9 +40,14 @@ const PaymentPage = () => {
 
         const { short_url } = response.data;
         setPaymentUrl(short_url);
+        setLoading(false);
         
-        // Auto redirect to Razorpay
-        window.location.href = short_url;
+        // Redirect after a short delay to give user control
+        setTimeout(() => {
+          if (window.location.pathname === '/payment') {
+            window.location.href = short_url;
+          }
+        }, 2000);
       } catch (err: any) {
         console.error('Payment creation failed', err);
         setError('Payment link creation failed. Please retry.');
@@ -81,16 +89,28 @@ const PaymentPage = () => {
           </>
         ) : (
           <div className="flex flex-col items-center justify-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting...</h2>
-            <p className="text-gray-500 mb-6 italic">You are being securely redirected to Razorpay.</p>
+            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+              <ShieldCheck className="w-10 h-10 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting to Secure Payment...</h2>
+            <p className="text-gray-500 mb-8 leading-relaxed text-sm">
+              You are being securely redirected to Razorpay. <br/>
+              If not redirected in 2 seconds, click the link below.
+            </p>
             {paymentUrl && (
               <a 
                 href={paymentUrl}
-                className="text-indigo-600 font-bold hover:underline transition-all"
+                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all mb-4 text-center"
               >
-                Click here if not redirected automatically
+                Go to Razorpay
               </a>
             )}
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="text-gray-400 font-bold hover:text-red-500 transition-colors text-sm"
+            >
+              Cancel & Go Back
+            </button>
           </div>
         )}
       </div>

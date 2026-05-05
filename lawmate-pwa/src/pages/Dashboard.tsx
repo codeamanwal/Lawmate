@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Calendar, MapPin, Phone, CreditCard, ChevronRight, Star, Clock } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Phone, CreditCard, ChevronRight, Star, Clock, Trash2 } from 'lucide-react';
 
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 
 const Dashboard = () => {
@@ -34,6 +35,17 @@ const Dashboard = () => {
 
     if (user) fetchLeads();
   }, [user, authLoading, navigate]);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this case?')) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/leads/${id}`);
+      setLeads(leads.filter(l => l.id !== id));
+      toast.success('Case deleted');
+    } catch (error) {
+      toast.error('Failed to delete case');
+    }
+  };
 
   if (authLoading || loading) return <div className="flex items-center justify-center min-h-[calc(100vh-76px)]"><div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
@@ -86,9 +98,17 @@ const Dashboard = () => {
       <div className="grid lg:grid-cols-3 gap-10">
         {/* Active Cases/Leads */}
         <div className="lg:col-span-2 space-y-8">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <Briefcase className="w-6 h-6 text-indigo-600" /> My Cases
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <Briefcase className="w-6 h-6 text-indigo-600" /> My Cases
+            </h2>
+            <button 
+              onClick={() => navigate('/get-started')}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 text-sm flex items-center gap-2"
+            >
+              + Start New Case
+            </button>
+          </div>
           
           {leads.length === 0 ? (
             <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center">
@@ -109,9 +129,17 @@ const Dashboard = () => {
                       <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
                       <h3 className="text-xl font-bold text-gray-900">{lead.description.substring(0, 50)}...</h3>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${lead.status === 'NEW' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                      {lead.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${lead.status === 'NEW' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                        {lead.status}
+                      </span>
+                      <button 
+                        onClick={() => handleDelete(lead.id)}
+                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
                     <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
@@ -139,7 +167,7 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500 italic">Finding the best lawyer for you...</p>
                       {lead.status === 'NEW' && (
                         <button 
-                          onClick={() => navigate('/matching', { state: { leadId: lead.id } })}
+                          onClick={() => navigate('/payment', { state: { leadId: lead.id } })}
                           className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
                         >
                           <CreditCard className="w-4 h-4" /> Pay & Consult

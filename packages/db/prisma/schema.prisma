@@ -29,8 +29,8 @@ enum BookingStatus {
 
 model User {
   id            String    @id @default(uuid())
-  phone         String    @unique
-  email         String?   @unique
+  email         String    @unique
+  phone         String?   @unique
   name          String?
 
   city          String?

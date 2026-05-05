@@ -5,6 +5,8 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   ConfirmationResult
 } from 'firebase/auth';
 
@@ -30,7 +32,9 @@ interface AuthContextType {
   loading: boolean;
   sendOtp: (phone: string) => Promise<ConfirmationResult>;
   verifyOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
+  signupWithEmail: (email: string, pass: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: any) => void;
 }
@@ -81,8 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // onAuthStateChanged will handle the rest
   };
 
+  const signupWithEmail = async (email: string, pass: string) => {
+    await createUserWithEmailAndPassword(auth, email, pass);
+  };
+  
   const loginWithEmail = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
+  };
+
+  const forgotPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
   };
 
   const logout = async () => {
@@ -96,7 +108,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, loginWithEmail, logout, updateUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      sendOtp, 
+      verifyOtp, 
+      signupWithEmail,
+      loginWithEmail, 
+      forgotPassword,
+      logout, 
+      updateUser 
+    }}>
 
       {children}
       <div id="recaptcha-container"></div>

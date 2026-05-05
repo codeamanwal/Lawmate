@@ -59,15 +59,27 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     }
 
     // Ensure a valid User exists for this lead
-    let user = await prisma.user.findUnique({ where: { phone: lead.phone } });
+    const authUserId = request.headers['x-user-id'] as string;
+    let user = await prisma.user.findUnique({ where: { id: authUserId } });
+
     if (!user) {
-      user = await prisma.user.create({ data: { phone: lead.phone, name: lead.name, city: lead.city } });
+      // Fallback to phone if authUserId is missing (legacy leads)
+      user = await prisma.user.findUnique({ where: { phone: lead.phone } });
     }
+
+    if (!user) return reply.status(401).send({ error: 'User not found. Please sign in again.' });
 
     // Ensure a valid Lawyer exists to assign this booking
     let dummyLawyer = await prisma.lawyerProfile.findFirst();
     if (!dummyLawyer) {
-      const dummyUser = await prisma.user.create({ data: { phone: '9999999999', name: 'LawMate Expert', role: 'LAWYER' } });
+      const dummyUser = await prisma.user.create({ 
+        data: { 
+          email: 'expert@lawmate.in',
+          phone: '9999999999', 
+          name: 'LawMate Expert', 
+          role: 'LAWYER' 
+        } 
+      });
       dummyLawyer = await prisma.lawyerProfile.create({ data: { userId: dummyUser.id, categories: ['General'], verified: true } });
     }
 

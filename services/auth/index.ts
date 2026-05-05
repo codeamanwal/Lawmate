@@ -56,20 +56,15 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     const identifier = phone || email!;
     // 2. Find or create user in PostgreSQL
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { phone: phone || undefined },
-          { email: email || undefined }
-        ]
-      }
+    let user = await prisma.user.findUnique({
+      where: { email: email! }
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          phone: phone || (email as string), // Use email as fallback for phone if needed by other services
-          email: email || undefined,
+          email: email!,
+          phone: phone || undefined,
           role: 'CLIENT'
         }
       });
@@ -79,7 +74,7 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
     // 3. Issue our own JWT
     const token = fastify.jwt.sign({ 
       id: user.id, 
-      phone: user.phone, 
+      email: user.email,
       role: user.role 
     }, { expiresIn: '7d' });
 
