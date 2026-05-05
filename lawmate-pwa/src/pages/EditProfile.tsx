@@ -6,7 +6,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const EditProfile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState(user?.city || '');
@@ -26,6 +26,7 @@ const EditProfile = () => {
       });
 
       toast.success('Profile updated successfully');
+      updateUser({ name, city });
       navigate('/dashboard');
     } catch (error) {
       console.error('Update failed', error);

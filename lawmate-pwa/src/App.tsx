@@ -11,6 +11,8 @@ import EditProfile from './pages/EditProfile';
 import AuthPage from './pages/AuthPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import HowItWorks from './pages/HowItWorks';
+import MatchingPage from './pages/MatchingPage';
 import { AuthProvider } from './context/AuthContext';
 
 import './App.css';
@@ -32,6 +34,8 @@ function App() {
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/matching" element={<MatchingPage />} />
             </Routes>
 
           </main>

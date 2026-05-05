@@ -2,14 +2,22 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import Razorpay from 'razorpay';
 import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+import pg from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
 const fastify = Fastify({ logger: true });
-const prisma = new PrismaClient();
+
+const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID as string,
@@ -26,32 +34,63 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     const lead = await prisma.lead.findUnique({ where: { id: leadId } });
     if (!lead) return reply.status(404).send({ error: 'Lead not found' });
 
-    // Create Razorpay Order
-    const order = await razorpay.orders.create({
-      amount: 99900, // ₹999 in paise
-      currency: 'INR',
-      receipt: leadId,
+    // Check if we already have a payment/order for this lead
+    let payment = await prisma.payment.findFirst({
+      where: { booking: { leadId: lead.id } }
     });
 
-    // Create Payment record in DB
-    const payment = await prisma.payment.create({
-      data: {
-        amount: 99900,
-        razorpayOrderId: order.id,
-        status: 'created',
-      }
-    });
+    let order;
+    if (!payment) {
+      // Create Razorpay Order
+      order = await razorpay.orders.create({
+        amount: 99900, // ₹999 in paise
+        currency: 'INR',
+        receipt: leadId,
+      });
 
-    // Create Booking record in DB
-    await prisma.booking.create({
-      data: {
-        leadId: lead.id,
-        clientId: lead.userId || 'guest-user-id', // Handle guest users
-        lawyerId: lead.lawyerId || 'auto-assigned-lawyer-id',
-        status: 'PENDING',
-        paymentId: payment.id
-      }
-    });
+      // Create Payment record in DB
+      payment = await prisma.payment.create({
+        data: {
+          amount: 99900,
+          razorpayOrderId: order.id,
+          status: 'created',
+        }
+      });
+    }
+
+    // Ensure a valid User exists for this lead
+    let user = await prisma.user.findUnique({ where: { phone: lead.phone } });
+    if (!user) {
+      user = await prisma.user.create({ data: { phone: lead.phone, name: lead.name, city: lead.city } });
+    }
+
+    // Ensure a valid Lawyer exists to assign this booking
+    let dummyLawyer = await prisma.lawyerProfile.findFirst();
+    if (!dummyLawyer) {
+      const dummyUser = await prisma.user.create({ data: { phone: '9999999999', name: 'LawMate Expert', role: 'LAWYER' } });
+      dummyLawyer = await prisma.lawyerProfile.create({ data: { userId: dummyUser.id, categories: ['General'], verified: true } });
+    }
+
+    // Update lead with userId if it was missing
+    if (!lead.userId) {
+      await prisma.lead.update({ where: { id: lead.id }, data: { userId: user.id } });
+    }
+
+    // Check if booking already exists
+    let booking = await prisma.booking.findUnique({ where: { leadId: lead.id } });
+    
+    if (!booking) {
+      // Create Booking record in DB
+      await prisma.booking.create({
+        data: {
+          leadId: lead.id,
+          clientId: user.id,
+          lawyerId: lead.lawyerId || dummyLawyer.id,
+          status: 'PENDING',
+          paymentId: payment.id
+        }
+      });
+    }
 
 
     // Generate Payment Link

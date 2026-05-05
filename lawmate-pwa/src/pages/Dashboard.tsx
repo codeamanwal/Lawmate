@@ -139,7 +139,7 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500 italic">Finding the best lawyer for you...</p>
                       {lead.status === 'NEW' && (
                         <button 
-                          onClick={() => navigate('/payment', { state: { leadId: lead.id } })}
+                          onClick={() => navigate('/matching', { state: { leadId: lead.id } })}
                           className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
                         >
                           <CreditCard className="w-4 h-4" /> Pay & Consult

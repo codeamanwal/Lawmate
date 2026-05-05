@@ -4,7 +4,9 @@ import jwt from '@fastify/jwt';
 import replyFrom from '@fastify/reply-from';
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
 const fastify = Fastify({ logger: true });
 

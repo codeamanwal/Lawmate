@@ -72,15 +72,46 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-20 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">Trusted by 10,000+ Clients</h2>
-          <div className="flex flex-wrap justify-center gap-8 opacity-50 grayscale">
-            {/* Add partner logos here if needed */}
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-1 md:col-span-2">
+              <Link to="/" className="text-2xl font-black text-white tracking-tight flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">⚖️</span>
+                </div>
+                LawMate
+              </Link>
+              <p className="text-sm leading-relaxed max-w-xs">
+                Connecting you with India's top legal professionals instantly. Your trusted partner for legal solutions.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-gray-800 text-sm text-center md:text-left flex flex-col md:flex-row justify-between items-center">
+            <p>&copy; {new Date().getFullYear()} LawMate. All rights reserved.</p>
+            <p className="mt-2 md:mt-0">Designed for DPDP Compliance.</p>
           </div>
         </div>
-      </section>
+      </footer>
     </div>
   );
 };

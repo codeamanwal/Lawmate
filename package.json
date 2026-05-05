@@ -11,10 +11,16 @@
     "dev:gateway": "cd services/gateway && npx tsx index.ts",
     "db:generate": "cd packages/db && npx prisma generate",
     "db:push": "cd packages/db && npx prisma db push",
-    "install:all": "npm install && cd lawmate-pwa && npm install && cd ../services/auth && npm install && cd ../lead && npm install && cd ../payment && npm install && cd ../notification && npm install && cd ../profile && npm install && cd ../gateway && npm install && cd ../../packages/db && npm install"
+    "install:all": "npm install && cd lawmate-pwa && npm install && cd ../services/auth && npm install && cd ../lead && npm install && cd ../payment && npm install && cd ../notification && npm install && cd ../profile && npm install && cd ../gateway && npm install && cd ../../packages/db && npm install",
+    "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:lead\" \"npm run dev:profile\" \"npm run dev:payment\" \"npm run dev:notification\""
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@types/pg": "^8.20.0",
+    "pg": "^8.20.0"
   }
 }

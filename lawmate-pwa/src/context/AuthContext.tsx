@@ -32,6 +32,7 @@ interface AuthContextType {
   verifyOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: any) => void;
 }
 
 
@@ -43,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
         const idToken = await firebaseUser.getIdToken();
         try {
@@ -89,8 +91,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const updateUser = (userData: any) => {
+    setUser((prev: any) => ({ ...prev, ...userData }));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, loginWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, loginWithEmail, logout, updateUser }}>
 
       {children}
       <div id="recaptcha-container"></div>

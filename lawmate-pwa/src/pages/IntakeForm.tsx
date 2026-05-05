@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 import { ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -24,6 +25,7 @@ type FormData = z.infer<typeof formSchema>;
 const IntakeForm = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -59,7 +61,12 @@ const IntakeForm = () => {
       localStorage.setItem('pendingLeadId', response.data.id);
       localStorage.removeItem('intake_draft'); // Clear draft on success
       toast.success('Lead submitted successfully!');
-      navigate('/auth'); // Redirect to auth for OTP verification
+      
+      if (user) {
+        navigate('/matching', { state: { leadId: response.data.id } });
+      } else {
+        navigate('/auth', { state: { fromIntake: true } }); // Redirect to auth for OTP verification
+      }
     } catch (error) {
       toast.error('Failed to submit form. Please try again.');
     } finally {

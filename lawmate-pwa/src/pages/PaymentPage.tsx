@@ -3,15 +3,25 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const leadId = location.state?.leadId || localStorage.getItem('pendingLeadId');
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
     if (!leadId) {
       navigate('/get-started');
       return;
@@ -26,6 +36,7 @@ const PaymentPage = () => {
         });
 
         const { short_url } = response.data;
+        setPaymentUrl(short_url);
         
         // Auto redirect to Razorpay
         window.location.href = short_url;
@@ -38,7 +49,7 @@ const PaymentPage = () => {
     };
 
     createPayment();
-  }, [leadId, navigate]);
+  }, [leadId, navigate, user, authLoading]);
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-6">
@@ -69,7 +80,18 @@ const PaymentPage = () => {
             </button>
           </>
         ) : (
-          <div className="text-gray-500 italic">Redirecting you to payment...</div>
+          <div className="flex flex-col items-center justify-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting...</h2>
+            <p className="text-gray-500 mb-6 italic">You are being securely redirected to Razorpay.</p>
+            {paymentUrl && (
+              <a 
+                href={paymentUrl}
+                className="text-indigo-600 font-bold hover:underline transition-all"
+              >
+                Click here if not redirected automatically
+              </a>
+            )}
+          </div>
         )}
       </div>
     </div>

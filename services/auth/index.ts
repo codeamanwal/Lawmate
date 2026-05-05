@@ -4,6 +4,8 @@ import jwt from '@fastify/jwt';
 import * as admin from 'firebase-admin';
 // @ts-ignore
 import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+import pg from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 
 
@@ -11,7 +13,10 @@ import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/inde
 
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
+
 
 // Initialize Firebase Admin
 admin.initializeApp({
@@ -24,7 +29,11 @@ admin.initializeApp({
 });
 
 const fastify = Fastify({ logger: true });
-const prisma = new PrismaClient();
+
+const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
 fastify.register(jwt, {

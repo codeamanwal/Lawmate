@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2, Phone, ShieldCheck, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -11,8 +11,22 @@ const AuthPage = () => {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   
-  const { sendOtp, verifyOtp } = useAuth();
+  const { sendOtp, verifyOtp, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      const fromIntake = location.state?.fromIntake;
+      const pendingLeadId = localStorage.getItem('pendingLeadId');
+      
+      if (fromIntake && pendingLeadId) {
+        navigate('/matching');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [user, navigate, location.state]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +55,8 @@ const AuthPage = () => {
     setLoading(true);
     try {
       await verifyOtp(confirmationResult, otp);
-      toast.success('Login successful!');
-      navigate('/dashboard');
+      toast.success('OTP Verified. Securing session...');
+      // Navigation is now handled by the useEffect watching the `user` state.
     } catch (error: any) {
       toast.error('Invalid OTP. Please try again.');
     } finally {

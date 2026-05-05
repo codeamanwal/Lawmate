@@ -1,13 +1,21 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+import pg from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
 const fastify = Fastify({ logger: true });
-const prisma = new PrismaClient();
+
+const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
 
