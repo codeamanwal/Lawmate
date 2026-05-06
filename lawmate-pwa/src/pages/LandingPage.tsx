@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Shield, Zap, Clock, Star, ArrowRight } from 'lucide-react';
+import { Shield, Zap, Clock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const LandingPage = () => {
@@ -19,7 +19,7 @@ const LandingPage = () => {
                 Lawyers at your fingertips
               </span>
               <h1 className="mb-8 text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl">
-                Legal Expert advice <span className="text-indigo-600">in 30 minutes.</span>
+                Legal Expert advice <span className="text-indigo-600">in 60 minutes.</span>
               </h1>
               <p className="mb-10 text-xl text-gray-600 leading-relaxed">
                 Connect with India's top legal professionals instantly. Whether it's property, divorce, or business—we've got you covered.
@@ -60,13 +60,13 @@ const LandingPage = () => {
             />
             <FeatureCard 
               icon={<Clock className="w-8 h-8 text-blue-500" />}
-              title="30-Min Consultation"
-              description="Get connected and start your legal consultation within 30 minutes of booking. No more waiting for weeks."
+              title="60-Min Consultation"
+              description="Get connected and start your legal consultation within 60 minutes of booking. No more waiting for weeks."
             />
             <FeatureCard 
               icon={<Shield className="w-8 h-8 text-emerald-500" />}
               title="Verified Experts"
-              description="Every lawyer on LawMate is strictly verified for credentials, experience, and professional standing."
+              description="Every lawyer on LawOnCall is strictly verified for credentials, experience, and professional standing."
             />
           </div>
         </div>
@@ -82,7 +82,7 @@ const LandingPage = () => {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">⚖️</span>
                 </div>
-                LawMate
+                LawOnCall
               </Link>
               <p className="text-sm leading-relaxed max-w-xs">
                 Connecting you with India's top legal professionals instantly. Your trusted partner for legal solutions.
@@ -107,7 +107,7 @@ const LandingPage = () => {
           </div>
           
           <div className="pt-8 border-t border-gray-800 text-sm text-center md:text-left flex flex-col md:flex-row justify-between items-center">
-            <p>&copy; {new Date().getFullYear()} LawMate. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} LawOnCall. All rights reserved.</p>
             <p className="mt-2 md:mt-0">Designed for DPDP Compliance.</p>
           </div>
         </div>

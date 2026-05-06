@@ -89,10 +89,16 @@ fastify.get('/api/leads/my', async (request: any, reply: any) => {
 
 fastify.post('/api/leads/:id/complete', async (request: any, reply: any) => {
   const { id } = request.params as { id: string };
+  const authUserId = request.headers['x-user-id'] as string;
+  
   try {
     const updatedLead = await prisma.lead.update({
       where: { id },
-      data: { status: 'COMPLETED' }
+      data: { 
+        status: 'COMPLETED',
+        // Also associate user if not already associated
+        ...(authUserId && { userId: authUserId })
+      }
     });
     return updatedLead;
   } catch (error) {

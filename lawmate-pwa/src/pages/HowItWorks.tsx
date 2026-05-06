@@ -12,7 +12,7 @@ const HowItWorks = () => {
         </button>
 
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">How LawMate Works</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">How LawOnCall Works</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             We've simplified the process of finding and consulting with top legal experts in India. 
             Get connected in just 4 simple steps.
@@ -28,10 +28,10 @@ const HowItWorks = () => {
             </div>
             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><MessageCircle className="w-5 h-5" /></div>
-                <h3 className="text-xl font-bold text-gray-900">Tell us your issue</h3>
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Shield className="w-5 h-5" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Signup/Login</h3>
               </div>
-              <p className="text-gray-600">Answer a few simple questions about your legal situation (e.g. Property, Divorce, Civil) so we understand what you need.</p>
+              <p className="text-gray-600">Start your journey by verifying your <b>Email via OTP</b>. This creates your secure profile and allows you to track all your legal consultations.</p>
             </div>
           </div>
 
@@ -42,10 +42,10 @@ const HowItWorks = () => {
             </div>
             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-50 text-blue-500 rounded-lg"><Shield className="w-5 h-5" /></div>
-                <h3 className="text-xl font-bold text-gray-900">Instant Verification & Matching</h3>
+                <div className="p-2 bg-blue-50 text-blue-500 rounded-lg"><MessageCircle className="w-5 h-5" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Case Intake</h3>
               </div>
-              <p className="text-gray-600">Login securely via mobile OTP. Our smart engine instantly matches you with a verified legal expert specialized in your case category.</p>
+              <p className="text-gray-600">Enter your <b>Name, Mobile Number, and City</b> and describe your legal situation. This helps us match you with the right verified expert.</p>
             </div>
           </div>
 
@@ -56,10 +56,10 @@ const HowItWorks = () => {
             </div>
             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-amber-50 text-amber-500 rounded-lg"><CheckCircle2 className="w-5 h-5" /></div>
-                <h3 className="text-xl font-bold text-gray-900">Secure Payment</h3>
+                <div className="p-2 bg-amber-50 text-amber-500 rounded-lg"><Clock className="w-5 h-5" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Schedule Meeting</h3>
               </div>
-              <p className="text-gray-600">Complete a flat ₹999 payment securely via Razorpay (Cards, UPI, Netbanking). No hidden fees or monthly costs.</p>
+              <p className="text-gray-600">Choose a convenient time slot for your consultation using our live <b>Cal.com scheduler</b>. We value your time.</p>
             </div>
           </div>
 
@@ -70,22 +70,30 @@ const HowItWorks = () => {
             </div>
             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg"><Clock className="w-5 h-5" /></div>
-                <h3 className="text-xl font-bold text-gray-900">Connect in 30 Mins</h3>
+                <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg"><CheckCircle2 className="w-5 h-5" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Secure Payment</h3>
               </div>
-              <p className="text-gray-600">You will receive a notification via WhatsApp. Your assigned lawyer will contact you within the next 30 minutes to discuss your case.</p>
+              <p className="text-gray-600">Complete your flat <b>₹999 payment via Razorpay</b>. Once paid, your expert lawyer will connect with you via WhatsApp within 60 minutes.</p>
             </div>
           </div>
 
         </div>
         
-        <div className="mt-16 text-center">
-          <button 
-            onClick={() => navigate('/get-started')}
-            className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
-          >
-            Start Your Case Now
-          </button>
+        <div className="mt-20 bg-indigo-900 rounded-[32px] p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-200">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full filter blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold mb-4">Ready to solve your legal issues?</h2>
+            <p className="text-indigo-100 mb-8 max-w-xl mx-auto">
+              Our experts are online and ready to help. Join thousands of users who have solved their legal cases through LawOnCall.
+            </p>
+            <button 
+              onClick={() => navigate('/get-started')}
+              className="px-10 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center gap-2 mx-auto group"
+            >
+              Start Your Case Now
+              <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

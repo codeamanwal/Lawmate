@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Phone, ChevronRight, Briefcase, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
 
 const MyBookings = () => {
@@ -62,67 +62,57 @@ const MyBookings = () => {
       ) : (
         <div className="space-y-6">
           {bookings.map((booking) => (
-            <div key={booking.id} className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
-              <div className="p-8">
-                <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+            <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/40 overflow-hidden">
+              <div className="p-6">
+                <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-black uppercase rounded-full tracking-wider flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Confirmed
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Confirmed
                       </span>
-                      <span className="text-sm font-bold text-gray-400">#{booking.id.slice(0, 8)}</span>
+                      <span className="text-[10px] font-bold text-gray-400">#{booking.id.slice(0, 8)}</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">{booking.category} Case</h3>
+                    <h3 className="text-xl font-bold text-gray-900">{booking.category} Case</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Fee Paid</p>
-                    <p className="text-2xl font-black text-gray-900">₹999</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fee Paid</p>
+                    <p className="text-xl font-black text-gray-900">₹999</p>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shrink-0">
-                        <Clock className="w-5 h-5 text-indigo-600" />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2.5 text-gray-600">
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
+                        <Clock className="w-4 h-4 text-indigo-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Scheduled Time</p>
-                        <p className="font-bold text-gray-900">30 Min Consultation</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Duration</p>
+                        <p className="text-sm font-bold text-gray-900">60 Min Session</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shrink-0">
-                        <MapPin className="w-5 h-5 text-indigo-600" />
+                    <div className="flex items-center gap-2.5 text-gray-600">
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4 text-indigo-600" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Jurisdiction</p>
-                        <p className="font-bold text-gray-900">{booking.city}</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Jurisdiction</p>
+                        <p className="text-sm font-bold text-gray-900">{booking.city}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Assigned Expert</p>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shadow-sm">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shadow-sm text-sm">
                         {booking.lawyer?.user?.name?.[0] || 'V'}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900">{booking.lawyer?.user?.name || 'Adv. Vikram Singh'}</p>
-                        <p className="text-xs text-gray-500 font-medium">High Court Advocate</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Assigned Expert</p>
+                        <p className="text-sm font-bold text-gray-900">{booking.lawyer?.user?.name || 'Adv. Vikram Singh'}</p>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4 pt-6 border-t border-gray-50">
-                  <button className="flex-grow py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                    Join Video Call
-                  </button>
-                  <button className="px-8 py-4 bg-white border-2 border-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-all">
-                    View Details
-                  </button>
                 </div>
               </div>
             </div>

@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
       </button>
       <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
       <div className="prose max-w-none text-gray-600 space-y-6">
-        <p>This Privacy Policy describes how LawMate collects, uses, and shares your personal information.</p>
+        <p>This Privacy Policy describes how LawOnCall collects, uses, and shares your personal information.</p>
         <h2 className="text-2xl font-bold text-gray-900">1. Data Collection</h2>
         <p>We collect your mobile number, name, and details about your legal issues to facilitate matching with lawyers.</p>
         <h2 className="text-2xl font-bold text-gray-900">2. DPDP Compliance</h2>

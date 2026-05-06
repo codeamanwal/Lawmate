@@ -143,7 +143,7 @@ const Dashboard = () => {
                   </div>
                   <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
                     <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {lead.preferredTime === 'ASAP' ? 'Within 30 mins' : 'Later Today'}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {lead.preferredTime === 'ASAP' ? 'Within 60 mins' : 'Later Today'}</span>
                   </div>
                   
                   {lead.lawyer ? (

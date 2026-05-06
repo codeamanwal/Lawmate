@@ -35,18 +35,28 @@ const IntakeForm = () => {
     }
   });
 
-  // Load from localStorage on mount
+  // Load from localStorage or User Profile
   useEffect(() => {
-    const saved = localStorage.getItem('intake_draft');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        reset(parsed);
-      } catch (e) {
-        console.error('Failed to parse draft');
+    if (user) {
+      reset({
+        fullName: user.name || '',
+        phone: user.phone || '',
+        city: user.city || '',
+        preferredTime: 'ASAP',
+        agreed: false
+      });
+    } else {
+      const saved = localStorage.getItem('intake_draft');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          reset(parsed);
+        } catch (e) {
+          console.error('Failed to parse draft');
+        }
       }
     }
-  }, [reset]);
+  }, [reset, user]);
 
   // Save to localStorage on change
   const formValues = watch();
@@ -162,7 +172,7 @@ const IntakeForm = () => {
             <div className="grid grid-cols-2 gap-4">
               <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${watch('preferredTime') === 'ASAP' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
                 <input type="radio" value="ASAP" {...register('preferredTime')} className="hidden" />
-                <span className="font-bold">ASAP (30 min)</span>
+                <span className="font-bold">ASAP (60 min)</span>
               </label>
               <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${watch('preferredTime') === 'LATER' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
                 <input type="radio" value="LATER" {...register('preferredTime')} className="hidden" />

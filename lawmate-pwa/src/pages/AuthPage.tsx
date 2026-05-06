@@ -157,7 +157,7 @@ const AuthPage = () => {
           </h1>
           <p className="text-gray-500">
             {step === 'signin' && 'Sign in to access your legal dashboard'}
-            {step === 'signup-email' && 'Start your journey with LawMate'}
+            {step === 'signup-email' && 'Start your journey with LawOnCall'}
             {step === 'signup-otp' && `Enter the 6-digit code sent to ${email}`}
             {step === 'signup-password' && 'Choose a strong password for your account'}
             {step === 'forgot-password' && 'We will send you a link to reset your password'}

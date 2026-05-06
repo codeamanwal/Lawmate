@@ -13,7 +13,7 @@ const Navbar = () => {
         <div className="bg-indigo-600 p-1.5 rounded-lg">
           <Gavel className="w-6 h-6 text-white" />
         </div>
-        <span className="text-xl font-bold text-gray-900 tracking-tight">LawMate</span>
+        <span className="text-xl font-bold text-gray-900 tracking-tight">LawOnCall</span>
       </Link>
 
       <div className="flex items-center gap-6">

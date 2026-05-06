@@ -68,6 +68,25 @@ fastify.delete('/api/leads/:id', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, { rewriteRequestHeaders: (req, headers) => headers });
 });
 
+fastify.post('/api/leads/:id/complete', async (request, reply) => {
+  let userHeaders = {};
+  try {
+    await request.jwtVerify();
+    const user = (request as any).user;
+    userHeaders = {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    };
+  } catch (err) {}
+
+  return reply.from(`${LEAD_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => ({
+      ...headers,
+      ...userHeaders
+    })
+  });
+});
+
 
 // Protected routes
 fastify.register(async (instance) => {

@@ -10,7 +10,9 @@ const SuccessPage = () => {
   useEffect(() => {
     const leadId = localStorage.getItem('pendingLeadId');
     if (leadId) {
-      axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`)
+      axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
         .then(() => {
           console.log('Lead marked as completed');
         })
@@ -30,7 +32,7 @@ const SuccessPage = () => {
         </div>
         <h2 className="text-3xl font-black text-gray-900 mb-4">Thank You!</h2>
         <p className="text-gray-600 mb-8 leading-relaxed">
-          Your payment of <span className="font-bold text-gray-900">₹999</span> is received. Our team will connect you with a lawyer <span className="text-indigo-600 font-bold">within 30 minutes</span>.
+          Your payment of <span className="font-bold text-gray-900">₹999</span> is received. Our team will connect you with a lawyer <span className="text-indigo-600 font-bold">within 60 minutes</span>.
         </p>
 
         <div className="space-y-4 mb-10 text-left bg-gray-50 p-6 rounded-2xl border border-gray-100">
@@ -45,7 +47,7 @@ const SuccessPage = () => {
             <MessageCircle className="w-4 h-4 text-indigo-600" />
             <div>
               <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest">Consultation Window</p>
-              <p className="font-bold text-gray-900">Within 30 min</p>
+              <p className="font-bold text-gray-900">Within 60 min</p>
             </div>
           </div>
         </div>

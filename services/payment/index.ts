@@ -76,7 +76,7 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
         data: { 
           email: 'expert@lawmate.in',
           phone: '9999999999', 
-          name: 'LawMate Expert', 
+          name: 'LawOnCall Expert', 
           role: 'LAWYER' 
         } 
       });
