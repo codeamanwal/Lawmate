@@ -37,12 +37,20 @@ const Navbar = () => {
             </div>
           </>
         ) : (
-          <Link 
-            to="/auth" 
-            className="bg-indigo-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
-          >
-            Sign In
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/lawyer/register" 
+              className="text-gray-600 hover:text-indigo-600 font-bold text-sm"
+            >
+              Join as Advocate
+            </Link>
+            <Link 
+              to="/auth" 
+              className="bg-indigo-600 text-white px-5 py-2 rounded-full font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md text-sm"
+            >
+              Sign In
+            </Link>
+          </div>
         )}
       </div>
     </nav>

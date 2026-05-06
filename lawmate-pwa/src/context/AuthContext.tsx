@@ -13,6 +13,7 @@ import {
 
 import { initializeApp } from 'firebase/app';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const firebaseConfig = {
   // These should be in .env
@@ -33,7 +34,7 @@ interface AuthContextType {
   sendOtp: (phone: string) => Promise<ConfirmationResult>;
   verifyOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   signupWithEmail: (email: string, pass: string) => Promise<void>;
-  loginWithEmail: (email: string, pass: string) => Promise<void>;
+  loginWithEmail: (email: string, pass: string, role?: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: any) => void;
@@ -51,19 +52,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       if (firebaseUser) {
         const idToken = await firebaseUser.getIdToken();
+        const intendedRole = localStorage.getItem('intendedRole');
         try {
           const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
-            idToken
+            idToken,
+            role: intendedRole
           });
           const { token, user: backendUser } = response.data;
           localStorage.setItem('token', token);
           setUser(backendUser);
-        } catch (error) {
+          toast.success('Signed in successfully!');
+        } catch (error: any) {
           console.error('Backend auth failed', error);
-          setUser(null);
+          // If role check failed on backend (403), sign out from Firebase too
+          if (error.response?.status === 403) {
+            await auth.signOut();
+            localStorage.removeItem('token');
+            setUser(null);
+            toast.error(error.response?.data?.error || 'Invalid credentials');
+          } else {
+            // Otherwise just reset
+            setUser(null);
+          }
         }
       } else {
         localStorage.removeItem('token');
+        localStorage.removeItem('intendedRole');
         setUser(null);
       }
       setLoading(false);
@@ -73,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const sendOtp = async (phone: string) => {
+    localStorage.setItem('intendedRole', 'CLIENT');
     const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible'
     });
@@ -86,11 +101,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signupWithEmail = async (email: string, pass: string) => {
+    localStorage.setItem('intendedRole', 'CLIENT');
     await createUserWithEmailAndPassword(auth, email, pass);
   };
   
-  const loginWithEmail = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+  const loginWithEmail = async (email: string, pass: string, role?: string) => {
+    if (role) localStorage.setItem('intendedRole', role);
+    try {
+      // Try custom backend login first (for lawyers/password users or clients with passwords)
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, { 
+        email, 
+        password: pass,
+        role 
+      });
+      const { token, user: backendUser } = response.data;
+      localStorage.setItem('token', token);
+      setUser(backendUser);
+      toast.success('Signed in successfully!');
+    } catch (error: any) {
+      // If role mismatch (403), throw error immediately
+      if (error.response?.status === 403) {
+        throw new Error(error.response.data.error);
+      }
+      
+      // Fallback to Firebase for clients (handles 401 or not found)
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
   };
 
   const forgotPassword = async (email: string) => {

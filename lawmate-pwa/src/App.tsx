@@ -14,6 +14,7 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import HowItWorks from './pages/HowItWorks';
 import BookingPage from './pages/BookingPage';
 import MyBookings from './pages/MyBookings';
+import LawyerSignup from './pages/LawyerSignup';
 import { AuthProvider } from './context/AuthContext';
 
 import './App.css';
@@ -38,6 +39,7 @@ function App() {
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/booking" element={<BookingPage />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/lawyer/register" element={<LawyerSignup />} />
             </Routes>
 
           </main>

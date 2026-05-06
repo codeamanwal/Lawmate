@@ -35,6 +35,7 @@ model User {
 
   city          String?
   role          Role      @default(CLIENT)
+  password      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lawyerProfile LawyerProfile?
@@ -52,6 +53,9 @@ model LawyerProfile {
   bio           String?
   fees          Int      @default(0)
   verified      Boolean  @default(false)
+  licenseNumber String?
+  state         String?
+  address       String?
   availability  Json?    // Stores working hours, etc.
   leads         Lead[]   @relation("LawyerLeads")
   bookings      Booking[]

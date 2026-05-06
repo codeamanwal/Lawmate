@@ -122,24 +122,16 @@ fastify.post('/api/auth/verify-otp', async (request: any, reply: any) => {
 });
 
 fastify.post('/api/auth/verify', async (request: any, reply: any) => {
-
   const { idToken } = request.body as { idToken: string };
 
   try {
-    // 1. Verify Firebase ID Token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const phone = decodedToken.phone_number;
     const email = decodedToken.email;
 
-    if (!phone && !email) {
-      return reply.status(400).send({ error: 'Identity info missing in token' });
-    }
+    if (!phone && !email) return reply.status(400).send({ error: 'Identity info missing in token' });
 
-    const identifier = phone || email!;
-    // 2. Find or create user in PostgreSQL
-    let user = await prisma.user.findUnique({
-      where: { email: email! }
-    });
+    let user = await prisma.user.findUnique({ where: { email: email! } });
 
     if (!user) {
       user = await prisma.user.create({
@@ -151,19 +143,192 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
       });
     }
 
+    // Role Enforcement for Firebase users
+    const { role: requestedRole } = request.body;
+    if (requestedRole && user.role !== requestedRole) {
+      return reply.status(403).send({ error: 'Invalid email or password' });
+    }
 
-    // 3. Issue our own JWT
     const token = fastify.jwt.sign({ 
       id: user.id, 
       email: user.email,
       role: user.role 
     }, { expiresIn: '7d' });
 
-
     return { token, user };
   } catch (error) {
     fastify.log.error(error);
-    return reply.status(401).send({ error: 'Unauthorized' });
+    return reply.status(401).send({ error: 'Invalid credentials' });
+  }
+});
+
+// 4. Lawyer Signup
+fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
+  const data = request.body;
+  const { role } = request.body; // Path role
+
+  try {
+    // Check if user already exists
+    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existing) return reply.status(409).send({ error: 'Invalid credentials' });
+
+    // Create User and LawyerProfile
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        phone: data.phone,
+        name: data.fullName,
+        city: data.city,
+        role: 'LAWYER',
+        lawyerProfile: {
+          create: {
+            licenseNumber: data.licenseNumber,
+            experience: data.experience,
+            categories: data.practiceAreas,
+            state: data.state,
+            address: data.address,
+            verified: false // Manual verification later
+          }
+        }
+      }
+    });
+
+    // Trigger OTP for verification
+    // Reuse send-otp logic (can call the internal function or just duplicate small part)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    
+    await prisma.otp.upsert({
+      where: { email: data.email },
+      update: { code: otp, expiresAt },
+      create: { email: data.email, code: otp, expiresAt }
+    });
+
+    await transporter.sendMail({
+      from: `"LawOnCall" <${process.env.SMTP_USER}>`,
+      to: data.email,
+      subject: 'Verify Your Advocate Account',
+      text: `Your verification code is ${otp}.`,
+      html: `<div style="font-family:sans-serif;padding:20px;border:1px solid #eee;border-radius:10px;">
+              <h2 style="color:#4f46e5;">LawOnCall Verification</h2>
+              <p>Hello Counsel,</p>
+              <p>Your verification code for LawOnCall is: <b>${otp}</b></p>
+            </div>`
+    });
+
+    return { userId: user.id };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: 'Failed to create lawyer account' });
+  }
+});
+
+// 5. Set Password
+fastify.post('/api/auth/set-password', async (request: any, reply: any) => {
+  const { userId, password } = request.body;
+  
+  try {
+    // In real production, use bcrypt. Here we'll use a simple sha256 for demo safety
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    return { success: true };
+  } catch (error) {
+    return reply.status(500).send({ error: 'Failed to set password' });
+  }
+});
+
+// 6. Login (Email + Password)
+fastify.post('/api/auth/login', async (request: any, reply: any) => {
+  const { email, password, role } = request.body;
+  
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password) return reply.status(401).send({ error: 'Invalid credentials' });
+
+    // Role Check
+    if (role && user.role !== role) {
+      return reply.status(403).send({ error: 'Invalid email or password' });
+    }
+
+    const hashedInput = crypto.createHash('sha256').update(password).digest('hex');
+    if (hashedInput !== user.password) return reply.status(401).send({ error: 'Invalid email or password' });
+
+    const token = fastify.jwt.sign({ 
+      id: user.id, 
+      email: user.email,
+      role: user.role 
+    }, { expiresIn: '7d' });
+
+    return { token, user };
+  } catch (error) {
+    return reply.status(500).send({ error: 'Login failed' });
+  }
+});
+
+// 7. Forgot Password (Send OTP)
+fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
+  const { email } = request.body;
+  
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.otp.upsert({
+      where: { email },
+      update: { code: otp, expiresAt },
+      create: { email, code: otp, expiresAt }
+    });
+
+    await transporter.sendMail({
+      from: `"LawOnCall" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Password Reset Code',
+      html: `<div style="font-family:sans-serif;padding:20px;border:1px solid #eee;border-radius:10px;">
+              <h2 style="color:#4f46e5;">Reset Your Password</h2>
+              <p>Your password reset code is: <b>${otp}</b></p>
+              <p>If you didn't request this, please ignore this email.</p>
+            </div>`
+    });
+
+    return { success: true };
+  } catch (error) {
+    return reply.status(500).send({ error: 'Failed to send reset code' });
+  }
+});
+
+// 8. Reset Password
+fastify.post('/api/auth/reset-password', async (request: any, reply: any) => {
+  const { email, code, newPassword } = request.body;
+  
+  try {
+    // 1. Verify OTP
+    const record = await prisma.otp.findUnique({ where: { email } });
+    if (!record || record.code !== code || new Date() > record.expiresAt) {
+      return reply.status(400).send({ error: 'Invalid or expired code' });
+    }
+
+    // 2. Hash and Update Password
+    const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
+    await prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword }
+    });
+
+    // 3. Clear OTP
+    await prisma.otp.delete({ where: { email } });
+
+    return { success: true };
+  } catch (error) {
+    return reply.status(500).send({ error: 'Failed to reset password' });
   }
 });
 

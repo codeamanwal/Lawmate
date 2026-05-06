@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Mail, Lock, ArrowLeft, User, Phone, MapPin } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Loader2, Mail, Lock, ArrowLeft, User, Phone, MapPin, Gavel } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
-type AuthStep = 'signin' | 'signup-email' | 'signup-otp' | 'signup-password' | 'forgot-password' | 'complete-profile';
+type AuthStep = 'signin' | 'signin-client' | 'signin-lawyer' | 'signup-email' | 'signup-otp' | 'signup-password' | 'forgot-password' | 'forgot-password-otp' | 'forgot-password-new' | 'complete-profile';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ const AuthPage = () => {
   const [step, setStep] = useState<AuthStep>('signin');
   const [loading, setLoading] = useState(false);
   
-  const { signupWithEmail, loginWithEmail, forgotPassword, user, updateUser } = useAuth();
+  const { signupWithEmail, loginWithEmail, user, updateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,9 +44,9 @@ const AuthPage = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const role = step === 'signin-lawyer' ? 'LAWYER' : 'CLIENT';
     try {
-      await loginWithEmail(email, password);
-      toast.success('Signed in successfully!');
+      await loginWithEmail(email, password, role);
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
     } finally {
@@ -107,11 +107,38 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await forgotPassword(email);
-      toast.success('Reset link sent to your email!');
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
+      toast.success('Reset code sent to your email!');
+      setStep('forgot-password-otp');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to send reset code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyResetOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) return toast.error('Enter 6-digit code');
+    setStep('forgot-password-new');
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) return toast.error('Password must be 8+ characters');
+    if (password !== confirmPassword) return toast.error('Passwords do not match');
+
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, {
+        email,
+        code: otp,
+        newPassword: password
+      });
+      toast.success('Password updated! Please sign in.');
       setStep('signin');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send reset link');
+      toast.error(error.response?.data?.error || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -152,7 +179,9 @@ const AuthPage = () => {
             {step === 'signup-email' && 'Create Account'}
             {step === 'signup-otp' && 'Verify Email'}
             {step === 'signup-password' && 'Set Password'}
-            {step === 'forgot-password' && 'Reset Password'}
+             {step === 'forgot-password' && 'Reset Password'}
+            {step === 'forgot-password-otp' && 'Verify Code'}
+            {step === 'forgot-password-new' && 'New Password'}
             {step === 'complete-profile' && 'About You'}
           </h1>
           <p className="text-gray-500">
@@ -160,13 +189,66 @@ const AuthPage = () => {
             {step === 'signup-email' && 'Start your journey with LawOnCall'}
             {step === 'signup-otp' && `Enter the 6-digit code sent to ${email}`}
             {step === 'signup-password' && 'Choose a strong password for your account'}
-            {step === 'forgot-password' && 'We will send you a link to reset your password'}
+            {step === 'forgot-password' && 'Enter your email to receive a reset code'}
+            {step === 'forgot-password-otp' && `Enter the code sent to ${email}`}
+            {step === 'forgot-password-new' && 'Set a new secure password for your account'}
             {step === 'complete-profile' && 'Please provide a few more details to continue'}
           </p>
         </div>
 
-        {/* Forms */}
+        {/* Sign In Choice */}
         {step === 'signin' && (
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              <button 
+                onClick={() => setStep('signin-client')}
+                className="group p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
+              >
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Sign In as Client</h3>
+                  <p className="text-sm text-gray-500 font-medium">I am looking for legal assistance</p>
+                </div>
+                <div className="bg-gray-50 p-2 rounded-full group-hover:bg-indigo-50 transition-colors">
+                  <User className="w-6 h-6 text-gray-400 group-hover:text-indigo-600" />
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setStep('signin-lawyer')}
+                className="group p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
+              >
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Sign In as Advocate</h3>
+                  <p className="text-sm text-gray-500 font-medium">I am a verified legal professional</p>
+                </div>
+                <div className="bg-gray-50 p-2 rounded-full group-hover:bg-indigo-50 transition-colors">
+                  <Gavel className="w-6 h-6 text-gray-400 group-hover:text-indigo-600" />
+                </div>
+              </button>
+            </div>
+
+            <div className="text-center pt-4">
+              <p className="text-sm text-gray-500 font-bold mb-4">New to LawOnCall?</p>
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setStep('signup-email')} 
+                  className="py-3 px-4 bg-gray-50 text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-all border border-indigo-50"
+                >
+                  Join as Client
+                </button>
+                <Link 
+                  to="/lawyer/register" 
+                  className="py-3 px-4 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 text-center flex items-center justify-center"
+                >
+                  Join as Advocate
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Client Sign In */}
+        {step === 'signin-client' && (
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
@@ -175,7 +257,7 @@ const AuthPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email Address"
+                  placeholder="Client Email"
                   className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
                   required
                 />
@@ -201,14 +283,55 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Sign In'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Client Sign In'}
             </button>
-            <p className="text-center text-gray-500">
-              Don't have an account?{' '}
-              <button type="button" onClick={() => setStep('signup-email')} className="text-indigo-600 font-bold hover:underline">
-                Sign Up
+            <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm">
+              <ArrowLeft className="w-4 h-4" /> Back to choices
+            </button>
+          </form>
+        )}
+
+        {/* Lawyer Sign In */}
+        {step === 'signin-lawyer' && (
+          <form onSubmit={handleSignIn} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Advocate Email"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Lawyer Password"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+            <div className="text-right">
+              <button type="button" onClick={() => setStep('forgot-password')} className="text-sm font-semibold text-indigo-600 hover:underline">
+                Forgot Password?
               </button>
-            </p>
+            </div>
+            <button
+              disabled={loading}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Advocate Sign In'}
+            </button>
+            <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm">
+              <ArrowLeft className="w-4 h-4" /> Back to choices
+            </button>
           </form>
         )}
 
@@ -312,10 +435,68 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send Reset Link'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send Reset Code'}
             </button>
             <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Back to Sign In
+            </button>
+          </form>
+        )}
+
+        {step === 'forgot-password-otp' && (
+          <form onSubmit={handleVerifyResetOtp} className="space-y-6">
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="0 0 0 0 0 0"
+              className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all text-center text-3xl font-black tracking-[1em]"
+              autoFocus
+              required
+            />
+            <button
+              disabled={loading}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
+            >
+              Continue
+            </button>
+            <button type="button" onClick={() => setStep('forgot-password')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
+          </form>
+        )}
+
+        {step === 'forgot-password-new' && (
+          <form onSubmit={handleResetPassword} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="New Password"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm New Password"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+            <button
+              disabled={loading}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Reset Password'}
             </button>
           </form>
         )}
