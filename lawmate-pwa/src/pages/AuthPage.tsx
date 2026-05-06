@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Mail, Lock, ShieldCheck, ArrowLeft, User, Phone, MapPin } from 'lucide-react';
+import { Loader2, Mail, Lock, ArrowLeft, User, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -54,18 +54,36 @@ const AuthPage = () => {
     }
   };
 
-  const handleSignupEmail = (e: React.FormEvent) => {
+  const handleSignupEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.includes('@')) return toast.error('Enter a valid email');
-    setStep('signup-otp');
-    toast.success('OTP sent to your email! (Simulated)');
+    
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/send-otp`, { email });
+      setStep('signup-otp');
+      toast.success('Verification code sent to your email!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignupOtp = (e: React.FormEvent) => {
+  const handleSignupOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) return toast.error('Enter 6-digit OTP');
-    // In a real app, verify OTP here
-    setStep('signup-password');
+    
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, { email, code: otp });
+      toast.success('Email verified!');
+      setStep('signup-password');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Invalid or expired OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignupPassword = async (e: React.FormEvent) => {
@@ -106,7 +124,7 @@ const AuthPage = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
         name, phone, city
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -208,9 +226,10 @@ const AuthPage = () => {
               />
             </div>
             <button
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"
+              disabled={loading}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              Send OTP
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send OTP'}
             </button>
             <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Back to Sign In
@@ -230,9 +249,10 @@ const AuthPage = () => {
               required
             />
             <button
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"
+              disabled={loading}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              Verify OTP
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Verify OTP'}
             </button>
             <button type="button" onClick={() => setStep('signup-email')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Change Email

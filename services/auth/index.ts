@@ -3,9 +3,11 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import * as admin from 'firebase-admin';
 // @ts-ignore
-import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
+import { PrismaClient } from '../../packages/db/node_modules/@prisma/client';
 import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 
 
@@ -40,6 +42,85 @@ fastify.register(jwt, {
   secret: process.env.JWT_SECRET || 'super-secret-lawmate-key'
 });
 
+// Configure Email Transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, 
+  requireTLS: true, // Force TLS
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// 1. Send OTP
+fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
+  const { email } = request.body as { email: string };
+  if (!email) return reply.status(400).send({ error: 'Email is required' });
+
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  try {
+    // 1. Save to DB (upsert)
+    // We wrap this in a try-catch to see if DB is the problem
+    try {
+      await prisma.otp.upsert({
+        where: { email },
+        update: { code: otp, expiresAt },
+        create: { email, code: otp, expiresAt }
+      });
+    } catch (dbErr) {
+      console.error('DATABASE ERROR:', dbErr);
+      return reply.status(500).send({ error: 'Database error. Please check if OTP model is pushed.' });
+    }
+
+    // 2. Send Email
+    await transporter.sendMail({
+      from: `"LawMate" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Your LawMate Verification Code',
+      text: `Your verification code is ${otp}. It will expire in 10 minutes.`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #4f46e5;">LawMate Verification</h2>
+          <p>Hello,</p>
+          <p>Your verification code for LawMate is:</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #111; margin: 20px 0;">${otp}</div>
+          <p>This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+    });
+
+    return { success: true, message: 'OTP sent successfully' };
+  } catch (error: any) {
+    console.error('SMTP ERROR:', error);
+    return reply.status(500).send({ error: `Failed to send email: ${error.message}` });
+  }
+});
+
+// 2. Verify OTP
+fastify.post('/api/auth/verify-otp', async (request: any, reply: any) => {
+  const { email, code } = request.body as { email: string; code: string };
+
+  const record = await prisma.otp.findUnique({ where: { email } });
+
+  if (!record || record.code !== code) {
+    return reply.status(400).send({ error: 'Invalid verification code' });
+  }
+
+  if (new Date() > record.expiresAt) {
+    return reply.status(400).send({ error: 'Code has expired. Please request a new one.' });
+  }
+
+  // Success - clear OTP
+  await prisma.otp.delete({ where: { email } });
+
+  return { success: true };
+});
+
 fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
   const { idToken } = request.body as { idToken: string };
@@ -64,7 +145,7 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
       user = await prisma.user.create({
         data: {
           email: email!,
-          phone: phone || undefined,
+          phone: phone ?? null,
           role: 'CLIENT'
         }
       });
