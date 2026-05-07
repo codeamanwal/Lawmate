@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -10,8 +10,6 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const leadId = location.state?.leadId || localStorage.getItem('pendingLeadId');
 
   useEffect(() => {
@@ -27,92 +25,58 @@ const PaymentPage = () => {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) return; // Wait for token to be available
-
-    const createPayment = async () => {
-      try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, {
-          leadId
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        const { short_url } = response.data;
-        setPaymentUrl(short_url);
-        setLoading(false);
-        
-        // Redirect after a short delay to give user control
-        setTimeout(() => {
-          if (window.location.pathname === '/payment') {
-            window.location.href = short_url;
-          }
-        }, 2000);
-      } catch (err: any) {
-        console.error('Payment creation failed', err);
-        setError('Payment link creation failed. Please retry.');
-        toast.error('Failed to initiate payment');
-        setLoading(false);
-      }
-    };
-
-    createPayment();
+    setLoading(false);
   }, [leadId, navigate, user, authLoading]);
+
+  const handleDummyPayment = async () => {
+    setLoading(true);
+    try {
+      // Mark lead as completed in backend
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      toast.success('Payment Received!');
+      navigate('/payment-success');
+    } catch (err) {
+      console.error('Failed to complete payment', err);
+      toast.error('Payment verification failed');
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
-        {loading ? (
-          <>
-            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Creating payment link...</h2>
-            <p className="text-gray-500 mb-8">Please wait while we set up your secure checkout session. Do not refresh this page.</p>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-400 font-medium bg-gray-50 py-3 rounded-xl border border-gray-100">
-              <ShieldCheck className="w-4 h-4 text-green-500" /> Powered by Razorpay
-            </div>
-          </>
-        ) : error ? (
-          <>
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <AlertCircle className="w-10 h-10 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Payment Failed</h2>
-            <p className="text-gray-500 mb-8">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
-            >
-              Retry Payment
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <ShieldCheck className="w-10 h-10 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Redirecting to Secure Payment...</h2>
-            <p className="text-gray-500 mb-8 leading-relaxed text-sm">
-              You are being securely redirected to Razorpay. <br/>
-              If not redirected in 2 seconds, click the link below.
-            </p>
-            {paymentUrl && (
-              <a 
-                href={paymentUrl}
-                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all mb-4 text-center"
-              >
-                Go to Razorpay
-              </a>
-            )}
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-400 font-bold hover:text-red-500 transition-colors text-sm"
-            >
-              Cancel & Go Back
-            </button>
+        <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
+          <ShieldCheck className="w-10 h-10 text-indigo-600" />
+        </div>
+        
+        <h2 className="text-3xl font-black text-gray-900 mb-2">Secure Checkout</h2>
+        <p className="text-gray-500 mb-8 font-medium">Complete your ₹999 payment to lock in your expert legal consultation.</p>
+
+        <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-4">
+          <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+            <span className="text-gray-500 font-medium">Consultation Fee</span>
+            <span className="text-gray-900 font-bold">₹999</span>
           </div>
-        )}
+          <div className="flex justify-between items-center text-lg">
+            <span className="text-gray-900 font-black">Total to Pay</span>
+            <span className="text-indigo-600 font-black">₹999</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={handleDummyPayment}
+          disabled={loading && !authLoading}
+          className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
+        >
+          {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Confirm & Pay ₹999'}
+        </button>
+
+        <p className="mt-6 text-xs text-gray-400 font-medium flex items-center justify-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" /> Secure 256-bit SSL Encryption
+        </p>
       </div>
     </div>
   );

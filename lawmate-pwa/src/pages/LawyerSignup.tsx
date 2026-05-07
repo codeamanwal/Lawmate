@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const states = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
@@ -38,10 +39,10 @@ const formSchema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit phone number'),
   state: z.string().min(1, 'Select your state'),
   city: z.string().min(1, 'City is required'),
-  licenseNumber: z.string().regex(/^[A-Z]{2,3}\/\d+\/\d{4}$/, 'Enter valid enrollment number (e.g. UP/1234/2015)'),
-  experience: z.number().min(0).max(50, 'Invalid number'),
-  practiceAreas: z.array(z.string()).min(1, 'Select at least one area'),
-  address: z.string().min(5, 'Required').max(200, 'Max 200 characters'),
+  licenseNumber: z.string().regex(/^[A-Z]{2,3}\/\d+\/\d{4}$/, 'Enter valid enrollment number.'),
+  experience: z.number().min(0, 'Invalid number.').max(50, 'Invalid number.'),
+  practiceAreas: z.array(z.string()).min(1, 'Select at least one area.'),
+  address: z.string().min(5, 'Required.').max(200, 'Max 200 characters'),
   agreed: z.boolean().refine(val => val === true, 'You must agree to the terms'),
 });
 
@@ -53,6 +54,7 @@ const LawyerSignup = () => {
   const [otp, setOtp] = useState('');
   const [tempUserId, setTempUserId] = useState('');
   const [passwords, setPasswords] = useState({ password: '', confirm: '' });
+  const { loginWithEmail } = useAuth();
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
@@ -109,10 +111,13 @@ const LawyerSignup = () => {
         userId: tempUserId,
         password: passwords.password
       });
+      
+      await loginWithEmail(watch('email'), passwords.password, 'LAWYER');
+      
       toast.success('Account created successfully!');
-      navigate('/dashboard'); // Land on Profile/Dashboard
+      navigate('/lawyer/onboarding'); // Land on Onboarding Wizard
     } catch (error) {
-      toast.error('Failed to set password');
+      toast.error('Failed to set password or login');
     } finally {
       setLoading(false);
     }
@@ -214,8 +219,11 @@ const LawyerSignup = () => {
                   {errors.city && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.city.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2 group relative">
                     <Award className="w-4 h-4 text-gray-400" /> License / Bar Council No.*
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 left-0 bg-gray-900 text-white text-[10px] py-1 px-2 rounded font-black whitespace-nowrap shadow-xl z-10 pointer-events-none">
+                      Your State Bar Council enrollment no.
+                    </span>
                   </label>
                   <input
                     {...register('licenseNumber')}
@@ -281,7 +289,7 @@ const LawyerSignup = () => {
                   className="mt-1 w-5 h-5 text-indigo-600 rounded-lg border-gray-300 focus:ring-indigo-500 shadow-sm"
                 />
                 <label htmlFor="agreed" className="text-xs font-bold text-gray-500 leading-tight">
-                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" className="text-indigo-600 hover:underline">Terms of Use</Link> and <Link to="/privacy" className="text-indigo-600 hover:underline">Privacy Policy</Link>.
+                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" className="text-indigo-600 hover:underline">Terms of Use</Link>.
                 </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs font-bold text-red-500">{errors.agreed.message}</p>}

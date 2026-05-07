@@ -35,7 +35,7 @@ const AuthPage = () => {
         if (fromIntake && pendingLeadId) {
           navigate('/booking');
         } else {
-          navigate('/dashboard');
+          navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
         }
       }
     }
@@ -158,7 +158,7 @@ const AuthPage = () => {
       });
       updateUser({ name, phone, city });
       toast.success('Profile completed!');
-      navigate('/dashboard');
+      navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
     } catch (error: any) {
       toast.error('Failed to update profile');
     } finally {

@@ -15,6 +15,9 @@ import HowItWorks from './pages/HowItWorks';
 import BookingPage from './pages/BookingPage';
 import MyBookings from './pages/MyBookings';
 import LawyerSignup from './pages/LawyerSignup';
+import PaymentSuccess from './pages/PaymentSuccess';
+import LawyerOnboarding from './pages/LawyerOnboarding';
+import LawyerDashboard from './pages/LawyerDashboard';
 import { AuthProvider } from './context/AuthContext';
 
 import './App.css';
@@ -39,7 +42,10 @@ function App() {
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/booking" element={<BookingPage />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/lawyer/register" element={<LawyerSignup />} />
+              <Route path="/lawyer/onboarding" element={<LawyerOnboarding />} />
+              <Route path="/lawyer/dashboard" element={<LawyerDashboard />} />
             </Routes>
 
           </main>

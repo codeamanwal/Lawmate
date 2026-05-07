@@ -48,6 +48,7 @@ model LawyerProfile {
   userId        String   @unique
   user          User     @relation(fields: [userId], references: [id])
   categories    String[]
+  languages     String[]
   experience    Int      @default(0)
   rating        Float    @default(0.0)
   bio           String?

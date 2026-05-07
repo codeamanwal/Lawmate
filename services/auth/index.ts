@@ -131,7 +131,10 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     if (!phone && !email) return reply.status(400).send({ error: 'Identity info missing in token' });
 
-    let user = await prisma.user.findUnique({ where: { email: email! } });
+    let user = await prisma.user.findUnique({ 
+      where: { email: email! },
+      include: { lawyerProfile: true }
+    });
 
     if (!user) {
       user = await prisma.user.create({
@@ -139,9 +142,12 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
           email: email!,
           phone: phone ?? null,
           role: 'CLIENT'
-        }
+        },
+        include: { lawyerProfile: true }
       });
     }
+
+    if (!user) return reply.status(500).send({ error: 'Failed to create user session' });
 
     // Role Enforcement for Firebase users
     const { role: requestedRole } = request.body;
@@ -247,7 +253,10 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
   const { email, password, role } = request.body;
   
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: { lawyerProfile: true }
+    });
     if (!user || !user.password) return reply.status(401).send({ error: 'Invalid credentials' });
 
     // Role Check
@@ -267,6 +276,60 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
     return { token, user };
   } catch (error) {
     return reply.status(500).send({ error: 'Login failed' });
+  }
+});
+
+// 7. Update Lawyer Profile (Onboarding)
+fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => {
+  const { bio, languages, categories, availability } = request.body;
+  const authHeader = request.headers.authorization;
+  
+  if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const decoded = fastify.jwt.verify(token) as { id: string };
+    if (!decoded.id) return reply.status(401).send({ error: 'Invalid token payload' });
+
+    const updateData: any = {
+      bio,
+      languages,
+      categories,
+      availability
+    };
+
+    const user = await prisma.user.update({
+      where: { id: decoded.id },
+      data: {
+        lawyerProfile: {
+          update: updateData
+        }
+      },
+      include: { lawyerProfile: true }
+    });
+    
+    return { success: true, user };
+  } catch (error) {
+    console.error('PROFILE UPDATE ERROR:', error);
+    return reply.status(500).send({ error: 'Failed to update profile' });
+  }
+});
+
+// 8. Get My Lawyer Profile
+fastify.get('/api/profiles/lawyer/me', async (request: any, reply: any) => {
+  const authHeader = request.headers.authorization;
+  if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = fastify.jwt.verify(token) as { id: string };
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: { lawyerProfile: true }
+    });
+    return { success: true, user };
+  } catch (error) {
+    return reply.status(401).send({ error: 'Invalid token' });
   }
 });
 

@@ -1,113 +1,119 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Loader2, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, MapPin, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
 
-const BookingPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+const MyBookings = () => {
+  const { user, loading: authLoading } = useAuth();
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const leadId = location.state?.leadId || localStorage.getItem('pendingLeadId');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!leadId) {
-      navigate('/get-started');
+    if (!authLoading && !user) {
+      navigate('/auth');
       return;
     }
 
-    // Load Cal.com Script
-    const script = document.createElement('script');
-    script.src = 'https://app.cal.com/embed/embed.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      const Cal = (window as any).Cal;
-      if (Cal) {
-        Cal("init", { origin: "https://app.cal.com" });
+    const fetchBookings = async () => {
+      try {
+        // We'll fetch from the leads endpoint which includes booking data
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/my`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
         
-        Cal("inline", {
-          elementOrSelector: "#cal-inline",
-          calLink: "sumitcodes",
-          layout: "month_view"
-        });
-
-        Cal("ui", { 
-          styles: { branding: { brandColor: "#4f46e5" } },
-          hideEventTypeDetails: false,
-          layout: "month_view"
-        });
-
-        // Listen for Success
-        Cal("onAnyEvent", (e: any) => {
-          if (e.detail.type === 'BOOKING_SUCCESSFUL') {
-            toast.success('Consultation Scheduled!');
-            setTimeout(() => {
-              navigate('/payment', { state: { leadId } });
-            }, 1500);
-          }
-        });
-
+        // Filter only those that have a confirmed booking status
+        const confirmedBookings = response.data.filter((lead: any) => lead.status === 'COMPLETED' || lead.status === 'ASSIGNED');
+        setBookings(confirmedBookings);
+      } catch (error) {
+        console.error('Failed to fetch bookings');
+      } finally {
         setLoading(false);
       }
     };
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, [leadId, navigate]);
+    if (user) fetchBookings();
+  }, [user, authLoading, navigate]);
 
-  const handleSkip = async () => {
-    try {
-      // Mark as complete/booked immediately
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      toast.success('Consultation Scheduled!');
-      navigate('/payment', { state: { leadId } });
-    } catch (error) {
-      console.error('Failed to auto-confirm booking', error);
-      // Still navigate even if API fails to avoid blocking the user
-      navigate('/payment', { state: { leadId } });
-    }
-  };
+  if (authLoading || loading) return <div className="flex items-center justify-center min-h-[calc(100vh-76px)]"><div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 p-6 flex flex-col items-center">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-10">
-          <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <CalendarIcon className="w-10 h-10 text-indigo-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule your Consultation</h1>
-          <p className="text-gray-500">Pick a slot that works for you via Cal.com.</p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden min-h-[700px] relative">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-            </div>
-          )}
-          
-          <div id="cal-inline" style={{ width: '100%', height: '700px', overflow: 'scroll' }}></div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400 mb-4 font-medium italic">Having trouble with the scheduler?</p>
-          <button 
-            onClick={handleSkip}
-            className="px-8 py-4 bg-white border-2 border-indigo-100 text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto"
-          >
-            Skip to Payment <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="mb-12">
+        <h1 className="text-4xl font-black text-gray-900 mb-2">My Bookings</h1>
+        <p className="text-gray-500 font-medium">You have {bookings.length} confirmed legal consultations</p>
       </div>
+
+      {bookings.length === 0 ? (
+        <div className="space-y-12">
+          <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-12 text-center">
+            <div className="bg-indigo-50 w-20 h-20 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <Calendar className="w-10 h-10 text-indigo-600" />
+            </div>
+            <h2 className="text-3xl font-black text-gray-900 mb-4">Book Your Session</h2>
+            <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">Ready to discuss your case? Use the professional scheduler below to pick a slot that works for you.</p>
+            
+            {/* Cal.com Embed */}
+            <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl shadow-indigo-100/50 overflow-hidden min-h-[600px]">
+              <iframe
+                src="https://cal.com/sumitcodes/30min?embed=true"
+                style={{ width: '100%', height: '600px', border: 'none' }}
+                title="Schedule 30min Meeting"
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {bookings.map((booking) => (
+            <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/40 overflow-hidden">
+              <div className="p-6">
+                <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Confirmed
+                      </span>
+                      <span className="text-[10px] font-bold text-gray-400">#{booking.id.slice(0, 8)}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">{booking.category} Case</h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fee Paid</p>
+                    <p className="text-xl font-black text-gray-900">₹999</p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2.5 text-gray-600">
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
+                        <Clock className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Duration</p>
+                        <p className="text-sm font-bold text-gray-900">60 Min Session</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-gray-600">
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Jurisdiction</p>
+                        <p className="text-sm font-bold text-gray-900">{booking.city}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-export default BookingPage;
+export default MyBookings;

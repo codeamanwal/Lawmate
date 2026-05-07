@@ -46,21 +46,45 @@ const MyBookings = () => {
       </div>
 
       {bookings.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-16 text-center">
-          <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Calendar className="w-10 h-10 text-gray-300" />
+        <div className="space-y-12">
+          <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-12 text-center">
+            <div className="bg-indigo-50 w-20 h-20 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <Calendar className="w-10 h-10 text-indigo-600" />
+            </div>
+            <h2 className="text-3xl font-black text-gray-900 mb-4">Book Your Session</h2>
+            <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">Ready to discuss your case? Use the professional scheduler below to pick a slot that works for you.</p>
+            
+            {/* Cal.com Embed */}
+            <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl shadow-indigo-100/50 overflow-hidden min-h-[600px]">
+              <iframe
+                src="https://cal.com/sumitcodes/30min?embed=true"
+                style={{ width: '100%', height: '600px', border: 'none' }}
+                title="Schedule 30min Meeting"
+              />
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No bookings yet</h2>
-          <p className="text-gray-500 mb-8 max-w-xs mx-auto">Start a new case to connect with a legal expert and schedule your consultation.</p>
-          <button 
-            onClick={() => navigate('/get-started')}
-            className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
-          >
-            Book your first session
-          </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm font-black">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-black text-gray-900">Consultation Paid & Confirmed</h4>
+                <p className="text-xs text-gray-500 font-bold">Pick your exact time slot below to finalize the meeting.</p>
+              </div>
+            </div>
+            <a 
+              href="https://cal.com/sumitcodes/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-xs hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+            >
+              Schedule Now
+            </a>
+          </div>
           {bookings.map((booking) => (
             <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/40 overflow-hidden">
               <div className="p-6">
