@@ -35,7 +35,15 @@ const AuthPage = () => {
         if (fromIntake && pendingLeadId) {
           navigate('/booking');
         } else {
-          navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
+          if (user.role === 'LAWYER') {
+            if (user.lawyerProfile?.onboardingCompleted) {
+              navigate('/lawyer/dashboard');
+            } else {
+              navigate('/lawyer/onboarding');
+            }
+          } else {
+            navigate('/dashboard');
+          }
         }
       }
     }

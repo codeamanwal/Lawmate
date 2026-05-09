@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { 
   Phone, 
   Clock, 
@@ -9,7 +9,6 @@ import {
   Settings, 
   TrendingUp,
   Power,
-  CheckCircle2,
   Loader2
 } from 'lucide-react';
 
@@ -23,6 +22,14 @@ const LawyerDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('calls');
   const [isAvailable, setIsAvailable] = useState(true);
+
+  const getFileUrl = (path: string | undefined) => {
+    if (!path) return '#';
+    if (path.startsWith('data:')) return path;
+    return `${import.meta.env.VITE_API_URL}${path}`;
+  };
+
+  const hasFetched = useRef(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,7 +50,8 @@ const LawyerDashboard = () => {
 
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user) {
+    } else if (user && !hasFetched.current) {
+      hasFetched.current = true;
       fetchProfile();
     }
   }, [user, loading, navigate, updateUser]);
@@ -92,9 +100,12 @@ const LawyerDashboard = () => {
               <Power className="w-4 h-4" />
               {isAvailable ? 'Currently Available' : 'Currently Not Available'}
             </button>
-            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer border border-gray-100">
+            <button 
+              onClick={() => navigate('/lawyer/onboarding')}
+              className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer border border-gray-100"
+            >
               <Settings className="w-5 h-5" />
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -220,49 +231,65 @@ const LawyerDashboard = () => {
         {activeTab === 'profile' && (
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm text-center">
-              <div className="w-24 h-24 bg-indigo-600 rounded-[32px] flex items-center justify-center text-white font-black text-4xl mx-auto mb-6 shadow-xl shadow-indigo-100 border-4 border-white">
-                {user?.name?.[0] || user?.fullName?.[0] || 'A'}
+              <div className="w-24 h-24 bg-indigo-600 rounded-[32px] flex items-center justify-center text-white font-black text-4xl mx-auto mb-6 shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden">
+                {user?.lawyerProfile?.photo ? (
+                  <img 
+                    src={getFileUrl(user.lawyerProfile.photo)} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user?.name?.[0] || user?.fullName?.[0] || 'A'
+                )}
               </div>
               <h2 className="text-2xl font-black text-gray-900 mb-1">{user?.name || user?.fullName || 'Advocate'}</h2>
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-6">{user?.lawyerProfile?.licenseNumber || 'Verified Advocate'}</p>
               
               <div className="flex items-center justify-center gap-3">
-                <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-black uppercase flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Profile Verified
+                <span className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-xs font-black uppercase flex items-center gap-2">
+                  <Clock className="w-4 h-4" /> Pending for Review
                 </span>
                 <span className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-xs font-black uppercase">
-                  ID: {user?.lawyerProfile?.licenseNumber?.split('/')?.[1] || 'Pending'}
+                  ID: {user?.lawyerProfile?.licenseNumber || 'Not Provided'}
                 </span>
               </div>
             </div>
 
             <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm">
-              <h3 className="font-black text-gray-900 mb-6 uppercase tracking-widest text-xs border-b border-gray-100 pb-4">Professional Details</h3>
+              <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+                <h3 className="font-black text-gray-900 uppercase tracking-widest text-xs">Professional Details</h3>
+                <button 
+                  onClick={() => navigate('/lawyer/onboarding')}
+                  className="text-indigo-600 text-[10px] font-black uppercase hover:underline"
+                >
+                  Edit Details
+                </button>
+              </div>
               <div className="grid gap-6">
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Introductory Bio</p>
                   <p className="text-sm font-bold text-gray-600 leading-relaxed italic">
-                    "{user?.lawyerProfile?.bio || 'Professional legal consultant dedicated to providing expert advice.'}"
+                    "{user?.lawyerProfile?.bio || 'No bio provided.'}"
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Languages</p>
-                    <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.languages?.join(', ') || 'English, Hindi'}</p>
+                    <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.languages?.join(', ') || 'Not Provided'}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Experience</p>
-                    <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.experience || '0'}+ Years</p>
+                    <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.experience || '0'} Years</p>
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Practice Areas</p>
                   <div className="flex flex-wrap gap-2">
-                    {(user?.lawyerProfile?.categories || ['General Practice']).map((area: string) => (
+                    {user?.lawyerProfile?.categories?.map((area: string) => (
                       <span key={area} className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase">
                         {area}
                       </span>
-                    ))}
+                    )) || <span className="text-xs text-gray-400">None selected</span>}
                   </div>
                 </div>
               </div>

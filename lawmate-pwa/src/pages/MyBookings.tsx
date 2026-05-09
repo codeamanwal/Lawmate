@@ -66,25 +66,6 @@ const MyBookings = () => {
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm font-black">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-black text-gray-900">Consultation Paid & Confirmed</h4>
-                <p className="text-xs text-gray-500 font-bold">Pick your exact time slot below to finalize the meeting.</p>
-              </div>
-            </div>
-            <a 
-              href="https://cal.com/sumitcodes/30min"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-xs hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-            >
-              Schedule Now
-            </a>
-          </div>
           {bookings.map((booking) => (
             <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/40 overflow-hidden">
               <div className="p-6">
@@ -122,18 +103,6 @@ const MyBookings = () => {
                       <div>
                         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Jurisdiction</p>
                         <p className="text-sm font-bold text-gray-900">{booking.city}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shadow-sm text-sm">
-                        {booking.lawyer?.user?.name?.[0] || 'V'}
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Assigned Expert</p>
-                        <p className="text-sm font-bold text-gray-900">{booking.lawyer?.user?.name || 'Adv. Vikram Singh'}</p>
                       </div>
                     </div>
                   </div>

@@ -34,16 +34,25 @@ const LawyerOnboarding = () => {
   const [bio, setBio] = useState(user?.lawyerProfile?.bio || '');
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(user?.lawyerProfile?.languages || []);
   const [website, setWebsite] = useState('');
-  const [files, setFiles] = useState<Record<string, File>>({});
+  const [files, setFiles] = useState<Record<string, string>>({
+    'Enrollment Certificate': user?.lawyerProfile?.enrollmentCert || '',
+    'PAN Card': user?.lawyerProfile?.panCard || '',
+    'Degree Certificate': user?.lawyerProfile?.degreeCert || '',
+    'Headshot Photo': user?.lawyerProfile?.photo || ''
+  });
   const [availability, setAvailability] = useState({
     monday: true, tuesday: true, wednesday: true, thursday: true, friday: true,
     saturday: false, sunday: false
   });
-
+  
   const handleFileUpload = (label: string, file: File | undefined) => {
     if (file) {
-      setFiles(prev => ({ ...prev, [label]: file }));
-      toast.success(`${label} uploaded!`);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFiles(prev => ({ ...prev, [label]: reader.result as string }));
+        toast.success(`${label} uploaded!`);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -61,7 +70,12 @@ const LawyerOnboarding = () => {
         availability: {
           days: Object.entries(availability).filter(([_, active]) => active).map(([day]) => day),
           hours: "10:00 AM - 06:00 PM"
-        }
+        },
+        onboardingCompleted: true,
+        enrollmentCert: files['Enrollment Certificate'],
+        panCard: files['PAN Card'],
+        degreeCert: files['Degree Certificate'],
+        photo: files['Headshot Photo']
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -71,7 +85,8 @@ const LawyerOnboarding = () => {
         toast.success('Professional profile updated!');
         navigate('/lawyer/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Full Error Object:', error.response?.data || error.message);
       toast.error('Failed to save profile details');
     } finally {
       setLoading(false);
@@ -253,10 +268,10 @@ const LawyerOnboarding = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 {[
-                  { label: 'Enrollment Certificate*', icon: FileCheck, hint: 'State Bar Council Certificate (PDF/JPG)' },
-                  { label: 'PAN Card*', icon: User, hint: 'Government ID (JPG/PDF)' },
-                  { label: 'Degree Certificate*', icon: Award, hint: 'Law Degree (JPG/PDF)' },
-                  { label: 'Headshot Photo*', icon: ImageIcon, hint: 'Clear passport-style photo (JPG)' }
+                  { label: 'Enrollment Certificate', icon: FileCheck, hint: 'State Bar Council Certificate (PDF/JPG)' },
+                  { label: 'PAN Card', icon: User, hint: 'Government ID (JPG/PDF)' },
+                  { label: 'Degree Certificate', icon: Award, hint: 'Law Degree (JPG/PDF)' },
+                  { label: 'Headshot Photo', icon: ImageIcon, hint: 'Clear passport-style photo (JPG)' }
                 ].map((doc) => (
                   <div key={doc.label} className="group">
                     <label className="block text-sm font-bold text-gray-700 mb-3">{doc.label}</label>
@@ -268,7 +283,7 @@ const LawyerOnboarding = () => {
                         {files[doc.label] ? <CheckCircle2 className="w-6 h-6" /> : <doc.icon className="w-6 h-6" />}
                       </div>
                       <p className={`text-sm font-black mb-1 flex items-center gap-2 ${files[doc.label] ? 'text-emerald-700' : 'text-gray-900'}`}>
-                        {files[doc.label] ? files[doc.label].name : <>Click to Upload <Upload className="w-4 h-4 text-indigo-600" /></>}
+                        {files[doc.label] ? "Document Attached" : <>Click to Upload <Upload className="w-4 h-4 text-indigo-600" /></>}
                       </p>
                       <p className="text-[10px] text-gray-400 font-bold">{doc.hint} · Max 5MB</p>
                       <input 

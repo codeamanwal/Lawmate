@@ -8,7 +8,10 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+  logger: true,
+  bodyLimit: 52428800 // 50MB
+});
 
 fastify.register(cors, {
   origin: true,
@@ -143,6 +146,22 @@ fastify.register(async (instance) => {
     });
   });
 
+}); // End of protected block
+
+fastify.post('/api/profiles/lawyer/update', (request, reply) => {
+  return reply.from(`${AUTH_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => headers
+  });
+});
+
+fastify.get('/api/profiles/lawyer/me', (request, reply) => {
+  return reply.from(`${AUTH_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => headers
+  });
+});
+
+fastify.get('/uploads/*', (request, reply) => {
+  return reply.from(`${AUTH_SERVICE}${request.url}`);
 });
 
 const start = async () => {

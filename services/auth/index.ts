@@ -8,14 +8,47 @@ import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-
-
-
-
-
 import dotenv from 'dotenv';
-
 import path from 'path';
+import fs from 'fs';
+import fastifyStatic from '@fastify/static';
+
+// Helper to save Base64 as real file
+const saveBase64File = (base64String: string | undefined, prefix: string, userId: string) => {
+  if (!base64String || typeof base64String !== 'string' || !base64String.includes(';base64,')) {
+    return base64String;
+  }
+  
+  try {
+    console.log(`Processing ${prefix} for user ${userId}...`);
+    const match = base64String.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) {
+      console.error(`Invalid base64 format for ${prefix}`);
+      return base64String;
+    }
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+    let extension = mimeType.split('/')[1];
+    if (extension === 'jpeg') extension = 'jpg';
+    
+    const filename = `${prefix}_${userId}_${Date.now()}.${extension}`;
+    const uploadsDir = path.join(__dirname, 'uploads');
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const filePath = path.join(uploadsDir, filename);
+    fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+    
+    console.log(`✅ Saved physical file: ${filename} (${Math.round(base64Data.length / 1024)} KB)`);
+    return `/uploads/${filename}`;
+  } catch (error) {
+    console.error(`❌ File save error for ${prefix}:`, error);
+    return base64String;
+  }
+};
 
 dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
@@ -30,7 +63,10 @@ admin.initializeApp({
   }),
 });
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+  logger: true,
+  bodyLimit: 52428800 // 50MB
+});
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -38,6 +74,10 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'uploads'),
+  prefix: '/uploads/',
+});
 fastify.register(jwt, {
   secret: process.env.JWT_SECRET || 'super-secret-lawmate-key'
 });
@@ -175,32 +215,42 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
 
   try {
     // Check if user already exists
-    const existing = await prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) return reply.status(409).send({ error: 'Invalid credentials' });
+    const existing = await prisma.user.findFirst({ 
+      where: { 
+        OR: [
+          { email: data.email },
+          { phone: data.phone?.toString() }
+        ]
+      } 
+    });
+    
+    if (existing) {
+      const reason = existing.email === data.email ? 'Email already registered' : 'Mobile number already registered';
+      return reply.status(409).send({ error: reason });
+    }
 
     // Create User and LawyerProfile
     const user = await prisma.user.create({
       data: {
         email: data.email,
-        phone: data.phone,
+        phone: data.phone?.toString(),
         name: data.fullName,
         city: data.city,
         role: 'LAWYER',
         lawyerProfile: {
           create: {
             licenseNumber: data.licenseNumber,
-            experience: data.experience,
-            categories: data.practiceAreas,
+            experience: data.experience ? parseInt(data.experience.toString()) : 0,
+            categories: data.practiceAreas || [],
             state: data.state,
             address: data.address,
-            verified: false // Manual verification later
+            verified: false 
           }
         }
       }
     });
 
-    // Trigger OTP for verification
-    // Reuse send-otp logic (can call the internal function or just duplicate small part)
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     
@@ -222,10 +272,10 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
             </div>`
     });
 
-    return { userId: user.id };
-  } catch (error) {
-    fastify.log.error(error);
-    return reply.status(500).send({ error: 'Failed to create lawyer account' });
+    return { success: true, userId: user.id };
+  } catch (error: any) {
+    console.error('SIGNUP ERROR:', error);
+    return reply.status(500).send({ error: `Registration failed: ${error.message}` });
   }
 });
 
@@ -267,7 +317,7 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
     const hashedInput = crypto.createHash('sha256').update(password).digest('hex');
     if (hashedInput !== user.password) return reply.status(401).send({ error: 'Invalid email or password' });
 
-    const token = fastify.jwt.sign({ 
+    const token = await fastify.jwt.sign({ 
       id: user.id, 
       email: user.email,
       role: user.role 
@@ -281,37 +331,75 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
 
 // 7. Update Lawyer Profile (Onboarding)
 fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => {
-  const { bio, languages, categories, availability } = request.body;
+  console.log('RECEIVED LAWYER UPDATE REQUEST:', request.body);
+  const { bio, languages, categories, availability, onboardingCompleted, enrollmentCert, panCard, degreeCert, photo } = request.body;
   const authHeader = request.headers.authorization;
   
   if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
   const token = authHeader.split(' ')[1];
   
   try {
+    console.log('--- STARTING PROFILE UPDATE ---');
+    console.log('Incoming Docs Check:', {
+      enrollment: enrollmentCert ? enrollmentCert.substring(0, 50) + '...' : 'EMPTY',
+      pan: panCard ? panCard.substring(0, 50) + '...' : 'EMPTY',
+    });
     const decoded = fastify.jwt.verify(token) as { id: string };
-    if (!decoded.id) return reply.status(401).send({ error: 'Invalid token payload' });
+    if (!decoded.id) {
+      console.error('Update failed: Invalid token ID');
+      return reply.status(401).send({ error: 'Invalid token payload' });
+    }
+
+    const enrollmentPath = saveBase64File(enrollmentCert, 'enrollment', decoded.id);
+    const panPath = saveBase64File(panCard, 'pancard', decoded.id);
+    const degreePath = saveBase64File(degreeCert, 'degree', decoded.id);
+    const photoPath = saveBase64File(photo, 'photo', decoded.id);
 
     const updateData: any = {
       bio,
       languages,
       categories,
-      availability
+      availability,
+      enrollmentCert: enrollmentPath,
+      panCard: panPath,
+      degreeCert: degreePath,
+      photo: photoPath
     };
 
-    const user = await prisma.user.update({
-      where: { id: decoded.id },
-      data: {
-        lawyerProfile: {
-          update: updateData
+    if (onboardingCompleted !== undefined) {
+      updateData.onboardingCompleted = onboardingCompleted;
+    }
+
+    // Two-step approach: Find first, then update or create
+    let profile = await prisma.lawyerProfile.findUnique({
+      where: { userId: decoded.id }
+    });
+
+    if (profile) {
+      await prisma.lawyerProfile.update({
+        where: { userId: decoded.id },
+        data: updateData
+      });
+    } else {
+      await prisma.lawyerProfile.create({
+        data: {
+          ...updateData,
+          userId: decoded.id,
+          experience: 0,
+          licenseNumber: "PENDING"
         }
-      },
+      });
+    }
+
+    const finalUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
       include: { lawyerProfile: true }
     });
-    
-    return { success: true, user };
-  } catch (error) {
-    console.error('PROFILE UPDATE ERROR:', error);
-    return reply.status(500).send({ error: 'Failed to update profile' });
+
+    return reply.send({ success: true, user: finalUser });
+  } catch (error: any) {
+    console.error('CRITICAL PROFILE UPDATE ERROR:', error);
+    return reply.status(500).send({ error: `Server Error: ${error.message}` });
   }
 });
 
