@@ -57,7 +57,7 @@ const MyBookings = () => {
             {/* Cal.com Embed */}
             <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl shadow-indigo-100/50 overflow-hidden min-h-[600px]">
               <iframe
-                src="https://cal.com/sumitcodes/30min?embed=true"
+                src="https://cal.com/law-on-call-11c14s/60min?embed=true"
                 style={{ width: '100%', height: '600px', border: 'none' }}
                 title="Schedule 30min Meeting"
               />

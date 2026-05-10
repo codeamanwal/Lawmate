@@ -110,7 +110,7 @@ const BookingPage = () => {
             </div>
           ) : (
             <iframe
-              src="https://cal.com/sumitcodes/30min?embed=true"
+              src="https://cal.com/law-on-call-11c14s/60min?embed=true"
               style={{ width: '100%', height: '600px', border: 'none' }}
               title="Schedule 30min Meeting"
               onLoad={() => setLoading(false)}
