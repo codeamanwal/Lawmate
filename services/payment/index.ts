@@ -1,14 +1,18 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import Razorpay from 'razorpay';
 import { PrismaClient } from '../../packages/db/node_modules/@prisma/client/index.js';
 import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
-
 import dotenv from 'dotenv';
 import crypto from 'crypto';
-
 import path from 'path';
+import { 
+  StandardCheckoutClient, 
+  Env, 
+  MetaInfo, 
+  StandardCheckoutPayRequest, 
+  PrefillUserLoginDetails 
+} from '@phonepe-pg/pg-sdk-node';
 
 dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
@@ -19,11 +23,18 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID as string,
-  key_secret: process.env.RAZORPAY_KEY_SECRET as string,
-});
+// PhonePe Client Initialization
+const clientId = process.env.PHONEPE_CLIENT_ID || 'SANDBOX_CLIENT_ID';
+const clientSecret = process.env.PHONEPE_CLIENT_SECRET || 'SANDBOX_CLIENT_SECRET';
+const clientVersion = parseInt(process.env.PHONEPE_CLIENT_VERSION || '1');
+const phonePeEnv = process.env.PHONEPE_ENV === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
 
+const phonePeClient = StandardCheckoutClient.getInstance(
+  clientId,
+  clientSecret,
+  clientVersion,
+  phonePeEnv
+);
 
 fastify.register(cors);
 
@@ -34,28 +45,28 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     const lead = await prisma.lead.findUnique({ where: { id: leadId } });
     if (!lead) return reply.status(404).send({ error: 'Lead not found' });
 
-    // Check if we already have a payment/order for this lead
+    // Check if we already have a payment for this lead
     let payment = await prisma.payment.findFirst({
       where: { booking: { leadId: lead.id } }
     });
 
-    let order;
-    if (!payment) {
-      // Create Razorpay Order
-      order = await razorpay.orders.create({
-        amount: 99900, // ₹999 in paise
-        currency: 'INR',
-        receipt: leadId,
-      });
+    const merchantTransactionId = `MT-${crypto.randomBytes(8).toString('hex')}`;
 
-      // Create Payment record in DB
+    if (!payment) {
+      // Create Payment record in DB with merchantTransactionId
       payment = await prisma.payment.create({
         data: {
-          amount: 99900,
-          razorpayOrderId: order.id,
+          amount: 99900, // ₹999 in paise
+          phonePeMerchantTransactionId: merchantTransactionId,
           status: 'created',
         }
       });
+    } else if (!payment.phonePeMerchantTransactionId) {
+       // Update existing payment with PhonePe ID if it was created for Razorpay
+       payment = await prisma.payment.update({
+         where: { id: payment.id },
+         data: { phonePeMerchantTransactionId: merchantTransactionId }
+       });
     }
 
     // Ensure a valid User exists for this lead
@@ -63,7 +74,6 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     let user = await prisma.user.findUnique({ where: { id: authUserId } });
 
     if (!user) {
-      // Fallback to phone if authUserId is missing (legacy leads)
       user = await prisma.user.findUnique({ where: { phone: lead.phone } });
     }
 
@@ -83,7 +93,6 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       dummyLawyer = await prisma.lawyerProfile.create({ data: { userId: dummyUser.id, categories: ['General'], verified: true } });
     }
 
-    // Update lead with userId if it was missing
     if (!lead.userId) {
       await prisma.lead.update({ where: { id: lead.id }, data: { userId: user.id } });
     }
@@ -92,7 +101,6 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     let booking = await prisma.booking.findUnique({ where: { leadId: lead.id } });
     
     if (!booking) {
-      // Create Booking record in DB
       await prisma.booking.create({
         data: {
           leadId: lead.id,
@@ -104,60 +112,116 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       });
     }
 
+    // PhonePe Initiate Payment
+    const prefillUserLoginDetails = PrefillUserLoginDetails.builder()
+      .phoneNumber(lead.phone)
+      .build();
 
-    // Generate Payment Link
-    const paymentLink = await razorpay.paymentLink.create({
-      amount: 99900,
-      currency: 'INR',
-      accept_partial: false,
-      description: `Legal Consultation for ${lead.category}`,
-      customer: {
-        name: lead.name,
-        contact: lead.phone,
-      },
-      notify: {
-        sms: true,
-        email: true
-      },
-      reminder_enable: true,
-      callback_url: `${process.env.FRONTEND_URL}/success`,
-      callback_method: 'get'
-    });
+    const metaInfo = MetaInfo.builder()
+      .udf1(lead.id)
+      .build();
 
-    return paymentLink;
+    const orderRequest = StandardCheckoutPayRequest.builder()
+      .merchantOrderId(payment.phonePeMerchantTransactionId!)
+      .amount(payment.amount)
+      .prefillUserLoginDetails(prefillUserLoginDetails)
+      .metaInfo(metaInfo)
+      .redirectUrl(`${process.env.FRONTEND_URL}/payment-success?leadId=${lead.id}`)
+      .expireAfter(1200) // 20 minutes
+      .message(`Legal Consultation for ${lead.category}`)
+      .build();
+
+    const phonePeResponse = await phonePeClient.pay(orderRequest);
+
+    return {
+      short_url: phonePeResponse.redirectUrl, 
+      redirect_url: phonePeResponse.redirectUrl,
+      order_id: phonePeResponse.orderId,
+      merchantTransactionId: payment.phonePeMerchantTransactionId
+    };
   } catch (error) {
     fastify.log.error(error);
-    return reply.status(500).send({ error: 'Failed to create payment link' });
+    return reply.status(500).send({ error: 'Failed to create PhonePe payment link' });
   }
 });
 
-// Webhook for reliable status updates
-fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
-  const signature = request.headers['x-razorpay-signature'] as string;
-  
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(request.body))
-    .digest('hex');
+// Manual status verification endpoint
+fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => {
+  const { leadId } = request.params;
 
-  if (signature === expectedSignature) {
-    const event = (request.body as any).event;
-    const payload = (request.body as any).payload;
+  try {
+    const payment = await prisma.payment.findFirst({
+      where: { booking: { leadId: leadId } },
+      include: { booking: true }
+    });
 
-    if (event === 'payment.captured') {
-      const orderId = payload.payment.entity.order_id;
-      const updatedPayment = await prisma.payment.update({
-        where: { razorpayOrderId: orderId },
+    if (!payment || !payment.phonePeMerchantTransactionId) {
+      return reply.status(404).send({ error: 'Payment record not found' });
+    }
+
+    // Check status with PhonePe
+    const statusResponse = await phonePeClient.getOrderStatus(payment.phonePeMerchantTransactionId);
+
+    if (statusResponse.state === 'COMPLETED') {
+      // Update DB manually if webhook hasn't done it yet
+      await prisma.payment.update({
+        where: { id: payment.id },
         data: { 
           status: 'captured',
-          razorpayPaymentId: payload.payment.entity.id,
-          razorpaySignature: signature
+          phonePeTransactionId: statusResponse.orderId 
+        }
+      });
+
+      if (payment.booking) {
+        await prisma.booking.update({
+          where: { id: payment.booking.id },
+          data: { status: 'CONFIRMED' }
+        });
+
+        await prisma.lead.update({
+          where: { id: payment.booking.leadId },
+          data: { status: 'COMPLETED' }
+        });
+      }
+
+      return { status: 'SUCCESS', message: 'Payment verified successfully' };
+    }
+
+    return { status: statusResponse.state, message: 'Payment not yet completed' };
+  } catch (error: any) {
+    fastify.log.error('Verification failed:', error.message);
+    return reply.status(500).send({ error: 'Failed to verify payment status' });
+  }
+});
+
+// Webhook for PhonePe
+fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
+  const authHeader = request.headers['authorization'] as string;
+  const webhookUsername = process.env.PHONEPE_WEBHOOK_USERNAME || 'admin';
+  const webhookPassword = process.env.PHONEPE_WEBHOOK_PASSWORD || 'password123';
+
+  try {
+    const callbackResponse = phonePeClient.validateCallback(
+      webhookUsername,
+      webhookPassword,
+      authHeader,
+      JSON.stringify(request.body)
+    );
+
+    const { payload } = callbackResponse;
+
+    if (payload.state === 'COMPLETED' && payload.merchantOrderId) {
+      const merchantOrderId = payload.merchantOrderId;
+      
+      const updatedPayment = await prisma.payment.update({
+        where: { phonePeMerchantTransactionId: merchantOrderId },
+        data: { 
+          status: 'captured',
+          phonePeTransactionId: payload.orderId,
         },
         include: { booking: true }
       });
       
-      // If there's a booking associated, update its status
       if (updatedPayment.booking) {
         await prisma.booking.update({
           where: { id: updatedPayment.booking.id },
@@ -170,16 +234,19 @@ fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
         });
       }
     }
-
+  } catch (error: any) {
+    fastify.log.error('Webhook validation failed:', error.message);
+    // Even if validation fails, we might want to return 200 to PhonePe to stop retries, 
+    // but log the error for investigation.
   }
 
-  return { status: 'ok' };
+  return reply.status(200).send({ status: 'ok' });
 });
 
 const start = async () => {
   try {
     await fastify.listen({ port: 3003, host: '0.0.0.0' });
-    console.log('Payment service running on port 3003');
+    console.log('PhonePe Payment service running on port 3003');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

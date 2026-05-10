@@ -91,6 +91,19 @@ fastify.post('/api/leads/:id/complete', async (request, reply) => {
 });
 
 
+// Public Payment Webhook & Verification (PhonePe)
+fastify.post('/api/payments/webhook', (request, reply) => {
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => headers
+  });
+});
+
+fastify.get('/api/payments/verify/:leadId', (request, reply) => {
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, {
+    rewriteRequestHeaders: (req, headers) => headers
+  });
+});
+
 // Protected routes
 fastify.register(async (instance) => {
   instance.addHook('onRequest', async (request: any, reply: any) => {
@@ -113,7 +126,7 @@ fastify.register(async (instance) => {
     });
   });
 
-  instance.post('/api/payments/*', (request, reply) => {
+  instance.post('/api/payments/create-link', (request, reply) => {
     const user = request.user as any;
     return reply.from(`${PAYMENT_SERVICE}${request.url}`, {
       rewriteRequestHeaders: (req, headers) => ({

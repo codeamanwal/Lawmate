@@ -28,19 +28,28 @@ const PaymentPage = () => {
     setLoading(false);
   }, [leadId, navigate, user, authLoading]);
 
-  const handleDummyPayment = async () => {
+  const handlePhonePePayment = async () => {
     setLoading(true);
     try {
-      // Mark lead as completed in backend
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, 
+        { leadId }, 
+        {
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'x-user-id': user?.id
+          }
+        }
+      );
       
-      toast.success('Payment Received!');
-      navigate('/payment-success');
+      if (response.data.redirect_url) {
+        // Redirect to PhonePe Standard Checkout page
+        window.location.href = response.data.redirect_url;
+      } else {
+        throw new Error('Failed to get redirect URL');
+      }
     } catch (err) {
-      console.error('Failed to complete payment', err);
-      toast.error('Payment verification failed');
+      console.error('Failed to initiate PhonePe payment', err);
+      toast.error('Failed to initiate payment. Please try again.');
       setLoading(false);
     }
   };
@@ -67,7 +76,7 @@ const PaymentPage = () => {
         </div>
 
         <button 
-          onClick={handleDummyPayment}
+          onClick={handlePhonePePayment}
           disabled={loading && !authLoading}
           className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
         >
