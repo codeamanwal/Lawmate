@@ -181,8 +181,26 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Subscription / Sidebar */}
+        {/* Sidebar */}
         <div className="space-y-8">
+          {/* Talk to a Lawyer Section */}
+          <div className="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl shadow-emerald-100 relative overflow-hidden group">
+            <div className="relative z-10">
+              <h2 className="text-2xl font-black mb-2 flex items-center gap-2">
+                <Phone className="w-6 h-6 animate-pulse" /> Talk to a Lawyer
+              </h2>
+              <p className="text-emerald-50 text-sm mb-6 font-medium">Instantly connect with a verified legal expert for immediate advice.</p>
+              <a 
+                href="tel:7292002026"
+                className="w-full py-4 bg-white text-emerald-600 rounded-xl font-black text-center block hover:bg-emerald-50 transition-all shadow-lg active:scale-95"
+              >
+                Call +91 7292002026
+              </a>
+            </div>
+            {/* Background Decoration */}
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+          </div>
+
           <h2 className="text-2xl font-bold text-gray-900">Subscription</h2>
           <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200">
             <h3 className="text-xl font-bold mb-2">Priority Plus</h3>
