@@ -12,7 +12,9 @@
     "db:generate": "cd packages/db && npx prisma generate",
     "db:push": "cd packages/db && npx prisma db push",
     "install:all": "npm install && cd lawmate-pwa && npm install && cd ../services/auth && npm install && cd ../lead && npm install && cd ../payment && npm install && cd ../notification && npm install && cd ../profile && npm install && cd ../gateway && npm install && cd ../../packages/db && npm install",
-    "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:lead\" \"npm run dev:profile\" \"npm run dev:payment\" \"npm run dev:notification\""
+    "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:lead\" \"npm run dev:profile\" \"npm run dev:payment\" \"npm run dev:notification\"",
+    "start:backend": "npx tsx server.ts",
+    "start": "npm run start:backend"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

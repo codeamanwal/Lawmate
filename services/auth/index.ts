@@ -99,8 +99,8 @@ fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
   const { email } = request.body as { email: string };
   if (!email) return reply.status(400).send({ error: 'Email is required' });
 
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Hardcoded for testing since Render blocks email
+  const otp = "123456";
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   try {
@@ -117,7 +117,10 @@ fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
       return reply.status(500).send({ error: 'Database error. Please check if OTP model is pushed.' });
     }
 
-    // 2. Send Email
+    // 2. Bypass Email for Render testing (to prevent firewall hanging)
+    console.log(`[TEST MODE] OTP for ${email} is: ${otp}`);
+    
+    /* 
     await transporter.sendMail({
       from: `"LawOnCall" <${process.env.SMTP_USER}>`,
       to: email,
@@ -133,8 +136,9 @@ fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
         </div>
       `,
     });
+    */
 
-    return { success: true, message: 'OTP sent successfully' };
+    return { success: true, message: 'OTP logged to console. Check server logs!' };
   } catch (error: any) {
     console.error('SMTP ERROR:', error);
     return reply.status(500).send({ error: `Failed to send email: ${error.message}` });
@@ -277,8 +281,8 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
       }
     });
 
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate OTP (Hardcoded for testing to bypass Render email firewall)
+    const otp = "123456";
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     
     await prisma.otp.upsert({
@@ -287,17 +291,8 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
       create: { email: data.email, code: otp, expiresAt }
     });
 
-    await transporter.sendMail({
-      from: `"LawOnCall" <${process.env.SMTP_USER}>`,
-      to: data.email,
-      subject: 'Verify Your Advocate Account',
-      text: `Your verification code is ${otp}.`,
-      html: `<div style="font-family:sans-serif;padding:20px;border:1px solid #eee;border-radius:10px;">
-              <h2 style="color:#4f46e5;">LawOnCall Verification</h2>
-              <p>Hello Counsel,</p>
-              <p>Your verification code for LawOnCall is: <b>${otp}</b></p>
-            </div>`
-    });
+    // Bypass Email
+    console.log(`[TEST MODE] Lawyer Signup OTP for ${data.email} is: ${otp}`);
 
     return { success: true, userId: user.id };
   } catch (error: any) {
@@ -456,8 +451,8 @@ fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate OTP (Hardcoded for testing)
+    const otp = "123456";
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await prisma.otp.upsert({
@@ -466,16 +461,8 @@ fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
       create: { email, code: otp, expiresAt }
     });
 
-    await transporter.sendMail({
-      from: `"LawOnCall" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: 'Password Reset Code',
-      html: `<div style="font-family:sans-serif;padding:20px;border:1px solid #eee;border-radius:10px;">
-              <h2 style="color:#4f46e5;">Reset Your Password</h2>
-              <p>Your password reset code is: <b>${otp}</b></p>
-              <p>If you didn't request this, please ignore this email.</p>
-            </div>`
-    });
+    // Bypass Email
+    console.log(`[TEST MODE] Forgot Password OTP for ${email} is: ${otp}`);
 
     return { success: true };
   } catch (error) {
