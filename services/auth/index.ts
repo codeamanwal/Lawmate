@@ -161,6 +161,33 @@ fastify.post('/api/auth/verify-otp', async (request: any, reply: any) => {
   return { success: true };
 });
 
+// 3. Instant Connect (Masked Call Request)
+fastify.all('/api/auth/instant-call', async (request: any, reply: any) => {
+  try {
+    // Hardcoded lawyer numbers for testing as requested
+    const lawyerPool = [
+      { name: 'Lawyer A', phone: '6307640107' },
+      { name: 'Lawyer B', phone: '9163080411' }
+    ];
+
+    // 1. Randomly pick one
+    const selected = lawyerPool[Math.floor(Math.random() * lawyerPool.length)];
+
+    // 2. Log the "Call Request"
+    console.log(`[SECURE CALL] Connecting User to Lawyer: ${selected.name} (${selected.phone})`);
+    
+    // We return success but DO NOT return the lawyer's phone number to the frontend
+    return { 
+      success: true, 
+      message: 'Secure connection initiated',
+      businessNumber: '+91 7292002026' // Official business number
+    };
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: 'Failed to initiate secure call' });
+  }
+});
+
 fastify.post('/api/auth/verify', async (request: any, reply: any) => {
   const { idToken } = request.body as { idToken: string };
 

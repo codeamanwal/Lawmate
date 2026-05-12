@@ -11,6 +11,7 @@ const Dashboard = () => {
   const { user, loading: authLoading, logout } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
   const navigate = useNavigate();
 
 
@@ -44,6 +45,42 @@ const Dashboard = () => {
       toast.success('Case deleted');
     } catch (error) {
       toast.error('Failed to delete case');
+    }
+  };
+
+  const handleInstantConnect = async () => {
+    setConnecting(true);
+    try {
+      // 1. Call the backend to initiate the secure call
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/instant-call`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      if (response.data.success) {
+        toast.success(
+          (t) => (
+            <span className="flex flex-col gap-1">
+              <span className="font-bold text-gray-900 text-base">Request Successful!</span>
+              <span className="text-sm text-gray-500">
+                A legal expert will call you shortly from our secure business line: 
+                <b className="text-indigo-600 ml-1">{response.data.businessNumber}</b>
+              </span>
+              <button 
+                onClick={() => toast.dismiss(t.id)}
+                className="mt-2 text-xs font-bold text-indigo-600 hover:underline text-left"
+              >
+                Got it
+              </button>
+            </span>
+          ),
+          { duration: 8000, icon: '📞' }
+        );
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Connection failed. Please try again.';
+      toast.error(errorMsg);
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -190,12 +227,13 @@ const Dashboard = () => {
                 <Phone className="w-6 h-6 animate-pulse" /> Talk to a Lawyer
               </h2>
               <p className="text-emerald-50 text-sm mb-6 font-medium">Instantly connect with a verified legal expert for immediate advice.</p>
-              <a 
-                href="tel:7292002026"
-                className="w-full py-4 bg-white text-emerald-600 rounded-xl font-black text-center block hover:bg-emerald-50 transition-all shadow-lg active:scale-95"
+              <button 
+                onClick={handleInstantConnect}
+                disabled={connecting}
+                className="w-full py-4 bg-white text-emerald-600 rounded-xl font-black text-center block hover:bg-emerald-50 transition-all shadow-lg active:scale-95 disabled:opacity-70"
               >
-                Call +91 7292002026
-              </a>
+                {connecting ? 'Connecting...' : 'Connect Now'}
+              </button>
             </div>
             {/* Background Decoration */}
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
