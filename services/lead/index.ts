@@ -87,6 +87,27 @@ fastify.get('/api/leads/my', async (request: any, reply: any) => {
   return leads;
 });
 
+fastify.get('/api/leads/lawyer-calls', async (request: any, reply: any) => {
+  const userId = request.headers['x-user-id'] as string;
+  if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+  // Get the lawyer profile for this user
+  const lawyerProfile = await prisma.lawyerProfile.findUnique({
+    where: { userId }
+  });
+
+  if (!lawyerProfile) return [];
+
+  // Fetch leads assigned to this lawyer with status NEW
+  const leads = await prisma.lead.findMany({
+    where: { lawyerId: lawyerProfile.id, status: 'NEW' },
+    orderBy: { createdAt: 'desc' },
+    include: { user: true }
+  });
+
+  return leads;
+});
+
 fastify.post('/api/leads/:id/complete', async (request: any, reply: any) => {
   const { id } = request.params as { id: string };
   const authUserId = request.headers['x-user-id'] as string;

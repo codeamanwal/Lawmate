@@ -103,6 +103,7 @@ fastify.get('/api/payments/verify/:leadId', (request, reply) => {
 // Protected routes
 fastify.register(async (instance) => {
   instance.addHook('onRequest', async (request: any, reply: any) => {
+    if (request.method === 'OPTIONS') return;
     try {
       await request.jwtVerify();
     } catch (err) {
@@ -111,6 +112,15 @@ fastify.register(async (instance) => {
   });
 
   instance.get('/api/leads/my', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email,
+      'x-user-role': user.role
+    }));
+  });
+
+  instance.get('/api/leads/lawyer-calls', (request, reply) => {
     const user = request.user as any;
     return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
       'x-user-id': user.id,

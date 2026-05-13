@@ -97,15 +97,14 @@ const transporter = nodemailer.createTransport({
 // 1. Send OTP
 fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
   const { email } = request.body as { email: string };
+
   if (!email) return reply.status(400).send({ error: 'Email is required' });
 
-  // Hardcoded for testing since Render blocks email
-  const otp = "123456";
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
   try {
-    // 1. Save to DB (upsert)
-    // We wrap this in a try-catch to see if DB is the problem
+    // Generate OTP (Hardcoded to 123456 to bypass Render SMTP firewall in production tests)
+    const otp = "123456";
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     try {
       await prisma.otp.upsert({
         where: { email },
@@ -168,19 +167,49 @@ fastify.post('/api/auth/verify-otp', async (request: any, reply: any) => {
 // 3. Instant Connect (Masked Call Request)
 fastify.all('/api/auth/instant-call', async (request: any, reply: any) => {
   try {
-    // Hardcoded lawyer numbers for testing as requested
-    const lawyerPool = [
-      { name: 'Lawyer A', phone: '6307640107' },
-      { name: 'Lawyer B', phone: '9163080411' }
-    ];
-
-    // 1. Randomly pick one
-    const selected = lawyerPool[Math.floor(Math.random() * lawyerPool.length)];
-
-    // 2. Log the "Call Request"
-    console.log(`[SECURE CALL] Connecting User to Lawyer: ${selected.name} (${selected.phone})`);
+    const authHeader = request.headers.authorization;
+    if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
+    const token = authHeader.split(' ')[1];
     
-    // We return success but DO NOT return the lawyer's phone number to the frontend
+    // Extract user ID from token
+    const decoded = fastify.jwt.verify(token) as { id: string };
+    
+    // Get client details
+    const clientUser = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!clientUser) return reply.status(404).send({ error: 'User not found' });
+
+    // Find the target lawyers by phone number
+    const targetPhones = ['6307640107', '9163080411'];
+    const lawyers = await prisma.lawyerProfile.findMany({
+      where: {
+        user: { phone: { in: targetPhones } }
+      },
+      include: { user: true }
+    });
+
+    if (lawyers.length > 0) {
+      // Create a Lead for each found lawyer
+      for (const lawyer of lawyers) {
+        await prisma.lead.create({
+          data: {
+            userId: clientUser.id,
+            name: clientUser.name || 'Anonymous Client',
+            phone: clientUser.phone || 'Unknown Phone',
+            city: clientUser.city || 'Unknown City',
+            category: 'Instant Consultation',
+            description: 'Client requested an instant secure connection from the dashboard.',
+            preferredTime: 'IMMEDIATE',
+            lawyerId: lawyer.id,
+            status: 'NEW'
+          }
+        });
+        console.log(`[SECURE CALL] Assigned to Lawyer: ${lawyer.user.name || 'Advocate'} (${lawyer.user.phone})`);
+      }
+    } else {
+      console.log(`[SECURE CALL] No target lawyers found! Proceeding with fallback.`);
+    }
+    
+    // We return success and the business number
     return { 
       success: true, 
       message: 'Secure connection initiated',
@@ -451,9 +480,9 @@ fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
-    // Generate OTP (Hardcoded for testing)
+    // Generate OTP (Hardcoded to 123456 to bypass Render SMTP firewall in production tests)
     const otp = "123456";
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await prisma.otp.upsert({
       where: { email },

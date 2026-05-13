@@ -56,6 +56,60 @@ const LawyerDashboard = () => {
     }
   }, [user, loading, navigate, updateUser]);
 
+  const [calls, setCalls] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCalls = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/lawyer-calls`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCalls(response.data);
+      } catch (error) {
+        console.error("Failed to fetch calls");
+      }
+    };
+
+    if (user && user.role === 'LAWYER') {
+      fetchCalls();
+      const interval = setInterval(fetchCalls, 5000); // Poll every 5s for demo
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleAcceptCall = async (callId: string, phone: string) => {
+    try {
+      // Open phone dialer
+      window.location.href = `tel:${phone}`;
+      
+      // Mark call as completed so it clears from the dashboard
+      const token = localStorage.getItem('token');
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update UI instantly
+      setCalls(calls.filter(c => c.id !== callId));
+    } catch (error) {
+      console.error("Failed to complete call", error);
+    }
+  };
+
+  const handleDeclineCall = async (callId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      // For now, we'll just delete it or mark it completed
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCalls(calls.filter(c => c.id !== callId));
+    } catch (error) {
+      console.error("Failed to decline call", error);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
@@ -63,9 +117,6 @@ const LawyerDashboard = () => {
   );
 
   if (!user) return null;
-
-  // Real-time Assignments (Waiting for backend integration)
-  const calls: any[] = [];
 
   const NavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
     <button 
@@ -156,7 +207,33 @@ const LawyerDashboard = () => {
             <div className="grid gap-4">
               {calls.length > 0 ? calls.map(call => (
                 <div key={call.id} className="bg-white rounded-[28px] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  {/* ... call item ... */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
+                      <p className="text-gray-500 font-bold text-sm">{call.phone}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-black uppercase flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Waiting
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl mb-4">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{call.category}</p>
+                    <p className="text-sm font-medium text-gray-700">{call.description}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => handleAcceptCall(call.id, call.phone)}
+                      className="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                    >
+                      Accept Call
+                    </button>
+                    <button 
+                      onClick={() => handleDeclineCall(call.id)}
+                      className="px-4 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all"
+                    >
+                      Decline
+                    </button>
+                  </div>
                 </div>
               )) : (
                 <div className="bg-white rounded-[32px] p-12 border border-gray-100 text-center">
