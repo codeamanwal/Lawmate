@@ -97,10 +97,10 @@ const LawyerOnboarding = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Stepper */}
-        <div className="flex items-center justify-between mb-12 bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-8 sm:mb-12 bg-white p-4 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 overflow-x-auto">
           {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center gap-3 flex-1 last:flex-none">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${step === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 ring-4 ring-indigo-50' : step > s ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+            <div key={s} className="flex items-center gap-2 sm:gap-3 flex-1 last:flex-none shrink-0">
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-xs sm:text-base ${step === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 ring-4 ring-indigo-50' : step > s ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
                 {step > s ? <CheckCircle2 className="w-6 h-6" /> : s}
               </div>
               <div className="hidden md:block">
@@ -122,7 +122,7 @@ const LawyerOnboarding = () => {
         <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
           {/* Step 1: Professional Info */}
           {step === 1 && (
-            <div className="p-8 md:p-12">
+            <div className="p-6 sm:p-8 md:p-12">
               <div className="mb-8">
                 <h2 className="text-2xl font-black text-gray-900 mb-2">Professional Profile</h2>
                 <p className="text-gray-500 font-medium text-sm">Tell us more about your practice and expertise.</p>
@@ -221,7 +221,7 @@ const LawyerOnboarding = () => {
 
           {/* Step 2: Availability */}
           {step === 2 && (
-            <div className="p-8 md:p-12">
+            <div className="p-6 sm:p-8 md:p-12">
               <div className="mb-8">
                 <h2 className="text-2xl font-black text-gray-900 mb-2">Availability Settings</h2>
                 <p className="text-gray-500 font-medium text-sm">When can we send you consultation requests?</p>
@@ -260,7 +260,7 @@ const LawyerOnboarding = () => {
 
           {/* Step 3: KYC Documents */}
           {step === 3 && (
-            <div className="p-8 md:p-12">
+            <div className="p-6 sm:p-8 md:p-12">
               <div className="mb-8">
                 <h2 className="text-2xl font-black text-gray-900 mb-2">KYC Documents</h2>
                 <p className="text-gray-500 font-medium text-sm">Please upload high-quality scans of your professional documents.</p>
@@ -301,7 +301,7 @@ const LawyerOnboarding = () => {
 
           {/* Step 4: Final Review */}
           {step === 4 && (
-            <div className="p-8 md:p-12 text-center">
+            <div className="p-6 sm:p-8 md:p-12 text-center">
               <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 ring-8 ring-emerald-50/50">
                 <FileCheck className="w-12 h-12 text-emerald-600" />
               </div>
@@ -328,7 +328,7 @@ const LawyerOnboarding = () => {
           )}
 
           {/* Footer Navigation */}
-          <div className="p-8 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+          <div className="p-4 sm:p-8 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
             <button
               onClick={prevStep}
               disabled={step === 1 || loading}

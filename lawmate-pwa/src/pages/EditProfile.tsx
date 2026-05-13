@@ -38,7 +38,7 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 p-6 flex items-center justify-center">
+    <div className="min-h-[calc(100vh-76px)] bg-gray-50 p-4 sm:p-6 flex items-center justify-center">
       <div className="max-w-md w-full">
         <button 
           onClick={() => navigate('/dashboard')}
@@ -47,7 +47,7 @@ const EditProfile = () => {
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
 
-        <div className="bg-white rounded-3xl p-8 shadow-xl shadow-gray-200/50 border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Profile</h1>
             <p className="text-gray-500">Update your personal information below.</p>

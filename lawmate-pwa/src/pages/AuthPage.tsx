@@ -175,14 +175,14 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-6">
+    <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
             {step === 'complete-profile' ? <User className="w-10 h-10 text-indigo-600" /> : <Mail className="w-10 h-10 text-indigo-600" />}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {step === 'signin' && 'Welcome Back'}
             {step === 'signup-email' && 'Create Account'}
             {step === 'signup-otp' && 'Verify Email'}
@@ -210,7 +210,7 @@ const AuthPage = () => {
             <div className="grid gap-4">
               <button 
                 onClick={() => setStep('signin-client')}
-                className="group p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
+                className="group p-4 sm:p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
               >
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Sign In as Client</h3>
@@ -223,7 +223,7 @@ const AuthPage = () => {
 
               <button 
                 onClick={() => setStep('signin-lawyer')}
-                className="group p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
+                className="group p-4 sm:p-6 bg-white border-2 border-gray-100 rounded-[24px] hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all text-left flex items-center justify-between"
               >
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Sign In as Advocate</h3>

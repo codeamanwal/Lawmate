@@ -139,18 +139,18 @@ const LawyerSignup = () => {
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-4 mb-10">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-10 overflow-x-auto py-2">
           {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-2">
+            <div key={s} className="flex items-center gap-2 shrink-0">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${step === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-110' : step > s ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
                 {step > s ? <CheckCircle2 className="w-4 h-4" /> : s}
               </div>
-              {s < 3 && <div className={`w-12 h-1 bg-gray-200 rounded-full overflow-hidden`}><div className={`h-full bg-indigo-600 transition-all duration-500 ${step > s ? 'w-full' : 'w-0'}`}></div></div>}
+              {s < 3 && <div className={`w-8 sm:w-12 h-1 bg-gray-200 rounded-full overflow-hidden`}><div className={`h-full bg-indigo-600 transition-all duration-500 ${step > s ? 'w-full' : 'w-0'}`}></div></div>}
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 p-8 md:p-12 border border-gray-100">
+        <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 p-6 sm:p-8 md:p-12 border border-gray-100">
           
           {step === 1 && (
             <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">

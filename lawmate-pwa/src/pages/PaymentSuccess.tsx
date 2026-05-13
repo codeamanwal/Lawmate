@@ -46,8 +46,8 @@ const PaymentSuccess = () => {
     verifyPayment();
   }, [leadId]);
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[32px] shadow-xl shadow-gray-200/50 p-8 md:p-12 border border-gray-100 text-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full bg-white rounded-[32px] shadow-xl shadow-gray-200/50 p-6 sm:p-8 md:p-12 border border-gray-100 text-center">
         <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8">
           {verifying ? (
             <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
@@ -58,7 +58,7 @@ const PaymentSuccess = () => {
           )}
         </div>
         
-        <h1 className="text-3xl font-black text-gray-900 mb-4">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4">
           {verifying ? 'Verifying Payment...' : status === 'SUCCESS' ? 'Payment Successful!' : 'Payment Pending'}
         </h1>
         <p className="text-gray-500 font-medium mb-8">

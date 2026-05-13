@@ -39,19 +39,19 @@ const MyBookings = () => {
   if (authLoading || loading) return <div className="flex items-center justify-center min-h-[calc(100vh-76px)]"><div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-      <div className="mb-12">
-        <h1 className="text-4xl font-black text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-500 font-medium">You have {bookings.length} confirmed legal consultations</p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+      <div className="mb-8 md:mb-12">
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-2">My Bookings</h1>
+        <p className="text-gray-500 font-medium text-sm sm:text-base">You have {bookings.length} confirmed legal consultations</p>
       </div>
 
       {bookings.length === 0 ? (
         <div className="space-y-12">
-          <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-12 text-center">
+          <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-6 sm:p-12 text-center">
             <div className="bg-indigo-50 w-20 h-20 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-inner">
               <Calendar className="w-10 h-10 text-indigo-600" />
             </div>
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Book Your Session</h2>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4">Book Your Session</h2>
             <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">Ready to discuss your case? Use the professional scheduler below to pick a slot that works for you.</p>
             
             {/* Cal.com Embed */}
@@ -68,8 +68,8 @@ const MyBookings = () => {
         <div className="space-y-8">
           {bookings.map((booking) => (
             <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-200/40 overflow-hidden">
-              <div className="p-6">
-                <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1">
@@ -79,7 +79,7 @@ const MyBookings = () => {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">{booking.category} Case</h3>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fee Paid</p>
                     <p className="text-xl font-black text-gray-900">₹999</p>
                   </div>

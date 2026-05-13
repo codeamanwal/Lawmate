@@ -93,8 +93,8 @@ const Dashboard = () => {
           <h1 className="text-4xl font-black text-gray-900 mb-2">My Profile</h1>
           <p className="text-gray-500 font-medium">Welcome back, {user?.name || user?.phone}</p>
         </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-4">
             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
               <div className="bg-green-100 p-2 rounded-lg text-green-600">
                 <Phone className="w-5 h-5" />
@@ -114,25 +114,23 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigate('/edit-profile')}
-              className="px-6 py-2 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors border border-indigo-100 shadow-sm"
-            >
-              Edit Profile
-            </button>
-            <button 
-              onClick={logout}
-              className="px-6 py-2 bg-white text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors border border-red-100 shadow-sm"
-            >
-              Logout
-            </button>
-          </div>
         </div>
-
+        <div className="grid grid-cols-2 sm:flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/edit-profile')}
+            className="px-6 py-2 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors border border-indigo-100 shadow-sm"
+          >
+            Edit Profile
+          </button>
+          <button 
+            onClick={logout}
+            className="px-6 py-2 bg-white text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors border border-red-100 shadow-sm"
+          >
+            Logout
+          </button>
+        </div>
       </div>
-
-      <div className="grid lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Active Cases/Leads */}
         <div className="lg:col-span-2 space-y-8">
           <div className="flex items-center justify-between mb-8">
@@ -160,8 +158,8 @@ const Dashboard = () => {
           ) : (
             <div className="space-y-4">
               {leads.map((lead) => (
-                <div key={lead.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-4">
+                <div key={lead.id} className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
                       <h3 className="text-xl font-bold text-gray-900">{lead.description.substring(0, 50)}...</h3>
@@ -184,9 +182,9 @@ const Dashboard = () => {
                   </div>
                   
                   {lead.lawyer ? (
-                    <div className="bg-gray-50 p-4 rounded-xl flex items-center justify-between">
+                    <div className="bg-gray-50 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shrink-0">
                           {lead.lawyer.user?.name?.[0] || 'L'}
                         </div>
                         <div>
@@ -194,7 +192,7 @@ const Dashboard = () => {
                           <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating} • {lead.lawyer.experience} Years Exp</p>
                         </div>
                       </div>
-                      <button className="text-indigo-600 font-bold text-sm flex items-center gap-1 hover:underline">
+                      <button className="text-indigo-600 font-bold text-sm flex items-center gap-1 hover:underline w-full sm:w-auto justify-center sm:justify-start">
                         Contact Lawyer <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>

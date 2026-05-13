@@ -18,7 +18,7 @@ const LandingPage = () => {
               <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wide text-indigo-600 uppercase bg-indigo-50 rounded-full">
                 Lawyers at your fingertips
               </span>
-              <h1 className="mb-8 text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl">
+              <h1 className="mb-8 text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl leading-tight">
                 Legal Expert advice <span className="text-indigo-600">in 60 minutes.</span>
               </h1>
               <p className="mb-10 text-xl text-gray-600 leading-relaxed">
@@ -52,7 +52,7 @@ const LandingPage = () => {
       {/* Features */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
-          <div className="grid gap-12 lg:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <FeatureCard 
               icon={<Zap className="w-8 h-8 text-amber-500" />}
               title="Instant Matching"

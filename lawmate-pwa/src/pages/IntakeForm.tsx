@@ -86,10 +86,10 @@ const IntakeForm = () => {
 
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 py-12 px-6 flex items-center justify-center">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-8 md:p-12 border border-gray-100">
+    <div className="min-h-[calc(100vh-76px)] bg-gray-50 py-8 px-4 sm:px-6 flex items-center justify-center">
+      <div className="max-w-xl w-full bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 sm:p-8 md:p-12 border border-gray-100">
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Get Started</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Get Started</h2>
           <p className="text-gray-500">Fill in the details to connect with a legal expert</p>
         </div>
 
@@ -169,7 +169,7 @@ const IntakeForm = () => {
           {/* Preferred Time */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">When would you like to consult?</label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${watch('preferredTime') === 'ASAP' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
                 <input type="radio" value="ASAP" {...register('preferredTime')} className="hidden" />
                 <span className="font-bold">ASAP (60 min)</span>

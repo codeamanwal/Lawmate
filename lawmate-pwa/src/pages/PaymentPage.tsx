@@ -55,13 +55,13 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
+    <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
         <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
           <ShieldCheck className="w-10 h-10 text-indigo-600" />
         </div>
         
-        <h2 className="text-3xl font-black text-gray-900 mb-2">Secure Checkout</h2>
+        <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Secure Checkout</h2>
         <p className="text-gray-500 mb-8 font-medium">Complete your ₹999 payment to lock in your expert legal consultation.</p>
 
         <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-4">

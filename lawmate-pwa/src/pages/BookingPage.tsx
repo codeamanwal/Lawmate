@@ -76,12 +76,12 @@ const BookingPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 p-6 flex flex-col items-center">
+    <div className="min-h-[calc(100vh-76px)] bg-gray-50 p-4 sm:p-6 flex flex-col items-center">
       <div className="max-w-4xl w-full">
         {/* Case Summary Card */}
         {leadDetails && (
-          <div className="bg-indigo-600 rounded-[32px] p-8 mb-10 text-white shadow-xl shadow-indigo-200 flex flex-wrap justify-between items-center gap-6">
-            <div className="flex items-center gap-6">
+          <div className="bg-indigo-600 rounded-[32px] p-6 sm:p-8 mb-10 text-white shadow-xl shadow-indigo-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                 <CalendarIcon className="w-8 h-8 text-white" />
               </div>
@@ -91,15 +91,15 @@ const BookingPage = () => {
                 <p className="text-indigo-100 text-sm font-bold opacity-80">{leadDetails.city}, India</p>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm px-6 py-4 rounded-2xl border border-white/20">
-              <p className="text-[10px] font-black uppercase tracking-tighter opacity-70 mb-1 text-center">Status</p>
-              <p className="font-black text-sm uppercase tracking-widest">Awaiting Schedule</p>
+            <div className="bg-white/10 backdrop-blur-sm px-6 py-4 rounded-2xl border border-white/20 w-full sm:w-auto">
+              <p className="text-[10px] font-black uppercase tracking-tighter opacity-70 mb-1 text-center sm:text-left">Status</p>
+              <p className="font-black text-sm uppercase tracking-widest text-center sm:text-left">Awaiting Schedule</p>
             </div>
           </div>
         )}
 
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Schedule your Consultation</h1>
+        <div className="text-center mb-10 px-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Schedule your Consultation</h1>
           <p className="text-gray-500 font-medium">Pick a slot that works for you via Cal.com.</p>
         </div>
 

@@ -11,8 +11,8 @@ const HowItWorks = () => {
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
 
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">How LawOnCall Works</h1>
+        <div className="text-center mb-16 px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6">How LawOnCall Works</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             We've simplified the process of finding and consulting with top legal experts in India. 
             Get connected in just 4 simple steps.
@@ -88,7 +88,7 @@ const HowItWorks = () => {
             </p>
             <button 
               onClick={() => navigate('/get-started')}
-              className="px-10 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center gap-2 mx-auto group"
+              className="px-6 sm:px-10 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-base sm:text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center gap-2 mx-auto group"
             >
               Start Your Case Now
               <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />

@@ -5,11 +5,11 @@ import { ArrowLeft } from 'lucide-react';
 const TermsAndConditions = () => {
   const navigate = useNavigate();
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-indigo-600 font-semibold mb-8">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
-      <h1 className="text-4xl font-bold mb-8">Terms & Conditions</h1>
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8">Terms & Conditions</h1>
       <div className="prose max-w-none text-gray-600 space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">1. Services</h2>
         <p>LawOnCall provides a platform to connect clients with legal professionals. We do not provide legal advice ourselves.</p>

@@ -32,8 +32,8 @@ const MatchingPage = () => {
 
   if (matching) {
     return (
-      <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex flex-col items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
+      <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
           <div className="relative w-24 h-24 mx-auto mb-8">
             <div className="absolute inset-0 bg-indigo-100 rounded-full animate-ping opacity-75"></div>
             <div className="relative bg-indigo-50 w-24 h-24 rounded-full flex items-center justify-center">
@@ -50,7 +50,7 @@ const MatchingPage = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex flex-col items-center justify-center p-6 py-12">
+    <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-6 py-12">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,21 +60,21 @@ const MatchingPage = () => {
           <span className="inline-block px-4 py-1.5 mb-4 text-sm font-bold tracking-wide text-green-700 uppercase bg-green-100 rounded-full">
             Match Found!
           </span>
-          <h2 className="text-3xl font-black text-gray-900">Your Legal Expert</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900">Your Legal Expert</h2>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50 mb-8 relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-xl shadow-gray-200/50 mb-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 bg-indigo-50 text-indigo-600 rounded-bl-3xl font-bold text-sm flex items-center gap-1">
             <ShieldCheck className="w-4 h-4" /> Verified
           </div>
           
-          <div className="flex items-center gap-6 mb-6">
-            <div className="w-24 h-24 bg-gray-200 rounded-2xl overflow-hidden border-4 border-gray-50 shadow-inner">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-6 text-center sm:text-left">
+            <div className="w-24 h-24 bg-gray-200 rounded-2xl overflow-hidden border-4 border-gray-50 shadow-inner shrink-0">
               <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256" alt="Lawyer" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">Adv. Vikram Singh</h3>
-              <div className="flex items-center gap-1 text-amber-500 font-bold text-sm mb-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Adv. Vikram Singh</h3>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1 text-amber-500 font-bold text-sm mb-2">
                 <Star className="w-4 h-4 fill-current" />
                 <Star className="w-4 h-4 fill-current" />
                 <Star className="w-4 h-4 fill-current" />

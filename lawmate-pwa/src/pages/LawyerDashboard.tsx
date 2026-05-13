@@ -131,7 +131,7 @@ const LawyerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-8">
       {/* Top Header */}
-      <div className="bg-white border-b border-gray-100 p-6 sticky top-0 z-30 shadow-sm">
+      <div className="bg-white border-b border-gray-100 p-4 sm:p-6 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-100">
@@ -161,7 +161,7 @@ const LawyerDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
         {/* Mobile Availability Toggle */}
         <div className="md:hidden mb-6">
           <button 
@@ -206,8 +206,8 @@ const LawyerDashboard = () => {
 
             <div className="grid gap-4">
               {calls.length > 0 ? calls.map(call => (
-                <div key={call.id} className="bg-white rounded-[28px] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-4">
+                <div key={call.id} className="bg-white rounded-[28px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                       <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
                       <p className="text-gray-500 font-bold text-sm">{call.phone}</p>
@@ -220,7 +220,7 @@ const LawyerDashboard = () => {
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{call.category}</p>
                     <p className="text-sm font-medium text-gray-700">{call.description}</p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button 
                       onClick={() => handleAcceptCall(call.id, call.phone)}
                       className="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
@@ -277,7 +277,7 @@ const LawyerDashboard = () => {
                 { label: 'Rating', value: 'N/A', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
                 { label: 'Hours Spent', value: '0h', icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50' },
               ].map(stat => (
-                <div key={stat.label} className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
+                <div key={stat.label} className="bg-white p-4 sm:p-6 rounded-[28px] border border-gray-100 shadow-sm">
                   <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center mb-4`}>
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
@@ -307,7 +307,7 @@ const LawyerDashboard = () => {
         {/* Tab Content: Profile */}
         {activeTab === 'profile' && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm text-center">
+            <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-gray-100 shadow-sm text-center">
               <div className="w-24 h-24 bg-indigo-600 rounded-[32px] flex items-center justify-center text-white font-black text-4xl mx-auto mb-6 shadow-xl shadow-indigo-100 border-4 border-white overflow-hidden">
                 {user?.lawyerProfile?.photo ? (
                   <img 
@@ -332,7 +332,7 @@ const LawyerDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
                 <h3 className="font-black text-gray-900 uppercase tracking-widest text-xs">Professional Details</h3>
                 <button 
