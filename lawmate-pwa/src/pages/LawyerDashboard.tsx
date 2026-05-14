@@ -9,7 +9,10 @@ import {
   Settings, 
   TrendingUp,
   Power,
-  Loader2
+  Loader2,
+  Briefcase,
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 
 import { useEffect } from 'react';
@@ -91,7 +94,11 @@ const LawyerDashboard = () => {
       });
       
       // Update UI instantly
-      setCalls(calls.filter(c => c.id !== callId));
+      // Refresh the list to move the call to "Cases"
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/lawyer-calls`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCalls(response.data);
     } catch (error) {
       console.error("Failed to complete call", error);
     }
@@ -182,7 +189,7 @@ const LawyerDashboard = () => {
 
         {/* Dashboard Tabs for Desktop */}
         <div className="hidden md:flex items-center gap-8 mb-8 border-b border-gray-200">
-          {['calls', 'schedule', 'earnings', 'profile'].map(tab => (
+          {['calls', 'cases', 'schedule', 'earnings', 'profile'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -194,7 +201,7 @@ const LawyerDashboard = () => {
           ))}
         </div>
 
-        {/* Tab Content: Calls */}
+        {/* Tab Content: Calls (New Assignments Only) */}
         {activeTab === 'calls' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-2">
@@ -205,20 +212,26 @@ const LawyerDashboard = () => {
             </div>
 
             <div className="grid gap-4">
-              {calls.length > 0 ? calls.map(call => (
+              {calls.filter(c => c.status === 'NEW').length > 0 ? calls.filter(c => c.status === 'NEW').map(call => (
                 <div key={call.id} className="bg-white rounded-[28px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                       <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
                       <p className="text-gray-500 font-bold text-sm">{call.phone}</p>
                     </div>
-                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-black uppercase flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Waiting
-                    </span>
+                    {call.booking?.payment?.status === 'captured' ? (
+                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm">
+                        <CreditCard className="w-3 h-3" /> Booked
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Waiting
+                      </span>
+                    )}
                   </div>
                   <div className="bg-gray-50 p-4 rounded-2xl mb-4">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{call.category}</p>
-                    <p className="text-sm font-medium text-gray-700">{call.description}</p>
+                    <p className="text-sm font-medium text-gray-700 line-clamp-2">{call.description}</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button 
@@ -242,6 +255,40 @@ const LawyerDashboard = () => {
                   </div>
                   <h3 className="text-xl font-black text-gray-900 mb-2">No new assignments</h3>
                   <p className="text-gray-500 font-medium max-w-xs mx-auto">You're all caught up! New consultation requests will appear here as they come in.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content: Cases (History & Active) */}
+        {activeTab === 'cases' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black text-gray-900 mb-2">All Cases</h2>
+            <div className="grid gap-4">
+              {calls.length > 0 ? calls.map(call => (
+                <div key={call.id} className="bg-white rounded-[28px] p-5 border border-gray-100 shadow-sm flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${call.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                      {call.name[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-black text-gray-900">{call.name}</h3>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${call.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {call.status === 'COMPLETED' ? 'Completed' : 'Pending'}
+                    </span>
+                    <button className="p-2 text-gray-400 hover:text-indigo-600 transition-all">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div className="bg-white rounded-[32px] p-12 border border-gray-100 text-center">
+                   <p className="text-gray-400 font-bold">No cases found in your history.</p>
                 </div>
               )}
             </div>
@@ -378,6 +425,7 @@ const LawyerDashboard = () => {
       {/* Mobile Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-2 flex items-center justify-around z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <NavItem id="calls" icon={Phone} label="Calls" />
+        <NavItem id="cases" icon={Briefcase} label="Cases" />
         <NavItem id="schedule" icon={Calendar} label="Schedule" />
         <NavItem id="earnings" icon={DollarSign} label="Earnings" />
         <NavItem id="profile" icon={User} label="Profile" />

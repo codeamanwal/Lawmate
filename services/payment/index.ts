@@ -121,12 +121,15 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       .udf1(lead.id)
       .build();
 
+    // Dynamic redirect URL based on origin to fix "site not reach"
+    const origin = request.headers['origin'] || process.env.FRONTEND_URL || 'http://localhost:5173';
+    
     const orderRequest = StandardCheckoutPayRequest.builder()
       .merchantOrderId(payment.phonePeMerchantTransactionId!)
       .amount(payment.amount)
       .prefillUserLoginDetails(prefillUserLoginDetails)
       .metaInfo(metaInfo)
-      .redirectUrl(`${process.env.FRONTEND_URL}/payment-success?leadId=${lead.id}`)
+      .redirectUrl(`${origin}/payment-success?leadId=${lead.id}`)
       .expireAfter(1200) // 20 minutes
       .message(`Legal Consultation for ${lead.category}`)
       .build();
@@ -177,11 +180,9 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
           where: { id: payment.booking.id },
           data: { status: 'CONFIRMED' }
         });
-
-        await prisma.lead.update({
-          where: { id: payment.booking.leadId },
-          data: { status: 'COMPLETED' }
-        });
+        
+        // Lead status stays NEW so it shows up in Lawyer Dashboard as "Booked"
+        // It will be marked COMPLETED only when the lawyer accepts/finishes the call.
       }
 
       return { status: 'SUCCESS', message: 'Payment verified successfully' };
@@ -227,11 +228,8 @@ fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
           where: { id: updatedPayment.booking.id },
           data: { status: 'CONFIRMED' }
         });
-
-        await prisma.lead.update({
-          where: { id: updatedPayment.booking.leadId },
-          data: { status: 'COMPLETED' }
-        });
+        
+        // Lead status stays NEW so it shows up in Lawyer Dashboard as "Booked"
       }
     }
   } catch (error: any) {

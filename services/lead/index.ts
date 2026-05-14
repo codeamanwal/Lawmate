@@ -80,7 +80,10 @@ fastify.get('/api/leads/my', async (request: any, reply: any) => {
 
   const leads = await prisma.lead.findMany({
     where: { userId },
-    include: { lawyer: { include: { user: true } } },
+    include: { 
+      lawyer: { include: { user: true } },
+      booking: { include: { payment: true } }
+    },
     orderBy: { createdAt: 'desc' }
   });
 
@@ -98,11 +101,14 @@ fastify.get('/api/leads/lawyer-calls', async (request: any, reply: any) => {
 
   if (!lawyerProfile) return [];
 
-  // Fetch leads assigned to this lawyer with status NEW
+  // Fetch ALL leads assigned to this lawyer (NEW, COMPLETED, etc.)
   const leads = await prisma.lead.findMany({
-    where: { lawyerId: lawyerProfile.id, status: 'NEW' },
+    where: { lawyerId: lawyerProfile.id },
     orderBy: { createdAt: 'desc' },
-    include: { user: true }
+    include: { 
+      user: true,
+      booking: { include: { payment: true } }
+    }
   });
 
   return leads;

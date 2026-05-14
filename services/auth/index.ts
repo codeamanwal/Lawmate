@@ -231,15 +231,21 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     if (!phone && !email) return reply.status(400).send({ error: 'Identity info missing in token' });
 
-    let user = await prisma.user.findUnique({ 
-      where: { email: email! },
+    // Find user by email or phone
+    let user = await prisma.user.findFirst({ 
+      where: {
+        OR: [
+          ...(email ? [{ email }] : []),
+          ...(phone ? [{ phone }] : [])
+        ]
+      },
       include: { lawyerProfile: true }
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: email!,
+          email: email || `${phone}@phone.auth`,
           phone: phone ?? null,
           role: 'CLIENT'
         },
@@ -263,7 +269,7 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     return { token, user };
   } catch (error) {
-    fastify.log.error(error);
+    console.error('VERIFY ERROR:', error);
     return reply.status(401).send({ error: 'Invalid credentials' });
   }
 });
