@@ -51,6 +51,7 @@ const LawyerDashboard = () => {
       }
     };
 
+    
     if (!loading && !user) {
       navigate('/auth');
     } else if (user && !hasFetched.current) {
