@@ -22,7 +22,10 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/about" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">About</Link>
+            <Link to="/contact" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">Contact</Link>
+            <div className="h-4 w-[1px] bg-gray-200" />
             {user ? (
               <>
                 <Link 
@@ -83,6 +86,11 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
+          <div className="flex flex-col gap-4">
+            <Link to="/about" className="text-gray-600 hover:text-indigo-600 font-bold text-sm block px-2" onClick={() => setIsOpen(false)}>About Us</Link>
+            <Link to="/contact" className="text-gray-600 hover:text-indigo-600 font-bold text-sm block px-2" onClick={() => setIsOpen(false)}>Contact</Link>
+            <div className="h-[1px] bg-gray-50" />
+          </div>
           {user ? (
             <div className="flex flex-col gap-4">
               <Link 
