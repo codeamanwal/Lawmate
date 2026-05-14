@@ -72,6 +72,79 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Expertise Section */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 uppercase tracking-tight">Our Expertise</h2>
+            <div className="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
+          </div>
+          
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ExpertiseCard 
+              image="/divorce.jpg"
+              title="Divorce"
+              description="Top divorce law services in Delhi/NCR — expert support for contested and mutual divorce cases with trusted guidance."
+            />
+            <ExpertiseCard 
+              image="/domestic.jpg"
+              title="Domestic Violence"
+              description="Experienced domestic violence lawyer in Delhi & NCR providing dedicated legal help to protect your rights and ensure your safety."
+            />
+            <ExpertiseCard 
+              image="/Matrimonial.jpg"
+              title="Matrimonial"
+              description="Trusted matrimonial lawyer specializing in divorce, alimony, and family disputes — protecting your interests with care and professionalism."
+            />
+            <ExpertiseCard 
+              image="/family.jpg"
+              title="Family Disputes"
+              description="Best family dispute lawyer in Delhi NCR dedicated to protecting your rights and achieving fair resolutions in family matters."
+            />
+            <ExpertiseCard 
+              image="/bail.jpg"
+              title="Bail Matters"
+              description="Trusted bail lawyer in Delhi helping clients secure timely release with expert representation and legal guidance."
+            />
+            <ExpertiseCard 
+              image="/cheque.jpg"
+              title="Cheque Bounce"
+              description="Expert cheque bounce lawyer in Delhi providing swift legal action and effective solutions for cheque bounce cases."
+            />
+            <ExpertiseCard 
+              image="/civil.jpg"
+              title="Civil"
+              description="Experienced civil lawyer in Delhi providing expert legal solutions for property, contract, and civil dispute cases."
+            />
+            <ExpertiseCard 
+              image="/criminial.jpg"
+              title="Criminal"
+              description="Top criminal lawyer in Delhi specializing in defense for serious offenses, ensuring your rights are fiercely protected."
+            />
+            <ExpertiseCard 
+              image="/supreme.jpg"
+              title="Supreme Court"
+              description="Experienced Supreme Court lawyer in Delhi offering expert representation in high-stakes constitutional, civil, and criminal cases."
+            />
+            <ExpertiseCard 
+              image="/corporate.jpg"
+              title="Corporate"
+              description="Expert corporate lawyer in Delhi providing strategic legal solutions for businesses, compliance, and corporate disputes."
+            />
+            <ExpertiseCard 
+              image="/cat1.jpg"
+              title="CAT Matters"
+              description="Expert CAT lawyers in Delhi/NCR — handling government service disputes and administrative appeals efficiently."
+            />
+            <ExpertiseCard 
+              image="/debt.jpg"
+              title="Debt Recovery Tribunal"
+              description="Expert Debt Recovery Tribunal Lawyers in Delhi/NCR - providing expert support for debt recovery and financial claims efficiently."
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
@@ -123,6 +196,25 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
     </div>
     <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
     <p className="text-gray-600 leading-relaxed">{description}</p>
+  </div>
+);
+
+const ExpertiseCard = ({ image, title, description }: { image: string, title: string, description: string }) => (
+  <div className="group overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300">
+    <div className="relative h-48 overflow-hidden">
+      <img 
+        src={image} 
+        alt={title} 
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    </div>
+    <div className="p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{title}</h3>
+      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+        {description}
+      </p>
+    </div>
   </div>
 );
 
