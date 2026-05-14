@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'LawMate - Legal Advice in 30 Mins',
-        short_name: 'LawMate',
+        name: 'LawOnCall - Legal Advice in 60 Mins',
+        short_name: 'LawOnCall',
         description: 'Connect with expert lawyers in minutes for reliable legal advice.',
         theme_color: '#863bff',
         background_color: '#ffffff',
