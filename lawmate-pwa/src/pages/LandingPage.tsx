@@ -18,10 +18,10 @@ const LandingPage = () => {
               <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wide text-indigo-600 uppercase bg-indigo-50 rounded-full">
                 Lawyers at your fingertips
               </span>
-              <h1 className="mb-8 text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl leading-tight">
+              <h1 className="mb-6 text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl leading-tight">
                 Legal Expert advice <span className="text-indigo-600">in 60 minutes.</span>
               </h1>
-              <p className="mb-10 text-xl text-gray-600 leading-relaxed">
+              <p className="mb-10 text-lg md:text-xl text-gray-600 leading-relaxed">
                 Connect with India's top legal professionals instantly. Whether it's property, divorce, or business—we've got you covered.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -75,9 +75,9 @@ const LandingPage = () => {
       {/* Expertise Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 uppercase tracking-tight">Our Expertise</h2>
-            <div className="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4 uppercase tracking-tight">Our Expertise</h2>
+            <div className="w-16 md:w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
           </div>
           
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -190,18 +190,18 @@ const LandingPage = () => {
 };
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-  <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+  <div className="p-6 md:p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
     <div className="mb-6 p-3 bg-gray-50 inline-block rounded-xl">
       {icon}
     </div>
-    <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
-    <p className="text-gray-600 leading-relaxed">{description}</p>
+    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">{title}</h3>
+    <p className="text-sm md:text-base text-gray-600 leading-relaxed">{description}</p>
   </div>
 );
 
 const ExpertiseCard = ({ image, title, description }: { image: string, title: string, description: string }) => (
-  <div className="group overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300">
-    <div className="relative h-48 overflow-hidden">
+  <div className="group overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+    <div className="relative h-40 md:h-48 overflow-hidden shrink-0">
       <img 
         src={image} 
         alt={title} 
@@ -209,9 +209,9 @@ const ExpertiseCard = ({ image, title, description }: { image: string, title: st
       />
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
     </div>
-    <div className="p-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{title}</h3>
-      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+    <div className="p-5 md:p-6 flex-grow">
+      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-indigo-600 transition-colors line-clamp-1">{title}</h3>
+      <p className="text-xs md:text-sm text-gray-600 leading-relaxed line-clamp-3">
         {description}
       </p>
     </div>
