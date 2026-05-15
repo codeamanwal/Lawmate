@@ -35,18 +35,22 @@ const ContactPage = () => {
     try {
       const payload = {
         type: "contact",
-        ...formData
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject,
+        message: formData.message.trim(),
       };
 
-      // Using no-cors mode as per original script requirement for Apps Script
       await fetch(CONTACT_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(payload),
       });
 
-      // Since no-cors doesn't return a readable response, we assume success if it doesn't throw
+      // Since no-cors doesn't return a readable response, we assume success
       setLoading(false);
       setIsSubmitted(true);
       toast.success('Message sent successfully!');
