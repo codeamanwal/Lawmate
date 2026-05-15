@@ -21,6 +21,8 @@ const ContactPage = () => {
     { icon: Clock, label: 'Response time', value: 'Within 24 hours', sub: 'We read every message and reply to every one.' },
   ];
 
+  const CONTACT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv2DLxvLEN7jmOy2F56a9hOszDz19T-3-UzTjGjYM92bcHACfj67qTwS2FrT14vHJMmg/exec";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
@@ -29,12 +31,30 @@ const ContactPage = () => {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    
+    try {
+      const payload = {
+        type: "contact",
+        ...formData
+      };
+
+      // Using no-cors mode as per original script requirement for Apps Script
+      await fetch(CONTACT_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      // Since no-cors doesn't return a readable response, we assume success if it doesn't throw
       setLoading(false);
       setIsSubmitted(true);
       toast.success('Message sent successfully!');
-    }, 1500);
+    } catch (error) {
+      setLoading(false);
+      toast.error('Something went wrong. Please try again or email us directly.');
+      console.error('Submission error:', error);
+    }
   };
 
   return (
