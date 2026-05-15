@@ -18,7 +18,7 @@ const Navbar = () => {
             <div className="bg-indigo-600 p-1.5 rounded-lg">
               <Gavel className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight">LawOnCall</span>
+            <span className="text-xl font-black text-gray-900 tracking-tight">Law<span className="text-indigo-600">OnCall</span></span>
           </Link>
 
           {/* Desktop Menu */}
@@ -56,7 +56,7 @@ const Navbar = () => {
               <div className="flex items-center gap-4">
                 <Link 
                   to="/lawyer/register" 
-                  className="text-gray-600 hover:text-indigo-600 font-bold text-sm"
+                  className="px-4 py-2 text-indigo-600 border border-indigo-100 rounded-full font-bold text-sm hover:bg-indigo-50 transition-all"
                 >
                   Join as Advocate
                 </Link>
