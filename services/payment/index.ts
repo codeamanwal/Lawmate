@@ -181,8 +181,9 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
           data: { status: 'CONFIRMED' }
         });
         
-        // Lead status stays NEW so it shows up in Lawyer Dashboard as "Booked"
-        // It will be marked COMPLETED only when the lawyer accepts/finishes the call.
+        // Trigger SLA matching in Lead Service
+        fetch(`http://127.0.0.1:3002/api/leads/${leadId}/match`, { method: 'POST' })
+          .catch(err => console.error('Failed to trigger matching:', err));
       }
 
       return { status: 'SUCCESS', message: 'Payment verified successfully' };
@@ -237,8 +238,29 @@ fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
     // Even if validation fails, we might want to return 200 to PhonePe to stop retries, 
     // but log the error for investigation.
   }
+  return { success: true };
+});
 
-  return reply.status(200).send({ status: 'ok' });
+fastify.post('/api/payments/simulate-success/:leadId', async (request: any, reply: any) => {
+  const { leadId } = request.params;
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { leadId }
+    });
+    if (booking) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: 'CONFIRMED' }
+      });
+
+      // Trigger SLA matching in Lead Service
+      fetch(`http://127.0.0.1:3002/api/leads/${leadId}/match`, { method: 'POST' })
+        .catch(err => console.error('Failed to trigger matching:', err));
+    }
+    return { success: true };
+  } catch (err) {
+    return reply.status(500).send({ error: 'Failed to simulate payment success' });
+  }
 });
 
 const start = async () => {

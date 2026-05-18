@@ -56,13 +56,20 @@ model Lead {
   city          String
   description   String
   preferredTime String
-  status        LeadStatus     @default(NEW)
-  lawyerId      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  booking       Booking?
-  lawyer        LawyerProfile? @relation("LawyerLeads", fields: [lawyerId], references: [id])
-  user          User?          @relation(fields: [userId], references: [id])
+  status               LeadStatus     @default(NEW)
+  lawyerId             String?
+  assignedAt           DateTime?
+  acceptedAt           DateTime?
+  declinedLawyerIds    String[]       @default([])
+  slaStatus            String?
+  lawyerResolution     String?        // "CLOSED", "CANCELLED", "FORWARDED"
+  feedbackRating       Int?
+  feedbackText         String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  booking              Booking?
+  lawyer               LawyerProfile? @relation("LawyerLeads", fields: [lawyerId], references: [id])
+  user                 User?          @relation(fields: [userId], references: [id])
 }
 
 model Booking {

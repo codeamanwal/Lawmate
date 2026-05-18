@@ -65,9 +65,12 @@ const BookingPage = () => {
 
   const handleSkip = async () => {
     try {
+      // Bypassed automatic completion to ensure SLA matcher catches all new leads on payment success
+      /*
       await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
+      */
       toast.success('Consultation Confirmed!');
       navigate('/payment', { state: { leadId } });
     } catch (error) {

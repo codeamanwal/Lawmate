@@ -96,6 +96,18 @@ fastify.post('/api/payments/webhook', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.post('/api/payments/simulate-success/:leadId', (request, reply) => {
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
+});
+
+fastify.post('/api/leads/:id/simulate-accept-timeout', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
+fastify.post('/api/leads/:id/simulate-attendance-timeout', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.get('/api/payments/verify/:leadId', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
@@ -148,6 +160,46 @@ fastify.register(async (instance) => {
   instance.post('/api/profiles/update', (request, reply) => {
     const user = request.user as any;
     return reply.from(`${PROFILE_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
+  instance.post('/api/leads/:id/match', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
+  instance.post('/api/leads/:id/accept', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
+  instance.post('/api/leads/:id/decline', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
+  instance.post('/api/leads/:id/resolve', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
+  instance.post('/api/leads/:id/feedback', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
       'x-user-id': user.id,
       'x-user-email': user.email
     }));

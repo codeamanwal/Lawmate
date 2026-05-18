@@ -7,18 +7,7 @@ import axios from 'axios';
 const SuccessPage = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const leadId = localStorage.getItem('pendingLeadId');
-    if (leadId) {
-      axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
-        .then(() => {
-          console.log('Lead marked as completed');
-        })
-        .catch(err => console.error('Failed to complete lead', err));
-    }
-  }, []);
+  // Leads remain NEW in the SLA matchmaker and are completed only by lawyers on active consultation resolution.
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-4 sm:p-6">

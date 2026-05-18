@@ -145,6 +145,7 @@ const IntakeForm = () => {
                 <option value="">Select Category</option>
                 <option value="Property">Property</option>
                 <option value="Divorce">Divorce</option>
+                <option value="Matrimonial">Matrimonial</option>
                 <option value="Employment">Employment</option>
                 <option value="Criminal">Criminal</option>
                 <option value="Civil">Civil</option>

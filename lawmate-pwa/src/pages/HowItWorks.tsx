@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, MessageCircle, Clock, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const HowItWorks = () => {

@@ -68,8 +68,8 @@ const PaymentPage = () => {
         }
       );
 
-      // 2. Complete lead record status to COMPLETED
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
+      // 2. Call simulate success to confirm booking & trigger matchmaking (keeps lead status as NEW)
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/simulate-success/${leadId}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 

@@ -10,7 +10,6 @@ import {
   Power,
   Loader2,
   Briefcase,
-  ChevronRight,
   CreditCard
 } from 'lucide-react';
 
@@ -27,6 +26,9 @@ const LawyerDashboard = () => {
   const [isAvailable, setIsAvailable] = useState(() => {
     return user?.lawyerProfile?.isAvailable !== false;
   });
+  const [resolvingCall, setResolvingCall] = useState<any>(null);
+  const [resolutionChoice, setResolutionChoice] = useState<'CLOSED' | 'CANCELLED' | 'FORWARDED'>('CLOSED');
+  const [resolvingInProgress, setResolvingInProgress] = useState(false);
 
   const getFileUrl = (path: string | undefined) => {
     if (!path) return '#';
@@ -118,36 +120,69 @@ const LawyerDashboard = () => {
 
   const handleAcceptCall = async (callId: string, phone: string) => {
     try {
-      // Open phone dialer
-      window.location.href = `tel:${phone}`;
-      
-      // Mark call as completed so it clears from the dashboard
       const token = localStorage.getItem('token');
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/complete`, {}, {
+      // Mark as accepted in the backend
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/accept`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Update UI instantly
-      // Refresh the list to move the call to "Cases"
+      toast.success('Call request accepted!');
+      
+      // Open phone dialer
+      window.location.href = `tel:${phone}`;
+      
+      // Switch tab to cases so they can resolve the call
+      setActiveTab('cases');
+      
+      // Refresh the calls list
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/lawyer-calls`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCalls(response.data);
     } catch (error) {
-      console.error("Failed to complete call", error);
+      console.error("Failed to accept call request", error);
+      toast.error("Failed to accept call request.");
     }
   };
 
   const handleDeclineCall = async (callId: string) => {
     try {
       const token = localStorage.getItem('token');
-      // For now, we'll just delete it or mark it completed
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/complete`, {}, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/decline`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      toast.success('Call request declined.');
       setCalls(calls.filter(c => c.id !== callId));
     } catch (error) {
       console.error("Failed to decline call", error);
+      toast.error("Failed to decline call.");
+    }
+  };
+
+  const handleResolveCase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resolvingCall) return;
+    setResolvingInProgress(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${resolvingCall.id}/resolve`, {
+        resolution: resolutionChoice
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Case resolved successfully!');
+      setResolvingCall(null);
+      
+      // Refresh list
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/lawyer-calls`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCalls(response.data);
+    } catch (error) {
+      console.error("Failed to resolve case", error);
+      toast.error("Failed to resolve case.");
+    } finally {
+      setResolvingInProgress(false);
     }
   };
 
@@ -242,7 +277,7 @@ const LawyerDashboard = () => {
             </div>
 
             <div className="grid gap-4">
-              {calls.filter(c => c.status === 'NEW').length > 0 ? calls.filter(c => c.status === 'NEW').map(call => (
+              {calls.filter(c => c.status === 'NEW' && c.lawyerId === user.lawyerProfile?.id).length > 0 ? calls.filter(c => c.status === 'NEW' && c.lawyerId === user.lawyerProfile?.id).map(call => (
                 <div key={call.id} className="bg-white rounded-[28px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
@@ -293,34 +328,129 @@ const LawyerDashboard = () => {
 
         {/* Tab Content: Cases (History & Active) */}
         {activeTab === 'cases' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-black text-gray-900 mb-2">All Cases</h2>
-            <div className="grid gap-4">
-              {calls.length > 0 ? calls.map(call => (
-                <div key={call.id} className="bg-white rounded-[28px] p-5 border border-gray-100 shadow-sm flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${call.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                      {call.name[0]}
+          <div className="space-y-8">
+            {/* 1. Active Cases (Assigned & In Progress) */}
+            <div>
+              <h2 className="text-xl font-black text-gray-900 mb-4 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                Active Consultations
+              </h2>
+              <div className="grid gap-4">
+                {calls.filter(c => c.status === 'ASSIGNED' && c.lawyerId === user.lawyerProfile?.id).length > 0 ? (
+                  calls.filter(c => c.status === 'ASSIGNED' && c.lawyerId === user.lawyerProfile?.id).map(call => (
+                    <div key={call.id} className="bg-white rounded-[28px] p-5 border border-indigo-100 shadow-lg shadow-indigo-50/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg">
+                          {call.name[0]}
+                        </div>
+                        <div>
+                          <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category} • {call.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => window.location.href = `tel:${call.phone}`}
+                          className="px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                        >
+                          <Phone className="w-3.5 h-3.5" /> Call Client
+                        </button>
+                        <button 
+                          onClick={() => setResolvingCall(call)}
+                          className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                        >
+                          Resolve Case
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-black text-gray-900">{call.name}</h3>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category}</p>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-[24px] p-6 border border-gray-100 text-center text-gray-400 font-bold text-sm">
+                    No active consultations at the moment.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Completed Cases */}
+            <div>
+              <h2 className="text-xl font-black text-gray-900 mb-4">Completed History</h2>
+              <div className="grid gap-4">
+                {calls.filter(c => c.status === 'COMPLETED' && c.lawyerId === user.lawyerProfile?.id).length > 0 ? (
+                  calls.filter(c => c.status === 'COMPLETED' && c.lawyerId === user.lawyerProfile?.id).map(call => (
+                    <div key={call.id} className="bg-white rounded-[28px] p-5 border border-gray-100 shadow-sm">
+                      <div className="flex items-center justify-between gap-4 mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+                            {call.name[0]}
+                          </div>
+                          <div>
+                            <h3 className="font-black text-gray-900">{call.name}</h3>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{call.category}</p>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-black uppercase">
+                          Completed
+                        </span>
+                      </div>
+                      
+                      {/* Resolution outcome selected by lawyer */}
+                      {call.lawyerResolution && (
+                        <div className="bg-gray-50/70 rounded-xl px-4 py-2 text-xs font-bold text-gray-500 mb-3 flex items-center gap-1.5">
+                          Resolution: <span className="text-indigo-600 uppercase tracking-wider">{call.lawyerResolution}</span>
+                        </div>
+                      )}
+
+                      {/* Client feedback rating and text */}
+                      {call.feedbackRating !== null && (
+                        <div className="border-t border-gray-100 pt-3 mt-2">
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-bold text-gray-400">Client Rating:</span>
+                            <span className="text-amber-500 font-black text-sm">★ {call.feedbackRating}/5</span>
+                          </div>
+                          {call.feedbackText && (
+                            <p className="text-xs text-gray-600 italic font-medium">"{call.feedbackText}"</p>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-[24px] p-6 border border-gray-100 text-center text-gray-400 font-bold text-sm">
+                    No completed consultation history.
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${call.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {call.status === 'COMPLETED' ? 'Completed' : 'Pending'}
-                    </span>
-                    <button className="p-2 text-gray-400 hover:text-indigo-600 transition-all">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Cases Not Attended (SLA Missed) */}
+            <div>
+              <h2 className="text-xl font-black text-red-600 mb-4 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                Cases Not Attended (SLA Missed)
+              </h2>
+              <div className="grid gap-4">
+                {calls.filter(c => c.declinedLawyerIds?.includes(user.lawyerProfile?.id) && c.slaStatus === 'NOT_ATTENDED').length > 0 ? (
+                  calls.filter(c => c.declinedLawyerIds?.includes(user.lawyerProfile?.id) && c.slaStatus === 'NOT_ATTENDED').map(call => (
+                    <div key={call.id} className="bg-red-50/30 rounded-[28px] p-5 border border-red-100 shadow-sm flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center font-black">
+                          {call.name[0]}
+                        </div>
+                        <div>
+                          <h3 className="font-black text-gray-900">{call.name}</h3>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category}</p>
+                          <span className="text-[10px] font-black text-red-600 uppercase tracking-wider bg-red-50 px-2 py-0.5 rounded-full mt-1 inline-block">SLA Timeout (Not Attended)</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-[24px] p-6 border border-gray-100 text-center text-gray-400 font-bold text-sm">
+                    No missed SLA consultation records. Keep it up!
                   </div>
-                </div>
-              )) : (
-                <div className="bg-white rounded-[32px] p-12 border border-gray-100 text-center">
-                   <p className="text-gray-400 font-bold">No cases found in your history.</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -460,6 +590,65 @@ const LawyerDashboard = () => {
         <NavItem id="earnings" icon={DollarSign} label="Earnings" />
         <NavItem id="profile" icon={User} label="Profile" />
       </div>
+
+      {/* Resolution Modal */}
+      {resolvingCall && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Resolve Consultation</h3>
+            <p className="text-sm font-medium text-gray-500 mb-6">Select the final resolution status for your call with <span className="text-gray-900 font-bold">{resolvingCall.name}</span>.</p>
+
+            <form onSubmit={handleResolveCase} className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resolution Outcome</p>
+                <div className="grid gap-3">
+                  {[
+                    { id: 'CLOSED', title: 'Mark as Completed / Closed', desc: 'Call successfully completed and case is resolved.' },
+                    { id: 'CANCELLED', title: 'Mark as Cancelled', desc: 'Client requested cancellation or call was aborted.' },
+                    { id: 'FORWARDED', title: 'Mark as Forwarded', desc: 'Recommended client to another expert/department.' }
+                  ].map(opt => (
+                    <label 
+                      key={opt.id}
+                      className={`flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all ${resolutionChoice === opt.id ? 'border-indigo-600 bg-indigo-50/20' : 'border-gray-100 bg-gray-50 hover:bg-gray-100/50'}`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="resolution" 
+                        value={opt.id}
+                        checked={resolutionChoice === opt.id}
+                        onChange={() => setResolutionChoice(opt.id as any)}
+                        className="mt-1 accent-indigo-600 cursor-pointer"
+                      />
+                      <div className="text-left">
+                        <span className="block font-black text-gray-900 text-sm">{opt.title}</span>
+                        <span className="block text-xs font-medium text-gray-500 mt-0.5">{opt.desc}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setResolvingCall(null)}
+                  disabled={resolvingInProgress}
+                  className="flex-1 py-3.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all rounded-xl font-bold text-sm text-gray-600"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={resolvingInProgress}
+                  className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 transition-all text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                >
+                  {resolvingInProgress ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm & Resolve'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

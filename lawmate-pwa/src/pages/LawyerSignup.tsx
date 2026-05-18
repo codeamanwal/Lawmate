@@ -31,7 +31,7 @@ const states = [
   "Uttarakhand", "West Bengal", "Delhi"
 ];
 
-const categories = ["Divorce", "Criminal", "Property", "Employment", "Civil", "Other"];
+const categories = ["Divorce", "Criminal", "Property", "Employment", "Civil", "Matrimonial", "Other"];
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
