@@ -154,10 +154,17 @@ const LawyerDashboard = () => {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsAvailable(!isAvailable)}
-              className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all font-black text-xs ${isAvailable ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'}`}
+              className={`hidden md:flex items-center gap-3 px-3 py-2 rounded-[16px] border-2 shadow-sm transition-all ${isAvailable ? 'bg-white border-emerald-500' : 'bg-white border-red-500'}`}
             >
-              <Power className="w-4 h-4" />
-              {isAvailable ? 'Currently Available' : 'Currently Not Available'}
+              <div className="flex items-center gap-2">
+                <div className={`p-1.5 rounded-xl ${isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                  <Power className="w-4 h-4" />
+                </div>
+                <span className="font-black text-gray-900 text-xs">{isAvailable ? 'Active & Receiving Calls' : 'Currently Offline'}</span>
+              </div>
+              <div className={`w-10 h-5 rounded-full relative transition-all ${isAvailable ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${isAvailable ? 'left-[22px]' : 'left-[2px]'}`} />
+              </div>
             </button>
             <button 
               onClick={() => navigate('/lawyer/onboarding')}
