@@ -1,2 +1,5 @@
 /Lawmate _PRD.pdf
 node_modules
+
+/lawmate-pwa/
+.env
