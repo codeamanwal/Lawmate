@@ -33,7 +33,7 @@ const AuthPage = () => {
         const pendingLeadId = localStorage.getItem('pendingLeadId');
         
         if (fromIntake && pendingLeadId) {
-          navigate('/booking');
+          navigate('/payment', { state: { leadId: pendingLeadId } });
         } else {
           if (user.role === 'LAWYER') {
             if (user.lawyerProfile?.onboardingCompleted) {

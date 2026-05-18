@@ -54,6 +54,34 @@ const PaymentPage = () => {
     }
   };
 
+  const handleSimulateSuccess = async () => {
+    setLoading(true);
+    try {
+      // 1. Initialize booking/payment records
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, 
+        { leadId }, 
+        {
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'x-user-id': user?.id
+          }
+        }
+      );
+
+      // 2. Complete lead record status to COMPLETED
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      toast.success('Test payment successful!');
+      navigate(`/payment-success?leadId=${leadId}`);
+    } catch (err) {
+      console.error('Simulation failed', err);
+      toast.error('Simulation failed. Please try again.');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-10 text-center border border-gray-100 shadow-xl shadow-gray-200/50">
@@ -81,6 +109,15 @@ const PaymentPage = () => {
           className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
         >
           {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Confirm & Pay ₹999'}
+        </button>
+
+        {/* Development Simulation Mode */}
+        <button 
+          onClick={handleSimulateSuccess}
+          disabled={loading && !authLoading}
+          className="w-full mt-3 py-3.5 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 rounded-2xl font-black text-sm hover:bg-emerald-100/70 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+        >
+          Simulate Successful Payment (Test Mode)
         </button>
 
         <p className="mt-6 text-xs text-gray-400 font-medium flex items-center justify-center gap-2">

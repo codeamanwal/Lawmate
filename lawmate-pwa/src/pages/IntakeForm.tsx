@@ -73,7 +73,7 @@ const IntakeForm = () => {
       toast.success('Lead submitted successfully!');
       
       if (user) {
-        navigate('/booking', { state: { leadId: response.data.id } });
+        navigate('/payment', { state: { leadId: response.data.id } });
       } else {
         navigate('/auth', { state: { fromIntake: true } }); // Redirect to auth for OTP verification
       }

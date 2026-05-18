@@ -23,8 +23,12 @@ const MyBookings = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         
-        // Filter only those that have a confirmed booking status
-        const confirmedBookings = response.data.filter((lead: any) => lead.status === 'COMPLETED' || lead.status === 'ASSIGNED');
+        // Filter only those that have a confirmed booking status or completed/assigned leads
+        const confirmedBookings = response.data.filter((lead: any) => 
+          lead.status === 'COMPLETED' || 
+          lead.status === 'ASSIGNED' || 
+          (lead.booking && (lead.booking.status === 'CONFIRMED' || lead.booking.status === 'COMPLETED'))
+        );
         setBookings(confirmedBookings);
       } catch (error) {
         console.error('Failed to fetch bookings');
@@ -47,21 +51,18 @@ const MyBookings = () => {
 
       {bookings.length === 0 ? (
         <div className="space-y-12">
-          <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-6 sm:p-12 text-center">
+          <div className="bg-white border border-gray-100 rounded-[32px] p-8 sm:p-16 text-center shadow-lg shadow-gray-200/40">
             <div className="bg-indigo-50 w-20 h-20 rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-inner">
               <Calendar className="w-10 h-10 text-indigo-600" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4">Book Your Session</h2>
-            <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">Ready to discuss your case? Use the professional scheduler below to pick a slot that works for you.</p>
-            
-            {/* Cal.com Embed */}
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl shadow-indigo-100/50 overflow-hidden min-h-[600px]">
-              <iframe
-                src="https://cal.com/law-on-call-11c14s/60min?embed=true"
-                style={{ width: '100%', height: '600px', border: 'none' }}
-                title="Schedule 30min Meeting"
-              />
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-4">No Active Bookings</h2>
+            <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">Ready to discuss your case? Start a new case intake form to connect with verified legal experts instantly.</p>
+            <button 
+              onClick={() => navigate('/get-started')}
+              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 cursor-pointer"
+            >
+              Start New Case
+            </button>
           </div>
         </div>
       ) : (
