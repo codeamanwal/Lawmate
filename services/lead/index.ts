@@ -69,9 +69,9 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
     });
 
     return lead;
-  } catch (error) {
+  } catch (error: any) {
     fastify.log.error(error);
-    return reply.status(400).send({ error: 'Invalid data' });
+    return reply.status(400).send({ error: 'Invalid data', message: error.message });
   }
 });
 
