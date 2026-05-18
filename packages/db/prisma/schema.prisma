@@ -37,6 +37,7 @@ model LawyerProfile {
   state               String?
   languages           String[]
   onboardingCompleted Boolean   @default(false)
+  isAvailable         Boolean   @default(true)
   degreeCert          String?
   enrollmentCert      String?
   panCard             String?

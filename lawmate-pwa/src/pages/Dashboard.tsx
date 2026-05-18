@@ -15,24 +15,24 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
 
+  const fetchLeads = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/my`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setLeads(response.data);
+    } catch (error) {
+      console.error('Failed to fetch leads');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
       return;
     }
-
-    const fetchLeads = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/my`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        setLeads(response.data);
-      } catch (error) {
-        console.error('Failed to fetch leads');
-      } finally {
-        setLoading(false);
-      }
-    };
 
     if (user) fetchLeads();
   }, [user, authLoading, navigate]);
@@ -75,6 +75,8 @@ const Dashboard = () => {
           ),
           { duration: 8000, icon: '📞' }
         );
+        // Instant refresh of the case list so it populates immediately!
+        fetchLeads();
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Connection failed. Please try again.';

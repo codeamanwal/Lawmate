@@ -163,6 +163,10 @@ fastify.get('/api/profiles/lawyer/me', (request, reply) => {
   return reply.from(`${AUTH_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.post('/api/profiles/lawyer/availability', (request, reply) => {
+  return reply.from(`${AUTH_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.get('/uploads/*', (request, reply) => {
   return reply.from(`${AUTH_SERVICE}${request.url}`);
 });

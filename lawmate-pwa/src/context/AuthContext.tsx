@@ -61,7 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { token, user: backendUser } = response.data;
           localStorage.setItem('token', token);
           setUser(backendUser);
-          toast.success('Signed in successfully!');
+          const showToast = sessionStorage.getItem('showSignInToast');
+          if (showToast === 'true') {
+            toast.success('Signed in successfully!');
+            sessionStorage.removeItem('showSignInToast');
+          }
         } catch (error: any) {
           console.error('Backend auth failed', error);
           // If role check failed on backend (403), sign out from Firebase too
@@ -95,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyOtp = async (confirmationResult: ConfirmationResult, otp: string) => {
+    sessionStorage.setItem('showSignInToast', 'true');
     await confirmationResult.confirm(otp);
 
     // onAuthStateChanged will handle the rest
@@ -125,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Fallback to Firebase for clients (handles 401 or not found)
+      sessionStorage.setItem('showSignInToast', 'true');
       await signInWithEmailAndPassword(auth, email, pass);
     }
   };

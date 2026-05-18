@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { 
   Phone, 
@@ -19,12 +18,15 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const LawyerDashboard = () => {
   const { user, loading, updateUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('calls');
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(() => {
+    return user?.lawyerProfile?.isAvailable !== false;
+  });
 
   const getFileUrl = (path: string | undefined) => {
     if (!path) return '#';
@@ -44,6 +46,9 @@ const LawyerDashboard = () => {
           });
           if (response.data.success) {
             updateUser(response.data.user);
+            if (response.data.user.lawyerProfile) {
+              setIsAvailable(response.data.user.lawyerProfile.isAvailable);
+            }
           }
         } catch (error) {
           console.error("Failed to refresh profile");
@@ -59,6 +64,34 @@ const LawyerDashboard = () => {
       fetchProfile();
     }
   }, [user, loading, navigate, updateUser]);
+
+  const handleToggleAvailability = async () => {
+    const nextState = !isAvailable;
+    setIsAvailable(nextState);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/profiles/lawyer/availability`,
+        { isAvailable: nextState },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        updateUser({
+          ...user,
+          lawyerProfile: {
+            ...user.lawyerProfile,
+            isAvailable: response.data.isAvailable
+          }
+        });
+        toast.success(nextState ? "You are now online!" : "You are now offline.");
+      }
+    } catch (error) {
+      console.error("Failed to update availability in database", error);
+      setIsAvailable(isAvailable);
+      toast.error("Failed to update availability. Please try again.");
+    }
+  };
 
   const [calls, setCalls] = useState<any[]>([]);
 
@@ -153,13 +186,6 @@ const LawyerDashboard = () => {
 
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setIsAvailable(!isAvailable)}
-              className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all font-black text-xs ${isAvailable ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'}`}
-            >
-              <Power className="w-4 h-4" />
-              {isAvailable ? 'Currently Available' : 'Currently Not Available'}
-            </button>
-            <button 
               onClick={() => navigate('/lawyer/onboarding')}
               className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer border border-gray-100"
             >
@@ -170,19 +196,22 @@ const LawyerDashboard = () => {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        {/* Mobile Availability Toggle */}
-        <div className="md:hidden mb-6">
+        {/* Availability Toggle (Beautiful Status Card for Both Desktop and Mobile) */}
+        <div className="mb-6">
           <button 
-            onClick={() => setIsAvailable(!isAvailable)}
-            className={`w-full flex items-center justify-between p-5 rounded-[24px] border-2 shadow-sm transition-all ${isAvailable ? 'bg-white border-emerald-500' : 'bg-white border-red-500'}`}
+            onClick={handleToggleAvailability}
+            className={`w-full flex items-center justify-between p-5 rounded-[24px] border-2 shadow-sm transition-all cursor-pointer ${isAvailable ? 'bg-white border-emerald-500 shadow-emerald-50/50' : 'bg-white border-red-500 shadow-red-50/50'}`}
           >
             <div className="flex items-center gap-4">
-              <div className={`p-2 rounded-xl ${isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+              <div className={`p-2 rounded-xl transition-colors ${isAvailable ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                 <Power className="w-5 h-5" />
               </div>
-              <span className="font-black text-gray-900">{isAvailable ? 'Active & Receiving Calls' : 'Currently Offline'}</span>
+              <div className="text-left">
+                <span className="font-black text-gray-900 block text-base sm:text-lg">{isAvailable ? 'Active & Receiving Calls' : 'Currently Offline'}</span>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">{isAvailable ? 'Clients can request instant consultations' : 'Consultations are temporarily disabled'}</p>
+              </div>
             </div>
-            <div className={`w-12 h-6 rounded-full relative transition-all ${isAvailable ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+            <div className={`w-12 h-6 rounded-full relative transition-all shrink-0 ${isAvailable ? 'bg-emerald-500' : 'bg-gray-300'}`}>
               <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isAvailable ? 'left-7' : 'left-1'}`} />
             </div>
           </button>
@@ -196,7 +225,7 @@ const LawyerDashboard = () => {
               onClick={() => setActiveTab(tab)}
               className={`pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              {tab}
+              {tab === 'calls' ? 'requests' : tab}
               {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 rounded-full" />}
             </button>
           ))}
@@ -321,7 +350,7 @@ const LawyerDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: 'This Month', value: '₹0', icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                { label: 'Calls Today', value: '0', icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Requests Today', value: '0', icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                 { label: 'Rating', value: 'N/A', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
                 { label: 'Hours Spent', value: '0h', icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50' },
               ].map(stat => (
@@ -347,7 +376,7 @@ const LawyerDashboard = () => {
                   </div>
                 ))}
               </div>
-              <p className="mt-6 text-center text-gray-400 text-xs font-bold italic">Start accepting calls to see your revenue growth chart.</p>
+              <p className="mt-6 text-center text-gray-400 text-xs font-bold italic">Start accepting requests to see your revenue growth chart.</p>
             </div>
           </div>
         )}
@@ -425,7 +454,7 @@ const LawyerDashboard = () => {
 
       {/* Mobile Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-2 flex items-center justify-around z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <NavItem id="calls" icon={Phone} label="Calls" />
+        <NavItem id="calls" icon={Phone} label="Requests" />
         <NavItem id="cases" icon={Briefcase} label="Cases" />
         <NavItem id="schedule" icon={Calendar} label="Schedule" />
         <NavItem id="earnings" icon={DollarSign} label="Earnings" />

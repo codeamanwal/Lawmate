@@ -478,6 +478,44 @@ fastify.get('/api/profiles/lawyer/me', async (request: any, reply: any) => {
   }
 });
 
+// 8b. Update Availability
+fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: any) => {
+  const { isAvailable } = request.body;
+  const authHeader = request.headers.authorization;
+  if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = fastify.jwt.verify(token) as { id: string };
+    
+    // Find or create profile robustly to prevent 500 crashes
+    let profile = await prisma.lawyerProfile.findUnique({
+      where: { userId: decoded.id }
+    });
+
+    if (profile) {
+      profile = await prisma.lawyerProfile.update({
+        where: { userId: decoded.id },
+        data: { isAvailable }
+      });
+    } else {
+      profile = await prisma.lawyerProfile.create({
+        data: {
+          userId: decoded.id,
+          isAvailable,
+          experience: 0,
+          licenseNumber: "PENDING"
+        }
+      });
+    }
+
+    return reply.send({ success: true, isAvailable: profile.isAvailable });
+  } catch (error: any) {
+    console.error('CRITICAL: Failed to update availability:', error);
+    return reply.status(500).send({ error: `Server Error: ${error.message}` });
+  }
+});
+
 // 7. Forgot Password (Send OTP)
 fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
   const { email } = request.body;
