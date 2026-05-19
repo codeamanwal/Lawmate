@@ -25,6 +25,9 @@ model User {
 model LawyerProfile {
   id                  String    @id @default(uuid())
   userId              String    @unique
+  name                String?
+  email               String?
+  phone               String?
   categories          String[]
   experience          Int       @default(0)
   rating              Float     @default(0.0)

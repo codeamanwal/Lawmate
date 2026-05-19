@@ -412,6 +412,10 @@ fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => 
     const degreePath = saveBase64File(degreeCert, 'degree', decoded.id);
     const photoPath = saveBase64File(photo, 'photo', decoded.id);
 
+    const userRecord = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+
     const updateData: any = {
       bio,
       languages,
@@ -420,7 +424,10 @@ fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => 
       enrollmentCert: enrollmentPath,
       panCard: panPath,
       degreeCert: degreePath,
-      photo: photoPath
+      photo: photoPath,
+      name: userRecord?.name,
+      email: userRecord?.email,
+      phone: userRecord?.phone
     };
 
     if (onboardingCompleted !== undefined) {
@@ -499,12 +506,18 @@ fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: an
         data: { isAvailable }
       });
     } else {
+      const userRecord = await prisma.user.findUnique({
+        where: { id: decoded.id }
+      });
       profile = await prisma.lawyerProfile.create({
         data: {
           userId: decoded.id,
           isAvailable,
           experience: 0,
-          licenseNumber: "PENDING"
+          licenseNumber: "PENDING",
+          name: userRecord?.name,
+          email: userRecord?.email,
+          phone: userRecord?.phone
         }
       });
     }

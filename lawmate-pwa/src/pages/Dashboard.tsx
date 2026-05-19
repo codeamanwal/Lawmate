@@ -175,9 +175,29 @@ const Dashboard = () => {
                         const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
                         const isCompleted = lead.status === 'COMPLETED';
                         
-                        if (isCompleted) return <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>;
-                        if (isPaid) return <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 tracking-wider">Booked</span>;
-                        return <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>;
+                        return (
+                          <>
+                            {isCompleted ? (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>
+                            ) : isPaid ? (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 tracking-wider">Booked</span>
+                            ) : (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>
+                            )}
+                            
+                            {lead.lawyerResolution && (
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                lead.lawyerResolution === 'CANCELLED' 
+                                  ? 'bg-red-100 text-red-700' 
+                                  : lead.lawyerResolution === 'FORWARDED'
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : 'bg-indigo-100 text-indigo-700'
+                              }`}>
+                                {lead.lawyerResolution === 'CLOSED' ? 'Closed' : lead.lawyerResolution}
+                              </span>
+                            )}
+                          </>
+                        );
                       })()}
                       <button 
                         onClick={(e) => {
@@ -215,15 +235,6 @@ const Dashboard = () => {
                               <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating || '4.8'} • {lead.lawyer.experience} Years Exp</p>
                             </div>
                           </div>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate('/my-bookings', { state: { highlightLeadId: lead.id } });
-                            }}
-                            className="text-indigo-600 font-black text-[11px] uppercase tracking-widest flex items-center gap-1 hover:underline w-full sm:w-auto justify-center sm:justify-start"
-                          >
-                            Contact Lawyer <ChevronRight className="w-4 h-4" />
-                          </button>
                         </div>
                       );
                     }

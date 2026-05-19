@@ -133,8 +133,8 @@ const MyBookings = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 mb-6 shadow-sm animate-pulse">
                     <span className="text-xl shrink-0">⏳</span>
                     <div>
-                      <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-0.5">SLA Auto Reassignment</p>
-                      <p className="text-sm font-bold text-amber-700">Sorry for the delay, we are assigning a new lawyer very soon.</p>
+                      <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-0.5">Case to be handled manually</p>
+                      <p className="text-sm font-bold text-amber-700">Somebody from our team will reach out within an hour.</p>
                     </div>
                   </div>
                 )}
@@ -144,14 +144,35 @@ const MyBookings = () => {
                     <div className="flex items-center gap-2 mb-2">
                       {(() => {
                         const isPaid = booking.booking?.payment?.status === 'captured' || booking.booking?.status === 'CONFIRMED' || booking.status === 'ASSIGNED' || booking.status === 'COMPLETED';
-                        return isPaid ? (
-                          <span className="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1 shadow-sm shadow-green-100">
-                            <CheckCircle2 className="w-3 h-3" /> Booked
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1 shadow-sm shadow-amber-100">
-                            <AlertCircle className="w-3 h-3" /> Payment Pending
-                          </span>
+                        const isCompleted = booking.status === 'COMPLETED';
+                        return (
+                          <>
+                            {isCompleted ? (
+                              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1 shadow-sm shadow-emerald-100">
+                                <CheckCircle2 className="w-3 h-3" /> Completed
+                              </span>
+                            ) : isPaid ? (
+                              <span className="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1 shadow-sm shadow-green-100">
+                                <CheckCircle2 className="w-3 h-3" /> Booked
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1 shadow-sm shadow-amber-100">
+                                <AlertCircle className="w-3 h-3" /> Payment Pending
+                              </span>
+                            )}
+                            
+                            {booking.lawyerResolution && (
+                              <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full tracking-wider shadow-sm flex items-center gap-1 ${
+                                booking.lawyerResolution === 'CANCELLED' 
+                                  ? 'bg-red-50 text-red-600 shadow-red-100' 
+                                  : booking.lawyerResolution === 'FORWARDED'
+                                  ? 'bg-purple-50 text-purple-600 shadow-purple-100'
+                                  : 'bg-indigo-50 text-indigo-600 shadow-indigo-100'
+                              }`}>
+                                {booking.lawyerResolution === 'CLOSED' ? 'Closed' : booking.lawyerResolution}
+                              </span>
+                            )}
+                          </>
                         );
                       })()}
                       <span className="text-[10px] font-bold text-gray-400">#{booking.id.slice(0, 8)}</span>

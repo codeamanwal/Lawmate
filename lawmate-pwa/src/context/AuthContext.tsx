@@ -48,6 +48,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Check if we have a LAWYER token stored locally
+    const token = localStorage.getItem('token');
+    let isLawyer = false;
+    
+    if (token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          if (payload.role === 'LAWYER') {
+            isLawyer = true;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse local JWT token:", e);
+      }
+    }
+
+    if (isLawyer) {
+      axios.get(`${import.meta.env.VITE_API_URL}/api/profiles/lawyer/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then((res) => {
+        if (res.data.success) {
+          setUser(res.data.user);
+        } else {
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+        setLoading(false);
+      }).catch(() => {
+        localStorage.removeItem('token');
+        setUser(null);
+        setLoading(false);
+      });
+      
+      auth.signOut().catch(() => {});
+      return;
+    }
+
+    // 2. Client / no token Firebase flow
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
@@ -58,8 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             idToken,
             role: intendedRole
           });
-          const { token, user: backendUser } = response.data;
-          localStorage.setItem('token', token);
+          const { token: verifiedToken, user: backendUser } = response.data;
+          localStorage.setItem('token', verifiedToken);
           setUser(backendUser);
           const showToast = sessionStorage.getItem('showSignInToast');
           if (showToast === 'true') {
@@ -68,21 +108,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error: any) {
           console.error('Backend auth failed', error);
-          // If role check failed on backend (403), sign out from Firebase too
           if (error.response?.status === 403) {
             await auth.signOut();
             localStorage.removeItem('token');
             setUser(null);
             toast.error(error.response?.data?.error || 'Invalid credentials');
           } else {
-            // Otherwise just reset
             setUser(null);
           }
         }
       } else {
-        localStorage.removeItem('token');
-        localStorage.removeItem('intendedRole');
-        setUser(null);
+        const currentToken = localStorage.getItem('token');
+        let currentRole = null;
+        if (currentToken) {
+          try {
+            const parts = currentToken.split('.');
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1]));
+              currentRole = payload.role;
+            }
+          } catch (e) {}
+        }
+        
+        if (currentRole !== 'LAWYER') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('intendedRole');
+          setUser(null);
+        }
       }
       setLoading(false);
     });
@@ -101,8 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const verifyOtp = async (confirmationResult: ConfirmationResult, otp: string) => {
     sessionStorage.setItem('showSignInToast', 'true');
     await confirmationResult.confirm(otp);
-
-    // onAuthStateChanged will handle the rest
   };
 
   const signupWithEmail = async (email: string, pass: string) => {
@@ -113,7 +163,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithEmail = async (email: string, pass: string, role?: string) => {
     if (role) localStorage.setItem('intendedRole', role);
     try {
-      // Try custom backend login first (for lawyers/password users or clients with passwords)
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, { 
         email, 
         password: pass,
@@ -122,14 +171,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { token, user: backendUser } = response.data;
       localStorage.setItem('token', token);
       setUser(backendUser);
+      sessionStorage.removeItem('showSignInToast');
+      await auth.signOut().catch(() => {});
       toast.success('Signed in successfully!');
     } catch (error: any) {
-      // If role mismatch (403), throw error immediately
       if (error.response?.status === 403) {
         throw new Error(error.response.data.error);
       }
-      
-      // Fallback to Firebase for clients (handles 401 or not found)
       sessionStorage.setItem('showSignInToast', 'true');
       await signInWithEmailAndPassword(auth, email, pass);
     }

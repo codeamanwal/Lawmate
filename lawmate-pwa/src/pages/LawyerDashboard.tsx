@@ -284,15 +284,20 @@ const LawyerDashboard = () => {
                       <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
                       <p className="text-gray-500 font-bold text-sm">{call.phone}</p>
                     </div>
-                    {call.booking?.payment?.status === 'captured' ? (
-                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm">
-                        <CreditCard className="w-3 h-3" /> Booked
+                    <div className="flex items-center gap-2">
+                      {call.booking?.payment?.status === 'captured' ? (
+                        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm">
+                          <CreditCard className="w-3 h-3" /> Booked
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Waiting
+                        </span>
+                      )}
+                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                        #{call.id.slice(0, 8)}
                       </span>
-                    ) : (
-                      <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Waiting
-                      </span>
-                    )}
+                    </div>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-2xl mb-4">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{call.category}</p>
@@ -344,7 +349,10 @@ const LawyerDashboard = () => {
                           {call.name[0]}
                         </div>
                         <div>
-                          <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
+                            <span className="text-[10px] font-bold text-gray-400">#{call.id.slice(0, 8)}</span>
+                          </div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category} • {call.phone}</p>
                         </div>
                       </div>
@@ -385,7 +393,10 @@ const LawyerDashboard = () => {
                             {call.name[0]}
                           </div>
                           <div>
-                            <h3 className="font-black text-gray-900">{call.name}</h3>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <h3 className="font-black text-gray-900">{call.name}</h3>
+                              <span className="text-[10px] font-bold text-gray-400">#{call.id.slice(0, 8)}</span>
+                            </div>
                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{call.category}</p>
                           </div>
                         </div>

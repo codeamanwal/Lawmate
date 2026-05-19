@@ -90,7 +90,16 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
           role: 'LAWYER' 
         } 
       });
-      dummyLawyer = await prisma.lawyerProfile.create({ data: { userId: dummyUser.id, categories: ['General'], verified: true } });
+      dummyLawyer = await prisma.lawyerProfile.create({ 
+        data: { 
+          userId: dummyUser.id, 
+          categories: ['General'], 
+          verified: true,
+          name: dummyUser.name,
+          email: dummyUser.email,
+          phone: dummyUser.phone
+        } 
+      });
     }
 
     if (!lead.userId) {
