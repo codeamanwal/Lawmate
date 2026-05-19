@@ -64,6 +64,7 @@ model Lead {
   assignedAt           DateTime?
   acceptedAt           DateTime?
   declinedLawyerIds    String[]       @default([])
+  notifiedLawyerIds    String[]       @default([])
   slaStatus            String?
   lawyerResolution     String?        // "CLOSED", "CANCELLED", "FORWARDED"
   feedbackRating       Int?

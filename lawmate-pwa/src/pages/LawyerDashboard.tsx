@@ -139,9 +139,10 @@ const LawyerDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCalls(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to accept call request", error);
-      toast.error("Failed to accept call request.");
+      const errMsg = error.response?.data?.error || "Failed to accept call request.";
+      toast.error(errMsg);
     }
   };
 
@@ -277,7 +278,7 @@ const LawyerDashboard = () => {
             </div>
 
             <div className="grid gap-4">
-              {calls.filter(c => c.status === 'NEW' && c.lawyerId === user.lawyerProfile?.id).length > 0 ? calls.filter(c => c.status === 'NEW' && c.lawyerId === user.lawyerProfile?.id).map(call => (
+              {calls.filter(c => c.status === 'NEW' && (c.lawyerId === user.lawyerProfile?.id || c.notifiedLawyerIds?.includes(user.lawyerProfile?.id))).length > 0 ? calls.filter(c => c.status === 'NEW' && (c.lawyerId === user.lawyerProfile?.id || c.notifiedLawyerIds?.includes(user.lawyerProfile?.id))).map(call => (
                 <div key={call.id} className="bg-white rounded-[28px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>

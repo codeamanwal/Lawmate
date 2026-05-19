@@ -108,6 +108,7 @@ fastify.get('/api/leads/lawyer-calls', async (request: any, reply: any) => {
     where: {
       OR: [
         { lawyerId: lawyerProfile.id },
+        { notifiedLawyerIds: { has: lawyerProfile.id } },
         { declinedLawyerIds: { has: lawyerProfile.id } }
       ]
     },
@@ -138,21 +139,22 @@ async function assignLeadToLawyer(leadId: string) {
       }
     });
 
-    // Find the first lawyer that matches the lead's category
-    const matchingLawyer = availableLawyers.find((lawyer: any) => 
+    // Find all lawyers that match the lead's category
+    const matchingLawyers = availableLawyers.filter((lawyer: any) => 
       lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase())
-    );
+    ).slice(0, 5); // Pick up to 5 matching available lawyers in bulk!
 
-    if (matchingLawyer) {
+    if (matchingLawyers.length > 0) {
       await prisma.lead.update({
         where: { id: leadId },
         data: {
-          lawyerId: matchingLawyer.id,
+          notifiedLawyerIds: matchingLawyers.map((l: any) => l.id),
+          lawyerId: null, // Clear single lawyerId during bulk matchmaking invitation phase
           assignedAt: new Date(),
           slaStatus: lead.slaStatus === 'NOT_ATTENDED' ? 'NOT_ATTENDED' : 'PENDING_ACCEPTANCE'
         }
       });
-      console.log(`[SLA Matcher] Successfully matched Lead ${leadId} to Lawyer ${matchingLawyer.id}`);
+      console.log(`[SLA Matcher] Successfully matched Lead ${leadId} to Lawyers in bulk: ${matchingLawyers.map((l: any) => l.id).join(', ')}`);
     } else {
       console.log(`[SLA Matcher] No active matching lawyers online for Lead ${leadId}. System awaiting manual assignment.`);
     }
@@ -191,17 +193,26 @@ setInterval(async () => {
         : 24 * 60 * 60 * 1000;
 
       // Case B: DECLINE / TIMEOUT during Acceptance (10m ASAP / 1hr 24HRS)
-      if (lead.status === 'NEW' && lead.lawyerId && lead.assignedAt) {
+      if (lead.status === 'NEW' && (lead.lawyerId || (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0)) && lead.assignedAt) {
         const assignedTime = new Date(lead.assignedAt).getTime();
         if (now.getTime() - assignedTime > acceptanceTimeoutMs) {
           console.log(`[SLA Timeout] Lead ${lead.id} acceptance window exceeded. Reassigning...`);
           
-          const updatedDeclined = [...lead.declinedLawyerIds, lead.lawyerId];
+          const newlyDeclined = [...lead.declinedLawyerIds];
+          if (lead.lawyerId) {
+            newlyDeclined.push(lead.lawyerId);
+          }
+          if (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0) {
+            newlyDeclined.push(...lead.notifiedLawyerIds);
+          }
+          const updatedDeclined = Array.from(new Set(newlyDeclined));
+
           await prisma.lead.update({
             where: { id: lead.id },
             data: {
               declinedLawyerIds: updatedDeclined,
               lawyerId: null,
+              notifiedLawyerIds: [],
               assignedAt: null,
               slaStatus: 'REASSIGNING'
             }
@@ -223,6 +234,7 @@ setInterval(async () => {
             data: {
               declinedLawyerIds: updatedDeclined,
               lawyerId: null,
+              notifiedLawyerIds: [],
               assignedAt: null,
               acceptedAt: null,
               slaStatus: 'NOT_ATTENDED' // Acts as delay apology banner for client
@@ -259,13 +271,20 @@ fastify.post('/api/leads/:id/accept', async (request: any, reply: any) => {
     if (!lawyerProfile) return reply.status(404).send({ error: 'Lawyer profile not found' });
 
     const lead = await prisma.lead.findUnique({ where: { id } });
-    const cleanDeclined = lead?.declinedLawyerIds.filter(declinedId => declinedId !== lawyerProfile.id) || [];
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+
+    if (lead.status !== 'NEW') {
+      return reply.status(400).send({ error: 'This consultation has already been accepted by another advocate.' });
+    }
+
+    const cleanDeclined = lead.declinedLawyerIds.filter(declinedId => declinedId !== lawyerProfile.id);
 
     const updatedLead = await prisma.lead.update({
       where: { id },
       data: {
         status: 'ASSIGNED',
         lawyerId: lawyerProfile.id,
+        notifiedLawyerIds: [],
         declinedLawyerIds: cleanDeclined,
         acceptedAt: new Date(),
         slaStatus: 'ACCEPTED'
@@ -287,24 +306,68 @@ fastify.post('/api/leads/:id/accept', async (request: any, reply: any) => {
 
 fastify.post('/api/leads/:id/decline', async (request: any, reply: any) => {
   const { id } = request.params;
+  const userId = request.headers['x-user-id'] as string;
+  
   try {
-    const lead = await prisma.lead.findUnique({ where: { id } });
-    if (!lead || !lead.lawyerId) return reply.status(404).send({ error: 'Lead or lawyer not found' });
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
 
-    const updatedDeclined = [...lead.declinedLawyerIds, lead.lawyerId];
-    await prisma.lead.update({
-      where: { id },
-      data: {
-        declinedLawyerIds: updatedDeclined,
-        lawyerId: null,
-        assignedAt: null,
-        slaStatus: 'REASSIGNING'
-      }
+    const lawyerProfile = await prisma.lawyerProfile.findUnique({
+      where: { userId }
     });
 
-    await assignLeadToLawyer(id);
+    if (!lawyerProfile) return reply.status(404).send({ error: 'Lawyer profile not found' });
+
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+
+    const isAssigned = lead.lawyerId === lawyerProfile.id;
+    const isNotified = lead.notifiedLawyerIds.includes(lawyerProfile.id);
+
+    if (!isAssigned && !isNotified) {
+      return reply.status(400).send({ error: 'Advocate is not invited or assigned to this lead.' });
+    }
+
+    const updatedDeclined = Array.from(new Set([...lead.declinedLawyerIds, lawyerProfile.id]));
+
+    if (isAssigned) {
+      await prisma.lead.update({
+        where: { id },
+        data: {
+          declinedLawyerIds: updatedDeclined,
+          lawyerId: null,
+          assignedAt: null,
+          slaStatus: 'REASSIGNING'
+        }
+      });
+      await assignLeadToLawyer(id);
+    } else {
+      const remainingNotified = lead.notifiedLawyerIds.filter(id => id !== lawyerProfile.id);
+      if (remainingNotified.length === 0) {
+        await prisma.lead.update({
+          where: { id },
+          data: {
+            declinedLawyerIds: updatedDeclined,
+            notifiedLawyerIds: [],
+            lawyerId: null,
+            assignedAt: null,
+            slaStatus: 'REASSIGNING'
+          }
+        });
+        await assignLeadToLawyer(id);
+      } else {
+        await prisma.lead.update({
+          where: { id },
+          data: {
+            declinedLawyerIds: updatedDeclined,
+            notifiedLawyerIds: remainingNotified
+          }
+        });
+      }
+    }
+
     return { success: true };
   } catch (error) {
+    fastify.log.error(error);
     return reply.status(500).send({ error: 'Failed to decline lead' });
   }
 });
@@ -407,16 +470,21 @@ fastify.post('/api/leads/:id/simulate-accept-timeout', async (request: any, repl
     const lead = await prisma.lead.findUnique({ where: { id } });
     if (!lead) return reply.status(404).send({ error: 'Lead not found' });
     
-    // Mark current assigned lawyer as declined/timed out
+    // Mark current assigned and notified lawyers as declined/timed out
     const declinedLawyers = [...(lead.declinedLawyerIds || [])];
     if (lead.lawyerId) declinedLawyers.push(lead.lawyerId);
+    if (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0) {
+      declinedLawyers.push(...lead.notifiedLawyerIds);
+    }
+    const updatedDeclined = Array.from(new Set(declinedLawyers));
     
     await prisma.lead.update({
       where: { id },
       data: {
         assignedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        declinedLawyerIds: declinedLawyers,
-        lawyerId: null
+        declinedLawyerIds: updatedDeclined,
+        lawyerId: null,
+        notifiedLawyerIds: []
       }
     });
     
@@ -438,14 +506,19 @@ fastify.post('/api/leads/:id/simulate-attendance-timeout', async (request: any, 
     
     const declinedLawyers = [...(lead.declinedLawyerIds || [])];
     if (lead.lawyerId) declinedLawyers.push(lead.lawyerId);
+    if (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0) {
+      declinedLawyers.push(...lead.notifiedLawyerIds);
+    }
+    const updatedDeclined = Array.from(new Set(declinedLawyers));
     
     await prisma.lead.update({
       where: { id },
       data: {
         slaStatus: 'NOT_ATTENDED',
-        declinedLawyerIds: declinedLawyers,
+        declinedLawyerIds: updatedDeclined,
         lawyerId: null,
-        status: 'NEW' // Reset status to NEW so new lawyer receives invitation
+        notifiedLawyerIds: [],
+        status: 'NEW' // Reset status to NEW so new lawyers receive invitations
       }
     });
     
