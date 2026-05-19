@@ -374,7 +374,7 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
     const hashedInput = crypto.createHash('sha256').update(password).digest('hex');
     if (hashedInput !== user.password) return reply.status(401).send({ error: 'Invalid email or password' });
 
-    const token = await fastify.jwt.sign({ 
+    const token = fastify.jwt.sign({ 
       id: user.id, 
       email: user.email,
       role: user.role 
