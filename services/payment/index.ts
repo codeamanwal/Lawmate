@@ -245,13 +245,21 @@ fastify.post('/api/payments/simulate-success/:leadId', async (request: any, repl
   const { leadId } = request.params;
   try {
     const booking = await prisma.booking.findUnique({
-      where: { leadId }
+      where: { leadId },
+      include: { payment: true }
     });
     if (booking) {
       await prisma.booking.update({
         where: { id: booking.id },
         data: { status: 'CONFIRMED' }
       });
+
+      if (booking.paymentId) {
+        await prisma.payment.update({
+          where: { id: booking.paymentId },
+          data: { status: 'captured' }
+        });
+      }
 
       // Trigger SLA matching in Lead Service
       fetch(`http://127.0.0.1:3002/api/leads/${leadId}/match`, { method: 'POST' })

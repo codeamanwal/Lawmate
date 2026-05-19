@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Home, Phone, MessageCircle } from 'lucide-react';
-import axios from 'axios';
 
 const SuccessPage = () => {
   const navigate = useNavigate();

@@ -198,7 +198,7 @@ fastify.all('/api/auth/instant-call', async (request: any, reply: any) => {
             city: clientUser.city || 'Unknown City',
             category: 'Instant Consultation',
             description: 'Client requested an instant secure connection from the dashboard.',
-            preferredTime: 'IMMEDIATE',
+            preferredTime: 'ASAP',
             lawyerId: lawyer.id,
             status: 'NEW'
           }

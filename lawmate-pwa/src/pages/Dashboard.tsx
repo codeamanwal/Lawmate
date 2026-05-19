@@ -160,7 +160,11 @@ const Dashboard = () => {
           ) : (
             <div className="space-y-4">
               {leads.map((lead) => (
-                <div key={lead.id} className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                <div 
+                  key={lead.id} 
+                  onClick={() => navigate('/my-bookings', { state: { highlightLeadId: lead.id } })}
+                  className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 hover:ring-2 hover:ring-indigo-100/50 transition-all cursor-pointer text-left"
+                >
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
@@ -168,7 +172,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {(() => {
-                        const isPaid = lead.booking?.payment?.status === 'captured';
+                        const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
                         const isCompleted = lead.status === 'COMPLETED';
                         
                         if (isCompleted) return <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>;
@@ -176,7 +180,10 @@ const Dashboard = () => {
                         return <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>;
                       })()}
                       <button 
-                        onClick={() => handleDelete(lead.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(lead.id);
+                        }}
                         className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -185,41 +192,63 @@ const Dashboard = () => {
                   </div>
                   <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-tighter text-gray-400 mb-6">
                     <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {lead.preferredTime === 'ASAP' ? 'Within 60 mins' : 'Later Today'}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {lead.preferredTime === 'ASAP' || lead.preferredTime === 'IMMEDIATE' ? 'Within 60 mins' : 'Later Today'}</span>
                   </div>
                   
-                  {lead.lawyer ? (
-                    <div className="bg-gray-50 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shrink-0 overflow-hidden">
-                          {lead.lawyer.user?.photo ? (
-                            <img src={`${import.meta.env.VITE_API_URL}${lead.lawyer.user.photo}`} alt="Lawyer" className="w-full h-full object-cover" />
-                          ) : (
-                             lead.lawyer.user?.name?.[0] || 'L'
-                          )}
+                  {(() => {
+                    const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
+                    const showLawyer = lead.lawyer && isPaid && lead.status !== 'NEW';
+
+                    if (showLawyer) {
+                      return (
+                        <div className="bg-gray-50 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shrink-0 overflow-hidden">
+                              {lead.lawyer.user?.photo ? (
+                                <img src={`${import.meta.env.VITE_API_URL}${lead.lawyer.user.photo}`} alt="Lawyer" className="w-full h-full object-cover" />
+                              ) : (
+                                 lead.lawyer.user?.name?.[0] || 'L'
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating || '4.8'} • {lead.lawyer.experience} Years Exp</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/my-bookings', { state: { highlightLeadId: lead.id } });
+                            }}
+                            className="text-indigo-600 font-black text-[11px] uppercase tracking-widest flex items-center gap-1 hover:underline w-full sm:w-auto justify-center sm:justify-start"
+                          >
+                            Contact Lawyer <ChevronRight className="w-4 h-4" />
+                          </button>
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating || '4.8'} • {lead.lawyer.experience} Years Exp</p>
-                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center justify-between">
+                        {isPaid ? (
+                          <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic font-medium">Payment is required to start matching...</p>
+                        )}
+                        {lead.status === 'NEW' && !isPaid && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/payment', { state: { leadId: lead.id } });
+                            }}
+                            className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm cursor-pointer"
+                          >
+                            <CreditCard className="w-4 h-4" /> Pay & Consult
+                          </button>
+                        )}
                       </div>
-                      <button className="text-indigo-600 font-black text-[11px] uppercase tracking-widest flex items-center gap-1 hover:underline w-full sm:w-auto justify-center sm:justify-start">
-                        Contact Lawyer <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
-                      {lead.status === 'NEW' && !lead.booking?.payment && (
-                        <button 
-                          onClick={() => navigate('/payment', { state: { leadId: lead.id } })}
-                          className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm"
-                        >
-                          <CreditCard className="w-4 h-4" /> Pay & Consult
-                        </button>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               ))}
             </div>
