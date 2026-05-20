@@ -162,25 +162,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const loginWithEmail = async (email: string, pass: string, role?: string) => {
     if (role) localStorage.setItem('intendedRole', role);
-    try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, { 
-        email, 
-        password: pass,
-        role 
-      });
-      const { token, user: backendUser } = response.data;
-      localStorage.setItem('token', token);
-      setUser(backendUser);
-      sessionStorage.removeItem('showSignInToast');
-      await auth.signOut().catch(() => {});
-      toast.success('Signed in successfully!');
-    } catch (error: any) {
-      if (error.response?.status === 403) {
-        throw new Error(error.response.data.error);
-      }
-      sessionStorage.setItem('showSignInToast', 'true');
-      await signInWithEmailAndPassword(auth, email, pass);
-    }
+    sessionStorage.setItem('showSignInToast', 'true');
+    await signInWithEmailAndPassword(auth, email, pass);
   };
 
   const forgotPassword = async (email: string) => {

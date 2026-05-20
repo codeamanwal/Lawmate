@@ -25,5 +25,8 @@
     "@types/nodemailer": "^8.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "node-fetch": "^2.7.0"
   }
 }

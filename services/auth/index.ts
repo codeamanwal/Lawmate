@@ -341,13 +341,53 @@ fastify.post('/api/auth/set-password', async (request: any, reply: any) => {
   const { userId, password } = request.body;
   
   try {
-    // In real production, use bcrypt. Here we'll use a simple sha256 for demo safety
+    // 1. Hash and Update Password in PostgreSQL
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-    
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword }
     });
+
+    // 2. Sync to Firebase Authentication
+    if (user && user.email) {
+      try {
+        let fbUser;
+        try {
+          fbUser = await admin.auth().getUserByEmail(user.email);
+        } catch (e) {
+          fbUser = null;
+        }
+
+        if (fbUser) {
+          // If already in Firebase, update the password
+          await admin.auth().updateUser(fbUser.uid, {
+            password: password
+          });
+        } else {
+          // Create new user in Firebase Auth
+          try {
+            await admin.auth().createUser({
+              email: user.email,
+              password: password,
+              displayName: user.name || undefined,
+              phoneNumber: user.phone ? (user.phone.startsWith('+') ? user.phone : `+91${user.phone}`) : undefined
+            });
+          } catch (createError: any) {
+            if (createError.code === 'auth/phone-number-already-exists' || createError.code === 'auth/invalid-phone-number') {
+              await admin.auth().createUser({
+                email: user.email,
+                password: password,
+                displayName: user.name || undefined
+              });
+            } else {
+              throw createError;
+            }
+          }
+        }
+      } catch (fbErr) {
+        // Silent catch to prevent blocking PostgreSQL-based registration
+      }
+    }
 
     return { success: true };
   } catch (error) {
@@ -567,14 +607,26 @@ fastify.post('/api/auth/reset-password', async (request: any, reply: any) => {
       return reply.status(400).send({ error: 'Invalid or expired code' });
     }
 
-    // 2. Hash and Update Password
+    // 2. Hash and Update Password in PostgreSQL
     const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
     await prisma.user.update({
       where: { email },
       data: { password: hashedPassword }
     });
 
-    // 3. Clear OTP
+    // 3. Sync to Firebase Authentication
+    try {
+      const fbUser = await admin.auth().getUserByEmail(email);
+      if (fbUser) {
+        await admin.auth().updateUser(fbUser.uid, {
+          password: newPassword
+        });
+      }
+    } catch (fbErr) {
+      // Silent catch
+    }
+
+    // 4. Clear OTP
     await prisma.otp.delete({ where: { email } });
 
     return { success: true };
