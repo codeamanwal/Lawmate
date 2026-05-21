@@ -10,7 +10,8 @@ import {
   Power,
   Loader2,
   Briefcase,
-  CreditCard
+  CreditCard,
+  Star
 } from 'lucide-react';
 
 import { useEffect } from 'react';
@@ -493,7 +494,7 @@ const LawyerDashboard = () => {
               {[
                 { label: 'This Month', value: '₹0', icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                 { label: 'Requests Today', value: '0', icon: Phone, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Rating', value: 'N/A', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'Rating', value: user?.lawyerProfile?.rating && user.lawyerProfile.rating > 0 ? user.lawyerProfile.rating.toFixed(1) : 'N/A', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
                 { label: 'Hours Spent', value: '0h', icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50' },
               ].map(stat => (
                 <div key={stat.label} className="bg-white p-4 sm:p-6 rounded-[28px] border border-gray-100 shadow-sm">
@@ -541,9 +542,12 @@ const LawyerDashboard = () => {
               <h2 className="text-2xl font-black text-gray-900 mb-1">{user?.name || user?.fullName || 'Advocate'}</h2>
               <p className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-6">{user?.lawyerProfile?.licenseNumber || 'Verified Advocate'}</p>
               
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <span className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-xs font-black uppercase flex items-center gap-2">
                   <Clock className="w-4 h-4" /> Pending for Review
+                </span>
+                <span className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black uppercase flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" /> {user?.lawyerProfile?.rating && user.lawyerProfile.rating > 0 ? `${user.lawyerProfile.rating.toFixed(1)} / 5.0 Rating` : 'No Ratings'}
                 </span>
                 <span className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-xs font-black uppercase">
                   ID: {user?.lawyerProfile?.licenseNumber || 'Not Provided'}

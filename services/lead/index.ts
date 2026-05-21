@@ -411,8 +411,34 @@ fastify.post('/api/leads/:id/feedback', async (request: any, reply: any) => {
         feedbackText: feedback
       }
     });
+
+    if (updatedLead.lawyerId) {
+      const allFeedbackLeads = await prisma.lead.findMany({
+        where: {
+          lawyerId: updatedLead.lawyerId,
+          feedbackRating: { not: null }
+        },
+        select: {
+          feedbackRating: true
+        }
+      });
+
+      if (allFeedbackLeads.length > 0) {
+        const totalRating = allFeedbackLeads.reduce((acc, lead) => acc + (lead.feedbackRating || 0), 0);
+        const averageRating = totalRating / allFeedbackLeads.length;
+
+        await prisma.lawyerProfile.update({
+          where: { id: updatedLead.lawyerId },
+          data: {
+            rating: averageRating
+          }
+        });
+      }
+    }
+
     return updatedLead;
   } catch (error) {
+    fastify.log.error(error);
     return reply.status(500).send({ error: 'Failed to submit feedback' });
   }
 });

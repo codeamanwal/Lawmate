@@ -232,7 +232,7 @@ const Dashboard = () => {
                             </div>
                             <div>
                               <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
-                              <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating || '4.8'} • {lead.lawyer.experience} Years Exp</p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating && lead.lawyer.rating > 0 ? lead.lawyer.rating.toFixed(1) : 'No Ratings'} • {lead.lawyer.experience} Years Exp</p>
                             </div>
                           </div>
                         </div>

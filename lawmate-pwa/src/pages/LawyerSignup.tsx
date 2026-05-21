@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   Lock,
   Gavel,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -54,6 +56,8 @@ const LawyerSignup = () => {
   const [otp, setOtp] = useState('');
   const [tempUserId, setTempUserId] = useState('');
   const [passwords, setPasswords] = useState({ password: '', confirm: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { loginWithEmail } = useAuth();
   const navigate = useNavigate();
 
@@ -344,24 +348,42 @@ const LawyerSignup = () => {
               <div className="space-y-6 max-w-sm mx-auto">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
-                  <input
-                    type="password"
-                    value={passwords.password}
-                    onChange={(e) => setPasswords({...passwords, password: e.target.value})}
-                    placeholder="8+ characters"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-all font-medium"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={passwords.password}
+                      onChange={(e) => setPasswords({...passwords, password: e.target.value})}
+                      placeholder="8+ characters"
+                      className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-all font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                   <p className="mt-1.5 text-[10px] font-bold text-gray-400">8+ characters, mix of letters & numbers</p>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                    placeholder="Re-enter password"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-all font-medium"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                      placeholder="Re-enter password"
+                      className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-all font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <button
