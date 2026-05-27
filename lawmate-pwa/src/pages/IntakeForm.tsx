@@ -143,12 +143,14 @@ const IntakeForm = () => {
                 className={`w-full px-4 py-3 rounded-xl border ${errors.category ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all bg-white`}
               >
                 <option value="">Select Category</option>
-                <option value="Property">Property</option>
-                <option value="Divorce">Divorce</option>
-                <option value="Matrimonial">Matrimonial</option>
-                <option value="Employment">Employment</option>
-                <option value="Criminal">Criminal</option>
-                <option value="Civil">Civil</option>
+                <option value="Family & Marriage">Family & Marriage</option>
+                <option value="Domestic Violence">Domestic Violence</option>
+                <option value="Property & Registry">Property & Registry</option>
+                <option value="Criminal & Police">Criminal & Police</option>
+                <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
+                <option value="Employment & HR">Employment & HR</option>
+                <option value="Consumer Complaints">Consumer Complaints</option>
                 <option value="Other">Other</option>
               </select>
               {errors.category && <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.category.message}</p>}

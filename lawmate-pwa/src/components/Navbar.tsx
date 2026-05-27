@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Gavel, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -15,9 +15,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
-            <div className="bg-indigo-600 p-1.5 rounded-lg">
-              <Gavel className="w-6 h-6 text-white" />
-            </div>
+            <img src="/main-logo.png" alt="LawOnCall Logo" className="h-11 w-auto object-contain" />
             <span className="text-xl font-black text-gray-900 tracking-tight">Law<span className="text-indigo-600">OnCall</span></span>
           </Link>
 

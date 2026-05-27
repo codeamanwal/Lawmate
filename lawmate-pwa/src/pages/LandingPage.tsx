@@ -82,64 +82,44 @@ const LandingPage = () => {
           
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <ExpertiseCard 
-              image="/divorce.jpg"
-              title="Divorce"
-              description="Top divorce law services in Delhi/NCR — expert support for contested and mutual divorce cases with trusted guidance."
+              image="/1. Family & Marriage_001.png"
+              title="Family & Marriage"
+              description="Divorce, custody, matrimonial & family disputes."
             />
             <ExpertiseCard 
-              image="/domestic.jpg"
+              image="/2. Domestic Violence_001.png"
               title="Domestic Violence"
-              description="Experienced domestic violence lawyer in Delhi & NCR providing dedicated legal help to protect your rights and ensure your safety."
+              description="Protection against violence in personal space"
             />
             <ExpertiseCard 
-              image="/Matrimonial.jpg"
-              title="Matrimonial"
-              description="Trusted matrimonial lawyer specializing in divorce, alimony, and family disputes — protecting your interests with care and professionalism."
+              image="/3. Property & Registry_001.png"
+              title="Property & Registry"
+              description="Registry, builder fraud, rent & ownership issues."
             />
             <ExpertiseCard 
-              image="/family.jpg"
-              title="Family Disputes"
-              description="Best family dispute lawyer in Delhi NCR dedicated to protecting your rights and achieving fair resolutions in family matters."
+              image="/4. Criminal & Police_001.png"
+              title="Criminal & Police"
+              description="FIR, police matters, bail & urgent legal help."
             />
             <ExpertiseCard 
-              image="/bail.jpg"
-              title="Bail Matters"
-              description="Trusted bail lawyer in Delhi helping clients secure timely release with expert representation and legal guidance."
+              image="/5. Supreme Court Lawyer_001.png"
+              title="Supreme Court Lawyer"
+              description="Expert legal support and strong representation"
             />
             <ExpertiseCard 
-              image="/cheque.jpg"
-              title="Cheque Bounce"
-              description="Expert cheque bounce lawyer in Delhi providing swift legal action and effective solutions for cheque bounce cases."
+              image="/6. Cyber & Digital Fraud_001.png"
+              title="Cyber & Digital Fraud"
+              description="UPI fraud, cybercrime & online scam support."
             />
             <ExpertiseCard 
-              image="/civil.jpg"
-              title="Civil"
-              description="Experienced civil lawyer in Delhi providing expert legal solutions for property, contract, and civil dispute cases."
+              image="/7. Employment & HR_001.png"
+              title="Employment & HR"
+              description="Wrongful termination, salary & workplace disputes."
             />
             <ExpertiseCard 
-              image="/criminial.jpg"
-              title="Criminal"
-              description="Top criminal lawyer in Delhi specializing in defense for serious offenses, ensuring your rights are fiercely protected."
-            />
-            <ExpertiseCard 
-              image="/supreme.jpg"
-              title="Supreme Court"
-              description="Experienced Supreme Court lawyer in Delhi offering expert representation in high-stakes constitutional, civil, and criminal cases."
-            />
-            <ExpertiseCard 
-              image="/corporate.jpg"
-              title="Corporate"
-              description="Expert corporate lawyer in Delhi providing strategic legal solutions for businesses, compliance, and corporate disputes."
-            />
-            <ExpertiseCard 
-              image="/cat1.jpg"
-              title="CAT Matters"
-              description="Expert CAT lawyers in Delhi/NCR — handling government service disputes and administrative appeals efficiently."
-            />
-            <ExpertiseCard 
-              image="/debt.jpg"
-              title="Debt Recovery Tribunal"
-              description="Expert Debt Recovery Tribunal Lawyers in Delhi/NCR - providing expert support for debt recovery and financial claims efficiently."
+              image="/8. Consumer Complaints 001.png"
+              title="Consumer Complaints"
+              description="Online fraud, refunds & consumer protection."
             />
           </div>
         </div>
@@ -151,11 +131,9 @@ const LandingPage = () => {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-2">
-              <Link to="/" className="text-2xl font-black text-white tracking-tight flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">⚖️</span>
-                </div>
-                LawOnCall
+              <Link to="/" className="inline-flex items-center gap-2 mb-4">
+                <img src="/main-logo.png" alt="LawOnCall Logo" className="h-11 w-auto object-contain" />
+                <span className="text-xl font-black text-white tracking-tight">Law<span className="text-indigo-500">OnCall</span></span>
               </Link>
               <p className="text-sm leading-relaxed max-w-xs">
                 Connecting you with India's top legal professionals instantly. Your trusted partner for legal solutions.

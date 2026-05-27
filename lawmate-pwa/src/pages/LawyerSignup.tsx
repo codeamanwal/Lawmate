@@ -33,7 +33,7 @@ const states = [
   "Uttarakhand", "West Bengal", "Delhi"
 ];
 
-const categories = ["Divorce", "Criminal", "Property", "Employment", "Civil", "Matrimonial", "Other"];
+const categories = ["Family & Marriage", "Domestic Violence", "Property & Registry", "Criminal & Police", "Supreme Court Lawyer", "Cyber & Digital Fraud", "Employment & HR", "Consumer Complaints", "Other"];
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -133,10 +133,8 @@ const LawyerSignup = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="bg-indigo-600 p-1.5 rounded-lg">
-              <Gavel className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gray-900 tracking-tight">LawOnCall</span>
+            <img src="/main-logo.png" alt="LawOnCall Logo" className="h-9 w-auto object-contain" />
+            <span className="text-2xl font-bold text-gray-900 tracking-tight">Law<span className="text-indigo-600">OnCall</span></span>
           </Link>
           <h1 className="text-3xl font-black text-gray-900 mb-2">Register as Advocate</h1>
           <p className="text-gray-500 font-medium">Join our network of verified legal professionals</p>
