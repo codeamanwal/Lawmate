@@ -22,7 +22,78 @@ fastify.register(cors, {
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter }); // Reload trigger to pick up new env keys and database schema
+
+function formatPhoneNumber(phone: string): string {
+  const clean = phone.replace(/\D/g, '');
+  if (clean.length === 10) {
+    return `+91${clean}`;
+  }
+  if (clean.length === 12 && clean.startsWith('91')) {
+    return `+${clean}`;
+  }
+  return phone.startsWith('+') ? phone : `+${phone}`;
+}
+
+async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadId: string): Promise<any> {
+  const apiKey = process.env.EXOTEL_API_KEY;
+  const apiToken = process.env.EXOTEL_API_TOKEN;
+  const accountSid = process.env.EXOTEL_ACCOUNT_SID;
+  const subdomain = process.env.EXOTEL_SUBDOMAIN || 'api.exotel.com';
+  const exophone = process.env.EXOTEL_EXOPHONE;
+  const statusCallbackUrl = process.env.EXOTEL_STATUS_CALLBACK_URL;
+
+  if (!apiKey || !apiToken || !accountSid || !exophone) {
+    console.error('Exotel credentials or ExoPhone missing in environment variables');
+    throw new Error('Call service not fully configured.');
+  }
+
+  const url = `https://${subdomain}/v1/Accounts/${accountSid}/Calls/connect`;
+  const authHeader = 'Basic ' + Buffer.from(`${apiKey}:${apiToken}`).toString('base64');
+
+  const formattedLawyer = formatPhoneNumber(lawyerPhone);
+  const formattedClient = formatPhoneNumber(clientPhone);
+
+  const params = new URLSearchParams();
+  params.append('From', formattedLawyer);
+  params.append('To', formattedClient);
+  params.append('CallerId', exophone);
+  params.append('Record', 'true');
+  
+  if (statusCallbackUrl) {
+    params.append('StatusCallback', statusCallbackUrl);
+    params.append('StatusCallbackContentType', 'application/json');
+  }
+
+  console.log(`Triggering Exotel call from ${formattedLawyer} to ${formattedClient} using ExoPhone ${exophone}`);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Exotel call connection failed:', errorText);
+    throw new Error(`Exotel connection failed: ${response.statusText}`);
+  }
+
+  const data: any = await response.json();
+  console.log('Exotel call initiated successfully:', data);
+
+  if (data?.Call?.Sid) {
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: { callSid: data.Call.Sid }
+    });
+  }
+
+  return data;
+}
 
 const leadSchema = z.object({
   fullName: z.string(),
@@ -297,11 +368,82 @@ fastify.post('/api/leads/:id/accept', async (request: any, reply: any) => {
       data: { lawyerId: lawyerProfile.id }
     });
 
+    // Trigger Exotel Click-to-Call connection
+    try {
+      if (lawyerProfile.phone && updatedLead.phone) {
+        await triggerExotelCall(lawyerProfile.phone, updatedLead.phone, id);
+      } else {
+        console.error('Missing phone number for lawyer or lead to trigger Exotel call');
+      }
+    } catch (callErr) {
+      console.error('Failed to trigger Exotel call on accept:', callErr);
+    }
+
     return updatedLead;
   } catch (error) {
     fastify.log.error(error);
     return reply.status(500).send({ error: 'Failed to accept lead' });
   }
+});
+
+fastify.post('/api/leads/:id/call', async (request: any, reply: any) => {
+  const { id } = request.params;
+  const userId = request.headers['x-user-id'] as string;
+  
+  try {
+    if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+    const lawyerProfile = await prisma.lawyerProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!lawyerProfile) return reply.status(404).send({ error: 'Lawyer profile not found' });
+
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+
+    if (lead.lawyerId !== lawyerProfile.id) {
+      return reply.status(403).send({ error: 'You are not assigned to this consultation' });
+    }
+
+    if (!lawyerProfile.phone) {
+      return reply.status(400).send({ error: 'Your advocate profile is missing a phone number' });
+    }
+
+    const callResult = await triggerExotelCall(lawyerProfile.phone, lead.phone, id);
+    return { success: true, callSid: callResult?.Call?.Sid };
+  } catch (error: any) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: error.message || 'Failed to initiate call via Exotel' });
+  }
+});
+
+fastify.post('/api/leads/call-status', async (request: any, reply: any) => {
+  const payload = request.body;
+  fastify.log.info('Exotel Status Callback Received:', payload);
+
+  const callSid = payload?.CallSid || payload?.Call?.Sid;
+  const recordingUrl = payload?.RecordingUrl || payload?.Call?.RecordingUrl;
+
+  if (callSid) {
+    const lead = await prisma.lead.findFirst({
+      where: { callSid }
+    });
+
+    if (lead) {
+      await prisma.lead.update({
+        where: { id: lead.id },
+        data: {
+          recordingUrl: recordingUrl || undefined
+        }
+      });
+      fastify.log.info(`Updated lead ${lead.id} with Exotel callback details.`);
+    } else {
+      fastify.log.warn(`No lead matching Exotel CallSid ${callSid}`);
+    }
+  }
+
+  return { success: true };
 });
 
 fastify.post('/api/leads/:id/decline', async (request: any, reply: any) => {
@@ -569,3 +711,5 @@ const start = async () => {
 };
 
 start();
+
+// Cache clear trigger

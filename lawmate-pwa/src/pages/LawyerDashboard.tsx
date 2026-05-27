@@ -119,7 +119,9 @@ const LawyerDashboard = () => {
     }
   }, [user]);
 
-  const handleAcceptCall = async (callId: string, phone: string) => {
+  const [callingState, setCallingState] = useState<{ [key: string]: boolean }>({});
+
+  const handleAcceptCall = async (callId: string) => {
     try {
       const token = localStorage.getItem('token');
       // Mark as accepted in the backend
@@ -127,10 +129,7 @@ const LawyerDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      toast.success('Call request accepted!');
-      
-      // Open phone dialer
-      window.location.href = `tel:${phone}`;
+      toast.success('Call request accepted! Exotel is dialing your number to connect the call.');
       
       // Switch tab to cases so they can resolve the call
       setActiveTab('cases');
@@ -144,6 +143,23 @@ const LawyerDashboard = () => {
       console.error("Failed to accept call request", error);
       const errMsg = error.response?.data?.error || "Failed to accept call request.";
       toast.error(errMsg);
+    }
+  };
+
+  const handleInitiateCall = async (callId: string) => {
+    setCallingState(prev => ({ ...prev, [callId]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${callId}/call`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Connecting call... Exotel will ring your phone first.');
+    } catch (error: any) {
+      console.error("Failed to initiate Exotel call", error);
+      const errMsg = error.response?.data?.error || "Failed to initiate call.";
+      toast.error(errMsg);
+    } finally {
+      setCallingState(prev => ({ ...prev, [callId]: false }));
     }
   };
 
@@ -307,7 +323,7 @@ const LawyerDashboard = () => {
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button 
-                      onClick={() => handleAcceptCall(call.id, call.phone)}
+                      onClick={() => handleAcceptCall(call.id)}
                       className="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
                     >
                       Accept Call
@@ -360,10 +376,11 @@ const LawyerDashboard = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <button 
-                          onClick={() => window.location.href = `tel:${call.phone}`}
-                          className="px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                          onClick={() => handleInitiateCall(call.id)}
+                          disabled={callingState[call.id]}
+                          className="px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center gap-1.5 disabled:opacity-50"
                         >
-                          <Phone className="w-3.5 h-3.5" /> Call Client
+                          <Phone className="w-3.5 h-3.5" /> {callingState[call.id] ? 'Calling...' : 'Call Client'}
                         </button>
                         <button 
                           onClick={() => setResolvingCall(call)}

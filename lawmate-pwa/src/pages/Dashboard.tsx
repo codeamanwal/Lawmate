@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Calendar, MapPin, Phone, CreditCard, ChevronRight, Star, Clock, Trash2 } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Phone, CreditCard, Star, Clock, Trash2 } from 'lucide-react';
 
 import axios from 'axios';
 import toast from 'react-hot-toast';

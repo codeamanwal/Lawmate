@@ -108,6 +108,10 @@ fastify.post('/api/leads/:id/simulate-attendance-timeout', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.post('/api/leads/call-status', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.get('/api/payments/verify/:leadId', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
@@ -181,6 +185,14 @@ fastify.register(async (instance) => {
     }));
   });
 
+  instance.post('/api/leads/:id/call', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
   instance.post('/api/leads/:id/decline', (request, reply) => {
     const user = request.user as any;
     return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {
@@ -213,7 +225,7 @@ fastify.post('/api/profiles/lawyer/update', (request, reply) => {
 
 fastify.get('/api/profiles/lawyer/me', (request, reply) => {
   return reply.from(`${AUTH_SERVICE}${request.url}`, proxyOptions(request));
-});
+}); // Reload trigger to pick up new env keys and database schema
 
 fastify.post('/api/profiles/lawyer/availability', (request, reply) => {
   return reply.from(`${AUTH_SERVICE}${request.url}`, proxyOptions(request));
