@@ -129,11 +129,11 @@ VITE_FIREBASE_AUTH_DOMAIN="..."
 VITE_FIREBASE_PROJECT_ID="..."
 
 # EXOTEL VOICE CALL CREDENTIALS
-EXOTEL_API_KEY="74290c9e3ff4d73659fea3960ff32c8de0b33de7833cedfd"
-EXOTEL_API_TOKEN="85315ead1bc08e75d78b3fcc8dfd961a87e342caf46ccd22"
-EXOTEL_ACCOUNT_SID="shugendolabs1"
+EXOTEL_API_KEY="your_exotel_api_key"
+EXOTEL_API_TOKEN="your_exotel_api_token"
+EXOTEL_ACCOUNT_SID="your_exotel_account_sid"
 EXOTEL_SUBDOMAIN="api.exotel.com"
-EXOTEL_EXOPHONE="09513886363"
+EXOTEL_EXOPHONE="your_exophone_number"
 EXOTEL_STATUS_CALLBACK_URL="https://your-public-url.com/api/leads/call-status"
 ```
 
