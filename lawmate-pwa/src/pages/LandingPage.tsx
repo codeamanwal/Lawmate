@@ -132,7 +132,7 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-2">
               <Link to="/" className="inline-flex items-center gap-2 mb-4">
-                <img src="/main-logo.png" alt="LawOnCall Logo" className="h-11 w-auto object-contain" />
+                <img src="/logo-main.png" alt="LawOnCall Logo" className="h-11 w-auto object-contain" />
                 <span className="text-xl font-black text-white tracking-tight">Law<span className="text-indigo-500">OnCall</span></span>
               </Link>
               <p className="text-sm leading-relaxed max-w-xs">

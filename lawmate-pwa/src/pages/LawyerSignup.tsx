@@ -133,7 +133,7 @@ const LawyerSignup = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <img src="/main-logo.png" alt="LawOnCall Logo" className="h-9 w-auto object-contain" />
+            <img src="/logo-main.png" alt="LawOnCall Logo" className="h-9 w-auto object-contain" />
             <span className="text-2xl font-bold text-gray-900 tracking-tight">Law<span className="text-indigo-600">OnCall</span></span>
           </Link>
           <h1 className="text-3xl font-black text-gray-900 mb-2">Register as Advocate</h1>

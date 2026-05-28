@@ -96,23 +96,23 @@ const Dashboard = () => {
           <p className="text-gray-500 font-medium">Welcome back, {user?.name || user?.phone}</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-4">
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="bg-green-100 p-2 rounded-lg text-green-600">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 flex-1">
+              <div className="bg-green-100 p-2 rounded-lg text-green-600 shrink-0">
                 <Phone className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Mobile</p>
-                <p className="font-bold text-gray-800">{user?.phone}</p>
+                <p className="font-bold text-gray-800 break-all truncate text-sm sm:text-base">{user?.phone}</p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 flex-1">
+              <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600 shrink-0">
                 <MapPin className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">City</p>
-                <p className="font-bold text-gray-800">{user?.city || 'Not Set'}</p>
+                <p className="font-bold text-gray-800 truncate text-sm sm:text-base">{user?.city || 'Not Set'}</p>
               </div>
             </div>
           </div>
