@@ -59,7 +59,7 @@ const HowItWorks = () => {
                 <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg"><CheckCircle2 className="w-5 h-5" /></div>
                 <h3 className="text-xl font-bold text-gray-900">Secure Payment</h3>
               </div>
-              <p className="text-gray-600">Complete your flat <b>₹999 payment via Razorpay</b>. Once paid, your expert lawyer will connect with you via WhatsApp within 60 minutes.</p>
+              <p className="text-gray-600">Complete your safe and secure payment via PhonePe payment gateway. Once paid, your expert lawyer will connect with you within 60 minutes/same day.</p>
             </div>
           </div>
 

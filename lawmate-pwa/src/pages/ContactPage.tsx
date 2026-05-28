@@ -15,7 +15,7 @@ const ContactPage = () => {
   });
 
   const contactCards = [
-    { icon: Mail, label: 'Email us', value: 'hello@lawoncall.in', sub: 'For general enquiries, partnerships, and press.' },
+    { icon: Mail, label: 'Email us', value: 'hello@lawoncall.in', sub: 'For general enquiries and partnerships.' },
     { icon: Scale, label: 'For lawyers', value: 'lawyers@lawoncall.in', sub: 'Interested in joining our advocate network? Write to us.' },
     { icon: MapPin, label: 'Based in', value: 'India', sub: 'Serving Delhi NCR at launch, expanding pan-India.' },
     { icon: Clock, label: 'Response time', value: 'Within 24 hours', sub: 'We read every message and reply to every one.' },
@@ -172,7 +172,6 @@ const ContactPage = () => {
                         <option value="General Enquiry">General Enquiry</option>
                         <option value="Join as a Lawyer">Join as a Lawyer</option>
                         <option value="Partnership / Business">Partnership / Business</option>
-                        <option value="Press / Media">Press / Media</option>
                         <option value="Feedback">Feedback</option>
                         <option value="Other">Other</option>
                       </select>

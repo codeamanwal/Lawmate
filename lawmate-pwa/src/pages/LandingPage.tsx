@@ -16,7 +16,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
             >
               <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wide text-indigo-600 uppercase bg-indigo-50 rounded-full">
-                Lawyers at your fingertips
+                Legal support at your fingertips
               </span>
               <h1 className="mb-6 text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl leading-tight">
                 Legal Expert advice <span className="text-indigo-600">in 60 minutes.</span>
@@ -151,8 +151,8 @@ const LandingPage = () => {
             <div>
               <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Support</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+                <li><Link to="/about" className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>
             </div>
           </div>

@@ -20,6 +20,7 @@ import LawyerOnboarding from './pages/LawyerOnboarding';
 import LawyerDashboard from './pages/LawyerDashboard';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import DisclaimerModal from './components/DisclaimerModal';
 import { AuthProvider } from './context/AuthContext';
 
 import './App.css';
@@ -29,6 +30,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50 flex flex-col">
+          <DisclaimerModal />
           <Navbar />
           <main className="flex-grow">
             <Routes>
