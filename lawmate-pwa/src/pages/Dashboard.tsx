@@ -287,24 +287,7 @@ const Dashboard = () => {
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900">Subscription</h2>
-          <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200">
-            <h3 className="text-xl font-bold mb-2">Priority Plus</h3>
-            <p className="text-indigo-100 text-sm mb-6">Get unlimited consultations and priority matching for 12 months.</p>
-            <div className="text-3xl font-black mb-8">₹4,999<span className="text-lg font-normal opacity-70">/year</span></div>
-            <button className="w-full py-4 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-all shadow-lg">
-              Upgrade Now
-            </button>
 
-          </div>
-
-          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-4">Quick Support</h3>
-            <p className="text-sm text-gray-500 mb-6">Need help with your booking? Our support team is available 24/7.</p>
-            <button className="w-full py-3 border-2 border-gray-100 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all">
-              Chat with Us
-            </button>
-          </div>
         </div>
       </div>
     </div>
