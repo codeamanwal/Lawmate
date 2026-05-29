@@ -21,6 +21,7 @@ import LawyerDashboard from './pages/LawyerDashboard';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import DisclaimerModal from './components/DisclaimerModal';
+import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
 
 import './App.css';
@@ -29,6 +30,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <DisclaimerModal />
           <Navbar />

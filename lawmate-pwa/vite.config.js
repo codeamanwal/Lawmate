@@ -20,8 +20,8 @@ export default defineConfig({
         clientsClaim: true,
       },
       manifest: {
-        name: 'Law On Call',
-        short_name: 'Law On Call',
+        name: 'Lawoncall.com',
+        short_name: 'Lawoncall.com',
         description: 'Connect with expert lawyers in minutes for reliable legal advice.',
         theme_color: '#863bff',
         background_color: '#ffffff',
