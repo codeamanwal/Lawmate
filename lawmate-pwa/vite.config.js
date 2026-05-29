@@ -34,7 +34,13 @@ export default defineConfig({
         dir: 'ltr',
         display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
         prefer_related_applications: false,
-        related_applications: [],
+        related_applications: [
+          {
+            platform: 'play',
+            url: 'https://play.google.com/store/apps/details?id=com.lawoncall.app',
+            id: 'com.lawoncall.app'
+          }
+        ],
         iarc_rating_id: '12345678-90ab-cdef-1234-567890abcdef',
         categories: ['legal', 'utility'],
         launch_handler: {
@@ -117,14 +123,14 @@ export default defineConfig({
         screenshots: [
           {
             src: '/screenshot-desktop.png',
-            sizes: '1280x720',
+            sizes: '1877x907',
             type: 'image/png',
             form_factor: 'wide',
             label: 'Lawoncall Desktop'
           },
           {
             src: '/screenshot-mobile.png',
-            sizes: '720x1280',
+            sizes: '440x782',
             type: 'image/png',
             form_factor: 'narrow',
             label: 'Lawoncall Mobile'
