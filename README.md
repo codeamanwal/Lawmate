@@ -1,6 +1,6 @@
-# ⚖️ LawMate - Legal Consultation Platform
+# ⚖️ LawOnCall - Legal Consultation Platform
 
-LawMate is a high-performance, PWA-based legal consultation platform designed to connect clients with legal experts within 30 minutes.
+LawOnCall is a high-performance, PWA-based legal consultation platform designed to connect clients with legal experts within 30 minutes.
 
 ## 🚀 Features
 - **Progressive Web App (PWA)**: Install on Android/iOS homescreens.
