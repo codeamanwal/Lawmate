@@ -107,7 +107,7 @@ const LandingPage = () => {
               description="Expert legal support and strong representation"
             />
             <ExpertiseCard 
-              image="/6. Cyber & Digital Fraud_001.png"
+              image="/6. Cyber & Digital Fraud_004.png"
               title="Cyber & Digital Fraud"
               description="UPI fraud, cybercrime & online scam support."
             />
