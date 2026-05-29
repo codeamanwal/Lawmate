@@ -20,6 +20,7 @@ export default defineConfig({
         clientsClaim: true,
       },
       manifest: {
+        id: '/',
         name: 'Lawoncall.com',
         short_name: 'Lawoncall.com',
         description: 'Connect with expert lawyers in minutes for reliable legal advice.',
@@ -29,6 +30,23 @@ export default defineConfig({
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        categories: ['legal', 'utility'],
+        shortcuts: [
+          {
+            name: 'Start Case',
+            short_name: 'Start Case',
+            description: 'Start a new legal case consultation',
+            url: '/get-started',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
+          },
+          {
+            name: 'My Bookings',
+            short_name: 'Bookings',
+            description: 'View your active and past consultations',
+            url: '/my-bookings',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
+          }
+        ],
         icons: [
           {
             src: '/pwa-192x192.png',
