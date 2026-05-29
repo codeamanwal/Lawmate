@@ -30,7 +30,74 @@ export default defineConfig({
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        lang: 'en',
+        dir: 'ltr',
+        display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
+        prefer_related_applications: false,
+        related_applications: [],
+        iarc_rating_id: '12345678-90ab-cdef-1234-567890abcdef',
         categories: ['legal', 'utility'],
+        launch_handler: {
+          client_mode: 'focus-existing'
+        },
+        edge_side_panel: {
+          preferred_width: 480
+        },
+        note_taking: {
+          new_note_url: '/new-note'
+        },
+        scope_extensions: [
+          { type: 'origin', origin: 'https://lawmate-jade.vercel.app' }
+        ],
+        share_target: {
+          action: '/share',
+          method: 'GET',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        },
+        file_handlers: [
+          {
+            action: '/open-file',
+            accept: {
+              'application/pdf': ['.pdf'],
+              'text/plain': ['.txt']
+            },
+            icons: [
+              {
+                src: '/pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              }
+            ],
+            launch_type: 'single-client'
+          }
+        ],
+        protocol_handlers: [
+          {
+            protocol: 'web+lawmate',
+            url: '/?protocol=%s'
+          }
+        ],
+        widgets: [
+          {
+            name: 'Lawoncall Widget',
+            short_name: 'Lawoncall',
+            description: 'Quick check of your legal inquiries',
+            icons: [
+              {
+                src: '/pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              }
+            ],
+            ms_ac_template: '/widgets/consultation.json',
+            data: '/widgets/data.json',
+            type: 'application/json'
+          }
+        ],
         shortcuts: [
           {
             name: 'Start Case',
@@ -45,6 +112,22 @@ export default defineConfig({
             description: 'View your active and past consultations',
             url: '/my-bookings',
             icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }]
+          }
+        ],
+        screenshots: [
+          {
+            src: '/screenshot-desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Lawoncall Desktop'
+          },
+          {
+            src: '/screenshot-mobile.png',
+            sizes: '720x1280',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Lawoncall Mobile'
           }
         ],
         icons: [
