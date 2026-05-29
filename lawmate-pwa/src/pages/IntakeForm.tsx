@@ -17,7 +17,7 @@ const formSchema = z.object({
   category: z.string().min(1, 'Please select a category'),
   description: z.string().min(10, 'Please provide a bit more detail about your issue'),
   preferredTime: z.enum(['ASAP', 'LATER']),
-  agreed: z.boolean().refine(val => val === true, 'You must agree to the terms'),
+  agreed: z.boolean().refine(val => val === true, 'You must agree to Terms & Conditions and Privacy Policy.'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -35,34 +35,43 @@ const IntakeForm = () => {
     }
   });
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Load from localStorage or User Profile
   useEffect(() => {
-    if (user) {
-      reset({
-        fullName: user.name || '',
-        phone: user.phone || '',
-        city: user.city || '',
-        preferredTime: 'ASAP',
-        agreed: false
-      });
-    } else {
-      const saved = localStorage.getItem('intake_draft');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          reset(parsed);
-        } catch (e) {
-          console.error('Failed to parse draft');
-        }
+    const saved = localStorage.getItem('intake_draft');
+    let draftValues: any = {};
+    if (saved) {
+      try {
+        draftValues = JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse draft');
       }
     }
-  }, [reset, user]);
+
+    if (user) {
+      reset({
+        fullName: draftValues.fullName || user.name || '',
+        phone: draftValues.phone || user.phone || '',
+        city: draftValues.city || user.city || '',
+        category: draftValues.category || '',
+        description: draftValues.description || '',
+        preferredTime: draftValues.preferredTime || 'ASAP',
+        agreed: draftValues.agreed || false
+      });
+    } else if (Object.keys(draftValues).length > 0) {
+      reset(draftValues);
+    }
+    setIsLoaded(true);
+  }, [user, reset]);
 
   // Save to localStorage on change
   const formValues = watch();
   useEffect(() => {
-    localStorage.setItem('intake_draft', JSON.stringify(formValues));
-  }, [formValues]);
+    if (isLoaded) {
+      localStorage.setItem('intake_draft', JSON.stringify(formValues));
+    }
+  }, [formValues, isLoaded]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
