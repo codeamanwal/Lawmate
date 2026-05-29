@@ -90,7 +90,13 @@ const MyBookings = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
       <div className="mb-8 md:mb-12">
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-500 font-medium text-sm sm:text-base">You have {bookings.length} confirmed legal consultations</p>
+        <p className="text-gray-500 font-medium text-sm sm:text-base">
+          {bookings.length === 0
+            ? 'You have no open legal consultations'
+            : bookings.length === 1
+            ? 'You have 1 legal consultation'
+            : `You have ${bookings.length} legal consultations`}
+        </p>
       </div>
 
       {bookings.length === 0 ? (
@@ -258,7 +264,7 @@ const MyBookings = () => {
                               ) : (
                                 <div>
                                   <p className="text-sm font-bold text-gray-800">Finding your expert lawyer...</p>
-                                  <p className="text-xs text-gray-500 font-medium mt-1">Our SLA engine is checking for online available advocates specializing in {booking.category} law.</p>
+                                  <p className="text-xs text-gray-500 font-medium mt-1">Our neutral and merit-based lawyer matching engine is assessing available advocates specialized in {booking.category}</p>
                                 </div>
                               )}
                             </div>
