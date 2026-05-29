@@ -287,6 +287,15 @@ const Dashboard = () => {
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           </div>
 
+          {/* Emergency Legal Helpline Banner */}
+          <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300">
+            <img 
+              src="/Application-Image.jpeg" 
+              alt="Emergency Legal Helpline Banner" 
+              className="w-full h-auto object-cover"
+            />
+          </div>
+
 
         </div>
       </div>
