@@ -172,9 +172,7 @@ const AboutPage = () => {
       {/* Footer Branding */}
       <footer className="py-12 border-t border-gray-100 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="bg-indigo-600 p-1.5 rounded-lg">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
+          <img src="/footer-logo.jpeg" alt="LawOnCall Logo" className="h-10 w-auto object-contain" />
           <span className="text-xl font-bold text-gray-900 tracking-tight">LawOnCall</span>
         </div>
         <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
