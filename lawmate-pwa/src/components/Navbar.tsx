@@ -22,6 +22,7 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             <Link to="/about" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">About</Link>
+            <Link to="/how-it-works" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">How it Works</Link>
             <Link to="/contact" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">Contact</Link>
             <div className="h-4 w-[1px] bg-gray-200" />
             {user ? (
@@ -86,6 +87,7 @@ const Navbar = () => {
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-5 shadow-lg animate-in slide-in-from-top duration-200">
           <div className="flex flex-col gap-4">
             <Link to="/about" className="text-gray-600 hover:text-indigo-600 font-bold text-sm block px-2 py-1" onClick={() => setIsOpen(false)}>About</Link>
+            <Link to="/how-it-works" className="text-gray-600 hover:text-indigo-600 font-bold text-sm block px-2 py-1" onClick={() => setIsOpen(false)}>How it Works</Link>
             <Link to="/contact" className="text-gray-600 hover:text-indigo-600 font-bold text-sm block px-2 py-1" onClick={() => setIsOpen(false)}>Contact</Link>
             
             {user ? (

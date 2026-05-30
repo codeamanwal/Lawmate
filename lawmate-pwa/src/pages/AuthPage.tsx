@@ -16,14 +16,14 @@ const AuthPage = () => {
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
   
-  const [step, setStep] = useState<AuthStep>('signin');
+  const location = useLocation();
+  const [step, setStep] = useState<AuthStep>(location.state?.step || 'signin');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { signupWithEmail, loginWithEmail, user, updateUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     setShowPassword(false);

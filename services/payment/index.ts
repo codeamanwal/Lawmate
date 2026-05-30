@@ -164,11 +164,15 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
   try {
     const payment = await prisma.payment.findFirst({
       where: { booking: { leadId: leadId } },
-      include: { booking: true }
+      include: { booking: { include: { lead: true } } }
     });
 
     if (!payment || !payment.phonePeMerchantTransactionId) {
       return reply.status(404).send({ error: 'Payment record not found' });
+    }
+
+    if (payment.status === 'captured') {
+      return { status: 'SUCCESS', message: 'Payment verified successfully', preferredTime: payment.booking?.lead?.preferredTime };
     }
 
     // Check status with PhonePe
@@ -195,7 +199,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
           .catch(err => console.error('Failed to trigger matching:', err));
       }
 
-      return { status: 'SUCCESS', message: 'Payment verified successfully' };
+      return { status: 'SUCCESS', message: 'Payment verified successfully', preferredTime: payment.booking?.lead?.preferredTime };
     }
 
     return { status: statusResponse.state, message: 'Payment not yet completed' };

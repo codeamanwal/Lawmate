@@ -93,7 +93,7 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
         <div>
           <h1 className="text-4xl font-black text-gray-900 mb-2">My Profile</h1>
-          <p className="text-gray-500 font-medium">Welcome back, {user?.name || user?.phone}</p>
+          <p className="text-gray-500 font-medium">Manage your legal consultations and case history</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
@@ -268,7 +268,7 @@ const Dashboard = () => {
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Talk to a Lawyer Section */}
+          {/* Talk to a Lawyer Section
           <div className="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl shadow-emerald-100 relative overflow-hidden group">
             <div className="relative z-10">
               <h2 className="text-2xl font-black mb-2 flex items-center gap-2">
@@ -283,9 +283,9 @@ const Dashboard = () => {
                 {connecting ? 'Connecting...' : 'Connect Now'}
               </button>
             </div>
-            {/* Background Decoration */}
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           </div>
+          */}
 
           {/* Emergency Legal Helpline Banner */}
           <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300">

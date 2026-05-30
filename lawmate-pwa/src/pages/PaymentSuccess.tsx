@@ -9,6 +9,7 @@ const PaymentSuccess = () => {
   const leadId = searchParams.get('leadId');
   const [verifying, setVerifying] = useState(true);
   const [status, setStatus] = useState<'SUCCESS' | 'PENDING' | 'FAILED'>('PENDING');
+  const [preferredTime, setPreferredTime] = useState<string | null>(null);
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -26,8 +27,9 @@ const PaymentSuccess = () => {
           const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/payments/verify/${leadId}`);
           if (response.data.status === 'SUCCESS') {
             setStatus('SUCCESS');
+            setPreferredTime(response.data.preferredTime);
             setVerifying(false);
-            toast.success('Payment verified!');
+            toast.success('Payment verified!', { id: 'payment-verified' });
           } else if (attempts < maxAttempts) {
             attempts++;
             setTimeout(check, 3000); // Check again in 3 seconds
@@ -65,7 +67,9 @@ const PaymentSuccess = () => {
           {verifying 
             ? 'Please wait while we confirm your transaction with PhonePe.' 
             : status === 'SUCCESS' 
-              ? 'Your consultation has been confirmed. A verified legal expert will connect with you within 60 minutes.' 
+              ? (preferredTime === 'LATER' 
+                  ? 'Your consultation has been confirmed. A verified legal expert will connect with you within 24 hours.'
+                  : 'Your consultation has been confirmed. A verified legal expert will connect with you within 60 minutes.')
               : 'We are waiting for PhonePe to confirm your payment. You can check your booking status in a few minutes.'}
         </p>
 
@@ -74,7 +78,9 @@ const PaymentSuccess = () => {
             <Calendar className="w-5 h-5 text-indigo-600" />
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Scheduled Time</p>
-              <p className="text-sm font-bold text-gray-900">Today, Within 60 Mins</p>
+              <p className="text-sm font-bold text-gray-900">
+                {verifying ? 'Retrieving details...' : (preferredTime === 'LATER' ? 'Today, Within 24 Hours' : 'Today, Within 60 Mins')}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">

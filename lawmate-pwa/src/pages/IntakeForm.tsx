@@ -98,8 +98,8 @@ const IntakeForm = () => {
     <div className="min-h-[calc(100vh-76px)] bg-gray-50 py-8 px-4 sm:px-6 flex items-center justify-center">
       <div className="max-w-xl w-full bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 sm:p-8 md:p-12 border border-gray-100">
         <div className="mb-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Get Started</h2>
-          <p className="text-gray-500">Fill in the details to connect with a legal expert</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Create Consultation Request</h2>
+          <p className="text-gray-500">Share your issue details to connect with the right legal expert.</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -108,8 +108,9 @@ const IntakeForm = () => {
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
             <input
               {...register('fullName')}
+              readOnly={!!user}
               placeholder="e.g. Rahul Sharma"
-              className={`w-full px-4 py-3 rounded-xl border ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all`}
+              className={`w-full px-4 py-3 rounded-xl border ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
             />
             {errors.fullName && <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.fullName.message}</p>}
           </div>
@@ -121,8 +122,9 @@ const IntakeForm = () => {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+91</span>
               <input
                 {...register('phone')}
+                readOnly={!!user}
                 placeholder="10-digit mobile"
-                className={`w-full pl-12 pr-4 py-3 rounded-xl border ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all`}
+                className={`w-full pl-12 pr-4 py-3 rounded-xl border ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
               />
             </div>
             {errors.phone && <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}

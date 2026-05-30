@@ -1,9 +1,40 @@
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Zap, Clock, ArrowRight } from 'lucide-react';
+import { Shield, Zap, Clock, ArrowRight, X, PhoneCall, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const LandingPage = () => {
+  const [isAssistanceModalOpen, setIsAssistanceModalOpen] = useState(false);
+  const [isCallbackRequested, setIsCallbackRequested] = useState(false);
+  const [assistanceData, setAssistanceData] = useState({ name: '', phone: '' });
+  const [isSubmittingAssistance, setIsSubmittingAssistance] = useState(false);
+
+  const handleAssistanceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingAssistance(true);
+    try {
+      // POST to Google Sheets Webhook URL
+      const webhookUrl = "https://script.google.com/macros/s/AKfycbzv2DLxvLEN7jmOy2F56a9hOszDz19T-3-UzTjGjYM92bcHACfj67qTwS2FrT14vHJMmg/exec";
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...assistanceData, type: 'callback' }),
+        });
+      }
+      setIsCallbackRequested(true);
+    } catch (error) {
+      console.error('Failed to save to Google Sheets:', error);
+      setIsCallbackRequested(true); // Proceed to success screen anyway
+    } finally {
+      setIsSubmittingAssistance(false);
+    }
+  };
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -19,24 +50,25 @@ const LandingPage = () => {
                 Legal support at your fingertips
               </span>
               <h1 className="mb-6 text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900 lg:text-7xl leading-tight">
-                Legal Expert advice <span className="text-indigo-600">in 60 minutes.</span>
+                Expert Legal Advice <span className="text-indigo-600">in 60 Minutes</span>
               </h1>
               <p className="mb-10 text-lg md:text-xl text-gray-600 leading-relaxed">
-                Connect with India's top legal professionals instantly. Whether it's property, divorce, or business—we've got you covered.
+                Get connected with verified lawyers for urgent matters within 60 minutes or same day.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  to="/get-started"
+                  to="/auth"
+                  state={{ step: 'signin-client' }}
                   className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-white transition-all bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-xl hover:shadow-indigo-200/50 flex items-center justify-center gap-2"
                 >
                   Get Started <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link
-                  to="/how-it-works"
+                <button
+                  onClick={() => { setIsAssistanceModalOpen(true); setIsCallbackRequested(false); }}
                   className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-gray-700 transition-all bg-white border-2 border-gray-100 rounded-xl hover:border-gray-200 hover:bg-gray-50 flex items-center justify-center"
                 >
-                  How it Works
-                </Link>
+                  Need immediate assistance ?
+                </button>
               </div>
             </motion.div>
           </div>
@@ -163,6 +195,66 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Immediate Assistance Modal */}
+      {isAssistanceModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-2xl border border-gray-100 relative">
+            <button 
+              onClick={() => { setIsAssistanceModalOpen(false); setIsCallbackRequested(false); }}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {isCallbackRequested ? (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <PhoneCall className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">Request Confirmed</h3>
+                <p className="text-gray-600 mb-2">Our legal team will call you shortly from <span className="font-bold text-gray-900 whitespace-nowrap">+91&nbsp;7292002026.</span></p>
+                <p className="text-sm font-semibold text-gray-500">Expected callback: Within 30-60 minutes.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-2xl font-black text-gray-900 mb-6">Need Immediate Assistance?</h3>
+                <form className="space-y-4" onSubmit={handleAssistanceSubmit}>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Name</label>
+                    <input 
+                      required 
+                      type="text" 
+                      placeholder="Your Name" 
+                      value={assistanceData.name}
+                      onChange={(e) => setAssistanceData({ ...assistanceData, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+                    <input 
+                      required 
+                      type="tel" 
+                      placeholder="Your Phone Number" 
+                      value={assistanceData.phone}
+                      onChange={(e) => setAssistanceData({ ...assistanceData, phone: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" 
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingAssistance}
+                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 disabled:hover:bg-indigo-600 transition-all text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 mt-2 flex justify-center items-center h-[52px]"
+                  >
+                    {isSubmittingAssistance ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Request immediate callback'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, MapPin, ArrowLeft, Loader2, Save } from 'lucide-react';
+import { User, MapPin, ArrowLeft, Loader2, Save, Mail } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -65,6 +65,19 @@ const EditProfile = () => {
                   className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
                   placeholder="Enter your name"
                   required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  value={user?.email || ''}
+                  readOnly
+                  className="w-full pl-12 pr-4 py-4 bg-gray-100 border-0 rounded-2xl text-gray-500 cursor-not-allowed outline-none transition-all"
                 />
               </div>
             </div>
