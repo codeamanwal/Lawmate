@@ -15,7 +15,7 @@ const LandingPage = () => {
     setIsSubmittingAssistance(true);
     try {
       // POST to Google Sheets Webhook URL
-      const webhookUrl = "https://script.google.com/macros/s/AKfycbzv2DLxvLEN7jmOy2F56a9hOszDz19T-3-UzTjGjYM92bcHACfj67qTwS2FrT14vHJMmg/exec";
+      const webhookUrl = "https://script.google.com/macros/s/AKfycbwEUrF7HoSkyB3eGuh5fe6OjL47Nv8-iwtALMtGPZuuUKvj3oXiFJA209Ae27tgYJ4JUQ/exec";
       if (webhookUrl) {
         await fetch(webhookUrl, {
           method: 'POST',
