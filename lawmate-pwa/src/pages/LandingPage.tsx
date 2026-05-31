@@ -58,7 +58,7 @@ const LandingPage = () => {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   to="/auth"
-                  state={{ step: 'signin-client' }}
+                  state={{ step: 'signup-email' }}
                   className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-white transition-all bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-xl hover:shadow-indigo-200/50 flex items-center justify-center gap-2"
                 >
                   Get Started <ArrowRight className="w-5 h-5" />
