@@ -1,2 +1,7 @@
 /Lawmate _PRD.pdf
 node_modules
+.env
+.env.*
+*.log
+dist
+dev-dist
