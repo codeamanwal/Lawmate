@@ -242,7 +242,13 @@ const Dashboard = () => {
                     return (
                       <div className="flex items-center justify-between">
                         {isPaid ? (
-                          <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
+                          lead.slaStatus === 'NOT_ATTENDED' ? (
+                            <p className="text-sm text-amber-600 font-bold flex items-center gap-1">
+                              ⏳ Case handled manually (Somebody from our team will reach out within an hour)
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
+                          )
                         ) : (
                           <p className="text-sm text-gray-500 italic font-medium">Payment is required to start matching...</p>
                         )}

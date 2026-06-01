@@ -20,6 +20,7 @@ import LawyerOnboarding from './pages/LawyerOnboarding';
 import LawyerDashboard from './pages/LawyerDashboard';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import AdminDashboard from './pages/AdminDashboard';
 import DisclaimerModal from './components/DisclaimerModal';
 import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
@@ -54,6 +55,7 @@ function App() {
               <Route path="/lawyer/dashboard" element={<LawyerDashboard />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/admin" element={<AdminDashboard />} />
             </Routes>
 
           </main>

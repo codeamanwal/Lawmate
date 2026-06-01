@@ -77,6 +77,14 @@ fastify.delete('/api/leads/:id', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.get('/api/leads', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
+fastify.put('/api/leads/:id', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.post('/api/leads/:id/complete', async (request, reply) => {
   let userHeaders = {};
   try {

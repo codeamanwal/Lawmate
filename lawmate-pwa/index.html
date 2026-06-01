@@ -32,12 +32,5 @@
   <body style="font-family: 'Inter', sans-serif;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW registered:', reg))
-          .catch(err => console.error('SW registration failed:', err));
-      }
-    </script>
   </body>
 </html>

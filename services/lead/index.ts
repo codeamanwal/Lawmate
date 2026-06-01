@@ -333,7 +333,8 @@ setInterval(async () => {
         if (now.getTime() - assignedTime > acceptanceTimeoutMs) {
           console.log(`[SLA Timeout] Lead ${lead.id} acceptance window exceeded.`);
 
-          if (lead.retryCount >= 3) {
+          const nextRetryCount = lead.retryCount + 1;
+          if (nextRetryCount >= 3) {
             console.log(`[SLA Timeout] Lead ${lead.id} has reached max attempts (3). Moving to manual handling.`);
             await prisma.lead.update({
               where: { id: lead.id },
@@ -341,11 +342,12 @@ setInterval(async () => {
                 slaStatus: 'NOT_ATTENDED',
                 lawyerId: null,
                 notifiedLawyerIds: [],
-                assignedAt: null
+                assignedAt: null,
+                retryCount: 3
               }
             });
           } else {
-            console.log(`[SLA Timeout] Reassigning Lead ${lead.id}...`);
+            console.log(`[SLA Timeout] Reassigning Lead ${lead.id} (Attempt ${nextRetryCount + 1})...`);
             const newlyDeclined = [...lead.declinedLawyerIds];
             if (lead.lawyerId) {
               newlyDeclined.push(lead.lawyerId);
@@ -362,7 +364,8 @@ setInterval(async () => {
                 lawyerId: null,
                 notifiedLawyerIds: [],
                 assignedAt: null,
-                slaStatus: 'REASSIGNING'
+                slaStatus: 'REASSIGNING',
+                retryCount: nextRetryCount
               }
             });
 
@@ -378,19 +381,38 @@ setInterval(async () => {
           console.log(`[SLA Timeout] Lead ${lead.id} was accepted but not attended in SLA window. Reassigning...`);
           
           const updatedDeclined = [...lead.declinedLawyerIds, lead.lawyerId];
-          await prisma.lead.update({
-            where: { id: lead.id },
-            data: {
-              declinedLawyerIds: updatedDeclined,
-              lawyerId: null,
-              notifiedLawyerIds: [],
-              assignedAt: null,
-              acceptedAt: null,
-              slaStatus: 'NOT_ATTENDED' // Acts as delay apology banner for client
-            }
-          });
+          const nextRetryCount = lead.retryCount + 1;
 
-          await assignLeadToLawyer(lead.id);
+          if (nextRetryCount >= 3) {
+            console.log(`[SLA Timeout] Lead ${lead.id} has reached max attempts (3) during attendance timeout. Moving to manual handling.`);
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: {
+                declinedLawyerIds: updatedDeclined,
+                lawyerId: null,
+                notifiedLawyerIds: [],
+                assignedAt: null,
+                acceptedAt: null,
+                slaStatus: 'NOT_ATTENDED',
+                retryCount: 3
+              }
+            });
+          } else {
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: {
+                declinedLawyerIds: updatedDeclined,
+                lawyerId: null,
+                notifiedLawyerIds: [],
+                assignedAt: null,
+                acceptedAt: null,
+                slaStatus: 'NOT_ATTENDED', // Acts as delay apology banner for client
+                retryCount: nextRetryCount
+              }
+            });
+
+            await assignLeadToLawyer(lead.id);
+          }
         }
       }
     }
@@ -710,6 +732,57 @@ fastify.delete('/api/leads/:id', async (request: any, reply: any) => {
     return reply.status(500).send({ error: 'Delete failed. This case might have active dependencies.' });
   }
 });
+
+fastify.get('/api/leads', async (request: any, reply: any) => {
+  try {
+    const leads = await prisma.lead.findMany({
+      include: {
+        lawyer: { include: { user: true } },
+        booking: { include: { payment: true } },
+        user: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return leads;
+  } catch (error) {
+    fastify.log.error(error);
+    return reply.status(500).send({ error: 'Failed to fetch leads' });
+  }
+});
+
+const leadUpdateSchema = z.object({
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  city: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().optional(),
+  preferredTime: z.string().optional(),
+  status: z.string().optional()
+}).passthrough();
+
+fastify.put('/api/leads/:id', async (request: any, reply: any) => {
+  const { id } = request.params as { id: string };
+  try {
+    const data = leadUpdateSchema.parse(request.body);
+    const updatedLead = await prisma.lead.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.phone && { phone: data.phone }),
+        ...(data.city && { city: data.city }),
+        ...(data.category && { category: data.category }),
+        ...(data.description && { description: data.description }),
+        ...(data.preferredTime && { preferredTime: data.preferredTime }),
+        ...(data.status && { status: data.status as any })
+      }
+    });
+    return updatedLead;
+  } catch (error: any) {
+    fastify.log.error(error);
+    return reply.status(400).send({ error: 'Invalid data', message: error.message });
+  }
+});
+
 fastify.post('/api/leads/:id/simulate-accept-timeout', async (request: any, reply: any) => {
   const { id } = request.params as { id: string };
   try {
