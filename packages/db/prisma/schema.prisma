@@ -73,6 +73,7 @@ model Lead {
   feedbackText         String?
   callSid              String?
   recordingUrl         String?
+  retryCount           Int            @default(0)
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   booking              Booking?
