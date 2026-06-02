@@ -66,9 +66,9 @@ const MOCK_FLOW_1_LEADS: Lead[] = [
     id: "sheet-1",
     name: "Rajesh Kumar",
     phone: "9876543211",
-    city: "Delhi",
-    category: "Property",
-    description: "Property dispute regarding ancestral land in West Delhi.",
+    city: null,
+    category: null,
+    description: null,
     preferredTime: "Callback Requested",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     flow: "Flow 1",
@@ -80,9 +80,9 @@ const MOCK_FLOW_1_LEADS: Lead[] = [
     id: "sheet-2",
     name: "Sunita Sharma",
     phone: "9812345678",
-    city: "Gurugram",
-    category: "Matrimonial",
-    description: "Legal advice required for mutual divorce proceedings.",
+    city: null,
+    category: null,
+    description: null,
     preferredTime: "Callback Requested",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
     flow: "Flow 1",
@@ -229,9 +229,9 @@ const AdminDashboard = () => {
             id: `sheet-${index}-${Date.now()}`,
             name: row.name || row.Name || 'Anonymous Callback',
             phone: row.phone || row.Phone || 'No Phone',
-            city: row.city || row.City || 'Unknown',
-            category: row.category || row.Category || 'General',
-            description: row.message || row.Message || row.description || 'Callback requested from contact sheet.',
+            city: row.city || row.City || null,
+            category: row.category || row.Category || null,
+            description: row.message || row.Message || row.description || null,
             preferredTime: 'Callback Requested',
             createdAt: row.timestamp || row.Timestamp || new Date().toISOString(),
             flow: 'Flow 1',
@@ -460,10 +460,10 @@ const AdminDashboard = () => {
       // Search Term
       const query = searchTerm.toLowerCase();
       return (
-        lead.name.toLowerCase().includes(query) ||
-        lead.phone.toLowerCase().includes(query) ||
-        lead.city.toLowerCase().includes(query) ||
-        lead.category.toLowerCase().includes(query)
+        (lead.name || '').toLowerCase().includes(query) ||
+        (lead.phone || '').toLowerCase().includes(query) ||
+        (lead.city || '').toLowerCase().includes(query) ||
+        (lead.category || '').toLowerCase().includes(query)
       );
     })
     .sort((a, b) => {
@@ -474,13 +474,13 @@ const AdminDashboard = () => {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
       if (sortBy === 'name-asc') {
-        return a.name.localeCompare(b.name);
+        return (a.name || '').localeCompare(b.name || '');
       }
       if (sortBy === 'name-desc') {
-        return b.name.localeCompare(a.name);
+        return (b.name || '').localeCompare(a.name || '');
       }
       if (sortBy === 'city-asc') {
-        return a.city.localeCompare(b.city);
+        return (a.city || '').localeCompare(b.city || '');
       }
       return 0;
     });
@@ -915,17 +915,23 @@ const AdminDashboard = () => {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-1.5 text-sm text-gray-700">
                           <MapPin className="w-4 h-4 text-gray-400" />
-                          <span>{lead.city}</span>
+                          <span>{lead.city || <span className="text-gray-400 italic">—</span>}</span>
                         </div>
                       </td>
                       <td className="px-6 py-5 max-w-sm">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold">
-                            <Tag className="w-2.5 h-2.5" />
-                            {lead.category}
-                          </span>
+                          {lead.category ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold">
+                              <Tag className="w-2.5 h-2.5" />
+                              {lead.category}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 italic text-[10px]">No category</span>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{lead.description}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                          {lead.description || <span className="text-gray-400 italic">No description provided</span>}
+                        </p>
                       </td>
                       <td className="px-6 py-5">
                         {lead.flow === 'Flow 1' && (
@@ -1248,7 +1254,7 @@ const AdminDashboard = () => {
                       )}
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">City:</span>
-                        <span className="col-span-2 text-gray-800 font-semibold">{selectedLead.city}</span>
+                        <span className="col-span-2 text-gray-800 font-semibold">{selectedLead.city || '—'}</span>
                       </div>
                     </div>
                   </div>
@@ -1261,11 +1267,21 @@ const AdminDashboard = () => {
                     <div className="space-y-3 text-sm">
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">Category:</span>
-                        <span className="col-span-2"><span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">{selectedLead.category}</span></span>
+                        <span className="col-span-2">
+                          {selectedLead.category ? (
+                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">
+                              {selectedLead.category}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 italic">None</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <span className="text-gray-400 font-medium">Description:</span>
-                        <p className="text-gray-700 leading-relaxed bg-white border border-gray-100 p-3.5 rounded-xl text-xs">{selectedLead.description}</p>
+                        <p className="text-gray-700 leading-relaxed bg-white border border-gray-100 p-3.5 rounded-xl text-xs">
+                          {selectedLead.description || <span className="text-gray-400 italic">No description provided</span>}
+                        </p>
                       </div>
                     </div>
                   </div>

@@ -73,7 +73,7 @@ const HowItWorks = () => {
               Our experts are online and ready to help. Join thousands of users who have solved their legal cases through LawOnCall.
             </p>
             <button 
-              onClick={() => navigate('/get-started')}
+              onClick={() => navigate('/auth', { state: { step: 'signup-email' } })}
               className="px-6 sm:px-10 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-base sm:text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center gap-2 mx-auto group"
             >
               Start Your Case Now
