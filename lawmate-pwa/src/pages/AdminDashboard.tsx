@@ -59,7 +59,7 @@ interface Lead {
   } | null;
 }
 
-const FLOW_1_SHEET_URL = "https://script.google.com/a/macros/dimension-1.com/s/AKfycbyXTEfTqBbrdOKk52JSMGKnwuyGrjxh7m8MGgP0FFSrYWuOYVln4WOaK3Her1GUPLJiYA/exec";
+const FLOW_1_SHEET_URL = "https://script.google.com/macros/s/AKfycbwB1E_bF2VSIayBK8AXUsFvI5mhohFB8WZyR-Tb4eCEUfOVsEZgJLscCHI8NaBREf0AfA/exec";
 
 const MOCK_FLOW_1_LEADS: Lead[] = [
   {
