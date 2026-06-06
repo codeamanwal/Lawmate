@@ -37,9 +37,15 @@ const IntakeForm = () => {
 
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Use a user-scoped draft key so different users never share drafts
+  const draftKey = user ? `intake_draft_${user.id}` : 'intake_draft_guest';
+
   // Load from localStorage or User Profile
   useEffect(() => {
-    const saved = localStorage.getItem('intake_draft');
+    // Clean up any old unscoped draft keys on mount
+    localStorage.removeItem('intake_draft');
+
+    const saved = localStorage.getItem(draftKey);
     let draftValues: any = {};
     if (saved) {
       try {
@@ -50,9 +56,10 @@ const IntakeForm = () => {
     }
 
     if (user) {
+      // Always use the current user's profile data for name & phone — never the draft
       reset({
-        fullName: draftValues.fullName || user.name || '',
-        phone: draftValues.phone || user.phone || '',
+        fullName: user.name || '',
+        phone: user.phone || '',
         city: draftValues.city || user.city || '',
         category: draftValues.category || '',
         description: draftValues.description || '',
@@ -63,22 +70,22 @@ const IntakeForm = () => {
       reset(draftValues);
     }
     setIsLoaded(true);
-  }, [user, reset]);
+  }, [user, reset, draftKey]);
 
-  // Save to localStorage on change
+  // Save to localStorage on change (scoped to user)
   const formValues = watch();
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('intake_draft', JSON.stringify(formValues));
+      localStorage.setItem(draftKey, JSON.stringify(formValues));
     }
-  }, [formValues, isLoaded]);
+  }, [formValues, isLoaded, draftKey]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/leads`, data);
       localStorage.setItem('pendingLeadId', response.data.id);
-      localStorage.removeItem('intake_draft'); // Clear draft on success
+      localStorage.removeItem(draftKey); // Clear draft on success
       toast.success('Lead submitted successfully!');
       
       if (user) {

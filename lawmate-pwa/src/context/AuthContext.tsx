@@ -173,6 +173,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     await auth.signOut();
     localStorage.removeItem('token');
+    localStorage.removeItem('intendedRole');
+    localStorage.removeItem('intake_draft'); // Clear form draft so next user gets a clean form
     setUser(null);
   };
 
