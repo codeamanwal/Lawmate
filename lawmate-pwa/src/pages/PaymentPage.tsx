@@ -14,9 +14,9 @@ const PaymentPage = () => {
 
   useEffect(() => {
     if (authLoading) return;
-
-    if (!user) {
-      navigate('/auth');
+    
+    if (!user && !leadId) {
+      navigate('/auth', { state: { from: location } });
       return;
     }
 

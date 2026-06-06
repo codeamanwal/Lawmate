@@ -320,13 +320,14 @@ setInterval(async () => {
       }
 
       const preferredTime = lead.preferredTime.toLowerCase();
+      const isAsapSla = preferredTime.includes('asap') || preferredTime.includes('emergency') || preferredTime.includes('callback');
       // ASAP: 5 mins acceptance window. 24HRS (LATER): 10 mins acceptance window.
-      const acceptanceTimeoutMs = preferredTime.includes('asap')
+      const acceptanceTimeoutMs = isAsapSla
         ? 5 * 60 * 1000
         : 10 * 60 * 1000;
 
       // ASAP: 60 mins attendance window. 24HRS (LATER): 24 hours attendance window.
-      const attendanceTimeoutMs = preferredTime.includes('asap')
+      const attendanceTimeoutMs = isAsapSla
         ? 60 * 60 * 1000
         : 24 * 60 * 60 * 1000;
 
@@ -508,11 +509,11 @@ fastify.post('/api/leads/:id/prepare-emergency', async (request: any, reply: any
 
     let updatedLead = lead;
 
-    // 1. If the lead has no userId, try to find a registered user by phone number (endsWith match)
+    // 1. If the lead has no userId, try to find or create a user by phone number (endsWith match)
     if (!lead.userId && lead.phone) {
       const cleanPhone10 = lead.phone.replace(/\D/g, '').slice(-10);
       if (cleanPhone10.length === 10) {
-        const matchedUser = await prisma.user.findFirst({
+        let matchedUser = await prisma.user.findFirst({
           where: {
             role: 'CLIENT',
             phone: {
@@ -520,13 +521,23 @@ fastify.post('/api/leads/:id/prepare-emergency', async (request: any, reply: any
             }
           }
         });
-        if (matchedUser) {
-          updatedLead = await prisma.lead.update({
-            where: { id },
-            data: { userId: matchedUser.id }
+        if (!matchedUser) {
+          matchedUser = await prisma.user.create({
+            data: {
+              email: `guest-${cleanPhone10}-${Date.now()}@lawmate.in`,
+              phone: `+91${cleanPhone10}`,
+              name: lead.name || 'Guest Client',
+              role: 'CLIENT',
+              city: lead.city || ''
+            }
           });
-          fastify.log.info(`Linked lead ${id} to user ${matchedUser.id} via phone match`);
+          fastify.log.info(`Created guest user ${matchedUser.id} for lead ${id}`);
         }
+        updatedLead = await prisma.lead.update({
+          where: { id },
+          data: { userId: matchedUser.id }
+        });
+        fastify.log.info(`Linked lead ${id} to user ${matchedUser.id}`);
       }
     }
 

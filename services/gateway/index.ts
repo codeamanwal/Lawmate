@@ -128,6 +128,20 @@ fastify.get('/api/payments/verify/:leadId', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.post('/api/payments/create-link', async (request, reply) => {
+  let userHeaders = {};
+  try {
+    await request.jwtVerify();
+    const user = (request as any).user;
+    userHeaders = {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    };
+  } catch (err) {}
+
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request, userHeaders));
+});
+
 // Protected routes
 fastify.register(async (instance) => {
   instance.addHook('onRequest', async (request: any, reply: any) => {
@@ -157,13 +171,7 @@ fastify.register(async (instance) => {
     }));
   });
 
-  instance.post('/api/payments/create-link', (request, reply) => {
-    const user = request.user as any;
-    return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request, {
-      'x-user-id': user.id,
-      'x-user-email': user.email
-    }));
-  });
+
 
   instance.get('/api/profiles/*', (request, reply) => {
     const user = request.user as any;

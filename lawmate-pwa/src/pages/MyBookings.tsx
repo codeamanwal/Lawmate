@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, Clock, MapPin, CheckCircle2, Star, Loader2, Award, ShieldCheck, CreditCard, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle2, Star, Loader2, Award, ShieldCheck, CreditCard, AlertCircle, User, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 
 const MyBookings = () => {
@@ -212,6 +212,15 @@ const MyBookings = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-gray-600">
                       <div className="w-10 h-10 bg-indigo-50/50 rounded-xl flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Client Details</p>
+                        <p className="text-sm font-black text-gray-900">{booking.name} ({booking.phone})</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <div className="w-10 h-10 bg-indigo-50/50 rounded-xl flex items-center justify-center shrink-0">
                         <Clock className="w-5 h-5 text-indigo-600" />
                       </div>
                       <div>
@@ -226,6 +235,23 @@ const MyBookings = () => {
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Jurisdiction</p>
                         <p className="text-sm font-black text-gray-900">{booking.city}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <div className="w-10 h-10 bg-indigo-50/50 rounded-xl flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">SLA Flow</p>
+                        <p className="text-sm font-black text-gray-900">
+                          {(() => {
+                            const time = (booking.preferredTime || '').toLowerCase();
+                            if (time.includes('callback')) return 'Flow 1: Callback';
+                            if (time.includes('asap')) return 'Flow 2: 60 Min SLA';
+                            if (time.includes('emergency')) return 'Flow 4: Emergency';
+                            return 'Flow 3: Same Day';
+                          })()}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -316,6 +342,13 @@ const MyBookings = () => {
                     })()}
                   </div>
                 </div>
+
+                {booking.description && (
+                  <div className="mt-6 bg-gray-50 p-4 rounded-2xl border border-gray-100/80">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Case Description</p>
+                    <p className="text-sm text-gray-700 leading-relaxed font-medium">{booking.description}</p>
+                  </div>
+                )}
 
                 {/* Developer Sandbox Controls */}
                 {(() => {

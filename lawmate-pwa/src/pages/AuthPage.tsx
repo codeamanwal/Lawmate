@@ -36,21 +36,22 @@ const AuthPage = () => {
       if (!user.name || !user.phone || !user.city) {
         setStep('complete-profile');
       } else {
+        const fromLocation = location.state?.from;
         const fromIntake = location.state?.fromIntake;
         const pendingLeadId = localStorage.getItem('pendingLeadId');
-        
-        if (fromIntake && pendingLeadId) {
+
+        if (fromLocation) {
+          navigate(fromLocation.pathname, { state: fromLocation.state });
+        } else if (fromIntake && pendingLeadId) {
           navigate('/payment', { state: { leadId: pendingLeadId } });
-        } else {
-          if (user.role === 'LAWYER') {
-            if (user.lawyerProfile?.onboardingCompleted) {
-              navigate('/lawyer/dashboard');
-            } else {
-              navigate('/lawyer/onboarding');
-            }
+        } else if (user.role === 'LAWYER') {
+          if (user.lawyerProfile?.onboardingCompleted) {
+            navigate('/lawyer/dashboard');
           } else {
-            navigate('/dashboard');
+            navigate('/lawyer/onboarding');
           }
+        } else {
+          navigate('/dashboard');
         }
       }
     }
@@ -173,7 +174,18 @@ const AuthPage = () => {
       });
       updateUser({ name, phone, city });
       toast.success('Profile completed!');
-      navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
+      
+      const fromLocation = location.state?.from;
+      const fromIntake = location.state?.fromIntake;
+      const pendingLeadId = localStorage.getItem('pendingLeadId');
+
+      if (fromLocation) {
+        navigate(fromLocation.pathname, { state: fromLocation.state });
+      } else if (fromIntake && pendingLeadId) {
+        navigate('/payment', { state: { leadId: pendingLeadId } });
+      } else {
+        navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
+      }
     } catch (error: any) {
       toast.error('Failed to update profile');
     } finally {

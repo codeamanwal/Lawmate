@@ -47,6 +47,23 @@ const PaymentSuccess = () => {
 
     verifyPayment();
   }, [leadId]);
+
+  const handleSimulateSuccess = async () => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/simulate-success/${leadId}`);
+      toast.success('Simulation successful! Verifying status...');
+      
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/payments/verify/${leadId}`);
+      if (response.data.status === 'SUCCESS') {
+        setStatus('SUCCESS');
+        setPreferredTime(response.data.preferredTime);
+        setVerifying(false);
+      }
+    } catch (e) {
+      toast.error('Simulation failed.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full bg-white rounded-[32px] shadow-xl shadow-gray-200/50 p-6 sm:p-8 md:p-12 border border-gray-100 text-center">
@@ -93,6 +110,14 @@ const PaymentSuccess = () => {
         </div>
 
         <div className="space-y-4">
+          {!verifying && status !== 'SUCCESS' && (
+            <button 
+              onClick={handleSimulateSuccess}
+              className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-lg transition-all shadow-xl shadow-amber-100 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              ⚙️ Simulate Payment Success
+            </button>
+          )}
           <Link 
             to="/my-bookings" 
             className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"

@@ -304,29 +304,56 @@ const AdminDashboard = () => {
     }
   };
 
-  // Edit Flow 4 Lead — saves details + links to user by phone + triggers SLA match
+  // Edit Flow 4 / Flow 1 Lead — saves details + links to user by phone + triggers SLA match
   const handleEditLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLead) return;
 
     setCrudLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          city: formData.city,
-          category: formData.category,
-          description: formData.description
-        })
-      });
+      const isSheetLead = selectedLead.id.startsWith('sheet-');
+      
+      const payload = {
+        name: formData.name,
+        phone: formData.phone,
+        city: formData.city,
+        category: formData.category,
+        description: formData.description
+      };
+
+      let response;
+      if (isSheetLead) {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fullName: formData.name,
+            phone: formData.phone,
+            city: formData.city,
+            category: formData.category,
+            description: formData.description,
+            preferredTime: 'Callback' // Stored as Flow 1: Callback
+          })
+        });
+      } else {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+      }
 
       if (response.ok) {
+        const result = await response.json();
+        const leadId = isSheetLead ? result.id : selectedLead.id;
+
         // Link the lead to user by phone and create the PENDING booking
         try {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}/prepare-emergency`, {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/prepare-emergency`, {
             method: 'POST'
           });
         } catch (prepErr) {
@@ -334,7 +361,6 @@ const AdminDashboard = () => {
         }
         toast.success('Emergency case created! Redirecting to payment...');
         setIsEditModalOpen(false);
-        const leadId = selectedLead.id;
         resetForm();
         fetchLeads();
         navigate('/payment', { state: { leadId } });
@@ -370,12 +396,14 @@ const AdminDashboard = () => {
 
   const openEditModal = (lead: Lead) => {
     setSelectedLead(lead);
+    const validCategories = ['Property', 'Matrimonial', 'Criminal', 'Corporate'];
+    const resolvedCategory = validCategories.includes(lead.category) ? lead.category : 'Property';
     setFormData({
       name: lead.name,
       phone: lead.phone,
-      city: lead.city,
-      category: lead.category,
-      description: lead.description
+      city: lead.city || '',
+      category: resolvedCategory,
+      description: lead.description || ''
     });
     setIsEditModalOpen(true);
   };
@@ -990,7 +1018,7 @@ const AdminDashboard = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {lead.flow === 'Flow 4' ? (
+                          {lead.flow === 'Flow 4' || lead.flow === 'Flow 1' ? (
                             <>
                               {!(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED') && (
                                 <button 
