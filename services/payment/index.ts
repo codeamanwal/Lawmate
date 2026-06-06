@@ -72,9 +72,17 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     // Ensure a valid User exists for this lead
     const authUserId = request.headers['x-user-id'] as string;
     let user = await prisma.user.findUnique({ where: { id: authUserId } });
-
-    if (!user) {
-      user = await prisma.user.findUnique({ where: { phone: lead.phone } });
+    if (!user && lead.phone) {
+      const cleanPhone10 = lead.phone.replace(/\D/g, '').slice(-10);
+      if (cleanPhone10.length === 10) {
+        user = await prisma.user.findFirst({
+          where: {
+            phone: {
+              endsWith: cleanPhone10
+            }
+          }
+        });
+      }
     }
 
     if (!user) return reply.status(401).send({ error: 'User not found. Please sign in again.' });

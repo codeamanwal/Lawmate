@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   ShieldAlert, LogOut, Search, Filter, ArrowUpDown, Plus, 
   Edit2, Trash2, Calendar, Clock, Phone, MapPin, Tag, RefreshCw,
@@ -93,6 +94,7 @@ const MOCK_FLOW_1_LEADS: Lead[] = [
 ];
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   // Authentication State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
@@ -330,10 +332,12 @@ const AdminDashboard = () => {
         } catch (matchErr) {
           console.warn('SLA match trigger failed (non-critical):', matchErr);
         }
-        toast.success('Emergency case created and SLA matching activated!');
+        toast.success('Emergency case created! Redirecting to payment...');
         setIsEditModalOpen(false);
+        const leadId = selectedLead.id;
         resetForm();
         fetchLeads();
+        navigate('/payment', { state: { leadId } });
       } else {
         toast.error('Failed to update lead.');
       }
@@ -988,13 +992,15 @@ const AdminDashboard = () => {
                           </button>
                           {lead.flow === 'Flow 4' ? (
                             <>
-                              <button 
-                                onClick={() => openEditModal(lead)}
-                                className="p-2 text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors"
-                                title="Edit Lead"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
+                              {!(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED') && (
+                                <button 
+                                  onClick={() => openEditModal(lead)}
+                                  className="p-2 text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors"
+                                  title="Edit Lead"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              )}
                               <button 
                                 onClick={() => handleDeleteLead(lead.id)}
                                 className="p-2 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100/80 rounded-lg transition-colors"
