@@ -427,9 +427,48 @@ setInterval(async () => {
 // API Endpoints for SLA matching & actions
 fastify.post('/api/leads/:id/match', async (request: any, reply: any) => {
   const { id } = request.params;
-  await assignLeadToLawyer(id);
-  return { success: true };
+  try {
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+
+    let updatedLead = lead;
+
+    // 1. If the lead has no userId, try to find a registered user by phone number
+    if (!lead.userId && lead.phone) {
+      const matchedUser = await prisma.user.findFirst({
+        where: { phone: lead.phone }
+      });
+      if (matchedUser) {
+        updatedLead = await prisma.lead.update({
+          where: { id },
+          data: { userId: matchedUser.id }
+        });
+        fastify.log.info(`Linked lead ${id} to user ${matchedUser.id} via phone match`);
+      }
+    }
+
+    // 2. Create a booking record if one doesn't exist (so client can pay from their dashboard)
+    const existingBooking = await prisma.booking.findUnique({ where: { leadId: id } });
+    if (!existingBooking) {
+      await prisma.booking.create({
+        data: {
+          leadId: id,
+          status: 'PENDING',
+          userId: updatedLead.userId || ''
+        }
+      });
+    }
+
+    // 3. Trigger SLA lawyer matching
+    await assignLeadToLawyer(id);
+
+    return { success: true, linkedUserId: updatedLead.userId };
+  } catch (err) {
+    fastify.log.error(err);
+    return reply.status(500).send({ error: 'Match failed' });
+  }
 });
+
 
 fastify.post('/api/leads/:id/accept', async (request: any, reply: any) => {
   const { id } = request.params;

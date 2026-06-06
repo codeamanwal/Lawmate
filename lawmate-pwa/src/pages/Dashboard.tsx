@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Calendar, MapPin, Phone, CreditCard, Star, Clock, Trash2, Zap, X, Loader2, AlertCircle } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Phone, CreditCard, Star, Clock, Trash2 } from 'lucide-react';
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -12,11 +12,6 @@ const Dashboard = () => {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Flow 4 Emergency Case Modal
-  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
-  const [emergencyForm, setEmergencyForm] = useState({ category: '', city: '', description: '' });
-  const [emergencyLoading, setEmergencyLoading] = useState(false);
 
   const fetchLeads = async () => {
     try {
@@ -48,43 +43,6 @@ const Dashboard = () => {
       toast.success('Case deleted');
     } catch (error) {
       toast.error('Failed to delete case');
-    }
-  };
-
-  // Flow 4: Create Emergency Case → payment page
-  const handleEmergencyCaseSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emergencyForm.category || !emergencyForm.city) {
-      toast.error('Please fill all required fields.');
-      return;
-    }
-    setEmergencyLoading(true);
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/leads`,
-        {
-          fullName: user?.name || '',
-          phone: user?.phone || '',
-          city: emergencyForm.city,
-          category: emergencyForm.category,
-          description: emergencyForm.description || 'Emergency legal helpline consultation request.',
-          preferredTime: 'ASAP', // Flow 4 uses same 60-min SLA as Flow 2
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'x-user-id': user?.id,
-          },
-        }
-      );
-      setEmergencyModalOpen(false);
-      setEmergencyForm({ category: '', city: '', description: '' });
-      toast.success('Emergency case created! Proceeding to payment...');
-      navigate('/payment', { state: { leadId: response.data.id } });
-    } catch (error) {
-      toast.error('Failed to create emergency case. Please try again.');
-    } finally {
-      setEmergencyLoading(false);
     }
   };
 
@@ -276,144 +234,17 @@ const Dashboard = () => {
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Emergency Legal Helpline Banner — Flow 4 */}
-          <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300 relative group">
+          {/* Emergency Legal Helpline Banner */}
+          <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300">
             <img 
               src="/Application-Image.jpeg" 
               alt="Emergency Legal Helpline Banner" 
               className="w-full h-auto object-cover"
             />
-            {/* Overlay CTA button */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col items-center justify-end p-5">
-              <button
-                onClick={() => setEmergencyModalOpen(true)}
-                className="w-full py-3 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-900/30 transition-all flex items-center justify-center gap-2"
-              >
-                <Zap className="w-4 h-4" /> Create Emergency Case
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Flow 4 — Create Emergency Case Modal */}
-      {emergencyModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <button 
-              onClick={() => { setEmergencyModalOpen(false); setEmergencyForm({ category: '', city: '', description: '' }); }}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Header */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                  <Zap className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-900">Create Emergency Case</h3>
-                  <p className="text-xs text-red-600 font-bold">Emergency Legal Helpline · 60-Min SLA</p>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500 font-medium">Get connected with a verified lawyer within 60 minutes for urgent legal matters.</p>
-            </div>
-
-            <form onSubmit={handleEmergencyCaseSubmit} className="space-y-4">
-              {/* Name - read-only from profile */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
-                <input
-                  type="text"
-                  value={user?.name || ''}
-                  readOnly
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
-                />
-              </div>
-
-              {/* Phone - read-only from profile */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+91</span>
-                  <input
-                    type="text"
-                    value={user?.phone || ''}
-                    readOnly
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* City */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">City <span className="text-red-500">*</span></label>
-                <select
-                  value={emergencyForm.city}
-                  onChange={(e) => setEmergencyForm({ ...emergencyForm, city: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all bg-white"
-                >
-                  <option value="">Select City</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
-                  <option value="Ghaziabad">Ghaziabad</option>
-                </select>
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Issue Category <span className="text-red-500">*</span></label>
-                <select
-                  value={emergencyForm.category}
-                  onChange={(e) => setEmergencyForm({ ...emergencyForm, category: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all bg-white"
-                >
-                  <option value="">Select Category</option>
-                  <option value="Family & Marriage">Family & Marriage</option>
-                  <option value="Domestic Violence">Domestic Violence</option>
-                  <option value="Property & Registry">Property & Registry</option>
-                  <option value="Criminal & Police">Criminal & Police</option>
-                  <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
-                  <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
-                  <option value="Employment & HR">Employment & HR</option>
-                  <option value="Consumer Complaints">Consumer Complaints</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brief Description <span className="text-gray-400 font-normal">(optional)</span></label>
-                <textarea
-                  value={emergencyForm.description}
-                  onChange={(e) => setEmergencyForm({ ...emergencyForm, description: e.target.value })}
-                  rows={3}
-                  placeholder="Briefly describe your emergency legal situation..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all resize-none"
-                />
-              </div>
-
-              {/* Payment notice */}
-              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹999 is required to activate the 60-min SLA and connect you with an expert lawyer.</p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={emergencyLoading}
-                className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:opacity-70 text-white rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-100"
-              >
-                {emergencyLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Zap className="w-5 h-5" /> Create Case & Pay ₹999</>}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

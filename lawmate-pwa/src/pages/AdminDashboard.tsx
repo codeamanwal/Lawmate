@@ -302,7 +302,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Edit Flow 4 Lead
+  // Edit Flow 4 Lead — saves details + links to user by phone + triggers SLA match
   const handleEditLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLead) return;
@@ -322,7 +322,15 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        toast.success('Lead updated successfully.');
+        // Also trigger SLA matching so this lead enters the client's dashboard and 60-min flow
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}/match`, {
+            method: 'POST'
+          });
+        } catch (matchErr) {
+          console.warn('SLA match trigger failed (non-critical):', matchErr);
+        }
+        toast.success('Emergency case created and SLA matching activated!');
         setIsEditModalOpen(false);
         resetForm();
         fetchLeads();
@@ -1117,8 +1125,8 @@ const AdminDashboard = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl relative border border-gray-100"
             >
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">Update Emergency Details</h3>
-              <p className="text-sm text-gray-500 mb-6">Modify records for lead id: <span className="font-mono text-xs">{selectedLead?.id}</span></p>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">Create Emergency Case</h3>
+              <p className="text-sm text-gray-500 mb-6">Finalize details for lead id: <span className="font-mono text-xs">{selectedLead?.id}</span> — clicking <span className="font-bold text-indigo-600">Create Emergency Case</span> will save the details and activate 60-min SLA matching.</p>
 
               <form onSubmit={handleEditLead} className="space-y-4">
                 <div>
@@ -1190,7 +1198,7 @@ const AdminDashboard = () => {
                     disabled={crudLoading}
                     className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 text-sm"
                   >
-                    {crudLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Apply changes'}
+                    {crudLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Create Emergency Case'}
                   </button>
                 </div>
               </form>
