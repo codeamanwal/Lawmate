@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Calendar, MapPin, Phone, CreditCard, Star, Clock, Trash2 } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Phone, CreditCard, Star, Clock, Trash2, Zap, X, Loader2, AlertCircle } from 'lucide-react';
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -11,9 +11,12 @@ const Dashboard = () => {
   const { user, loading: authLoading, logout } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
   const navigate = useNavigate();
 
+  // Flow 4 Emergency Case Modal
+  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
+  const [emergencyForm, setEmergencyForm] = useState({ category: '', city: '', description: '' });
+  const [emergencyLoading, setEmergencyLoading] = useState(false);
 
   const fetchLeads = async () => {
     try {
@@ -48,41 +51,40 @@ const Dashboard = () => {
     }
   };
 
-  const handleInstantConnect = async () => {
-    setConnecting(true);
+  // Flow 4: Create Emergency Case → payment page
+  const handleEmergencyCaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emergencyForm.category || !emergencyForm.city) {
+      toast.error('Please fill all required fields.');
+      return;
+    }
+    setEmergencyLoading(true);
     try {
-      // 1. Call the backend to initiate the secure call
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/instant-call`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      if (response.data.success) {
-        toast.success(
-          (t) => (
-            <span className="flex flex-col gap-1">
-              <span className="font-bold text-gray-900 text-base">Request Successful!</span>
-              <span className="text-sm text-gray-500">
-                A legal expert will call you shortly from our secure business line: 
-                <b className="text-indigo-600 ml-1">{response.data.businessNumber}</b>
-              </span>
-              <button 
-                onClick={() => toast.dismiss(t.id)}
-                className="mt-2 text-xs font-bold text-indigo-600 hover:underline text-left"
-              >
-                Got it
-              </button>
-            </span>
-          ),
-          { duration: 8000, icon: '📞' }
-        );
-        // Instant refresh of the case list so it populates immediately!
-        fetchLeads();
-      }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 'Connection failed. Please try again.';
-      toast.error(errorMsg);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/leads`,
+        {
+          fullName: user?.name || '',
+          phone: user?.phone || '',
+          city: emergencyForm.city,
+          category: emergencyForm.category,
+          description: emergencyForm.description || 'Emergency legal helpline consultation request.',
+          preferredTime: 'ASAP', // Flow 4 uses same 60-min SLA as Flow 2
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'x-user-id': user?.id,
+          },
+        }
+      );
+      setEmergencyModalOpen(false);
+      setEmergencyForm({ category: '', city: '', description: '' });
+      toast.success('Emergency case created! Proceeding to payment...');
+      navigate('/payment', { state: { leadId: response.data.id } });
+    } catch (error) {
+      toast.error('Failed to create emergency case. Please try again.');
     } finally {
-      setConnecting(false);
+      setEmergencyLoading(false);
     }
   };
 
@@ -132,6 +134,7 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Active Cases/Leads */}
         <div className="lg:col-span-2 space-y-8">
@@ -159,152 +162,258 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {leads.map((lead) => (
-                <div 
-                  key={lead.id} 
-                  onClick={() => navigate('/my-bookings', { state: { highlightLeadId: lead.id } })}
-                  className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 hover:ring-2 hover:ring-indigo-100/50 transition-all cursor-pointer text-left"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
-                      <h3 className="text-xl font-bold text-gray-900">{lead.description.substring(0, 50)}...</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {(() => {
-                        const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
-                        const isCompleted = lead.status === 'COMPLETED';
-                        
-                        return (
-                          <>
-                            {isCompleted ? (
-                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>
-                            ) : isPaid ? (
-                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 tracking-wider">Booked</span>
-                            ) : (
-                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>
-                            )}
-                            
-                            {lead.lawyerResolution && (
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                lead.lawyerResolution === 'CANCELLED' 
-                                  ? 'bg-red-100 text-red-700' 
-                                  : lead.lawyerResolution === 'FORWARDED'
-                                  ? 'bg-purple-100 text-purple-700'
-                                  : 'bg-indigo-100 text-indigo-700'
-                              }`}>
-                                {lead.lawyerResolution === 'CLOSED' ? 'Closed' : lead.lawyerResolution}
-                              </span>
-                            )}
-                          </>
-                        );
-                      })()}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(lead.id);
-                        }}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-tighter text-gray-400 mb-6">
-                    <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {lead.preferredTime === 'ASAP' || lead.preferredTime === 'IMMEDIATE' ? 'Within 60 mins' : 'Later Today'}</span>
-                  </div>
-                  
-                  {(() => {
-                    const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
-                    const showLawyer = lead.lawyer && isPaid && lead.status !== 'NEW';
+              {leads.map((lead) => {
+                const isPaid = lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED';
+                const isCompleted = lead.status === 'COMPLETED';
 
-                    if (showLawyer) {
-                      return (
-                        <div className="bg-gray-50 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shrink-0 overflow-hidden">
-                              {lead.lawyer.user?.photo ? (
-                                <img src={`${import.meta.env.VITE_API_URL}${lead.lawyer.user.photo}`} alt="Lawyer" className="w-full h-full object-cover" />
-                              ) : (
-                                 lead.lawyer.user?.name?.[0] || 'L'
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
-                              <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating && lead.lawyer.rating > 0 ? lead.lawyer.rating.toFixed(1) : 'No Ratings'} • {lead.lawyer.experience} Years Exp</p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div className="flex items-center justify-between">
-                        {isPaid ? (
-                          lead.slaStatus === 'NOT_ATTENDED' ? (
-                            <p className="text-sm text-amber-600 font-bold flex items-center gap-1">
-                              ⏳ Case handled manually (Somebody from our team will reach out within an hour)
-                            </p>
-                          ) : (
-                            <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
-                          )
+                return (
+                  <div 
+                    key={lead.id} 
+                    onClick={() => navigate('/my-bookings', { state: { highlightLeadId: lead.id } })}
+                    className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 hover:ring-2 hover:ring-indigo-100/50 transition-all cursor-pointer text-left"
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
+                        <h3 className="text-xl font-bold text-gray-900">{lead.description.substring(0, 50)}...</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isCompleted ? (
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>
+                        ) : isPaid ? (
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 tracking-wider">Booked</span>
                         ) : (
-                          <p className="text-sm text-gray-500 italic font-medium">Payment is required to start matching...</p>
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>
                         )}
-                        {lead.status === 'NEW' && !isPaid && (
+                        
+                        {lead.lawyerResolution && (
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            lead.lawyerResolution === 'CANCELLED' 
+                              ? 'bg-red-100 text-red-700' 
+                              : lead.lawyerResolution === 'FORWARDED'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-indigo-100 text-indigo-700'
+                          }`}>
+                            {lead.lawyerResolution === 'CLOSED' ? 'Closed' : lead.lawyerResolution}
+                          </span>
+                        )}
+                        
+                        {/* Delete icon only shown if NOT yet paid */}
+                        {!isPaid && (
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate('/payment', { state: { leadId: lead.id } });
+                              handleDelete(lead.id);
                             }}
-                            className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm cursor-pointer"
+                            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                           >
-                            <CreditCard className="w-4 h-4" /> Pay & Consult
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
-                    );
-                  })()}
-                </div>
-              ))}
+                    </div>
+                    <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-tighter text-gray-400 mb-6">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {(lead.preferredTime || '').toUpperCase() === 'ASAP' ? 'Within 60 mins' : 'Later Today'}</span>
+                    </div>
+                    
+                    {(() => {
+                      const showLawyer = lead.lawyer && isPaid && lead.status !== 'NEW';
+
+                      if (showLawyer) {
+                        return (
+                          <div className="bg-gray-50 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-gray-200 font-bold text-indigo-600 shrink-0 overflow-hidden">
+                                {lead.lawyer.user?.photo ? (
+                                  <img src={`${import.meta.env.VITE_API_URL}${lead.lawyer.user.photo}`} alt="Lawyer" className="w-full h-full object-cover" />
+                                ) : (
+                                   lead.lawyer.user?.name?.[0] || 'L'
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
+                                <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating && lead.lawyer.rating > 0 ? lead.lawyer.rating.toFixed(1) : 'No Ratings'} • {lead.lawyer.experience} Years Exp</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="flex items-center justify-between">
+                          {isPaid ? (
+                            lead.slaStatus === 'NOT_ATTENDED' ? (
+                              <p className="text-sm text-amber-600 font-bold flex items-center gap-1">
+                                ⏳ Case handled manually (Somebody from our team will reach out within an hour)
+                              </p>
+                            ) : (
+                              <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
+                            )
+                          ) : (
+                            <p className="text-sm text-gray-500 italic font-medium">Payment is required to start matching...</p>
+                          )}
+                          {lead.status === 'NEW' && !isPaid && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate('/payment', { state: { leadId: lead.id } });
+                              }}
+                              className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm cursor-pointer"
+                            >
+                              <CreditCard className="w-4 h-4" /> Pay & Consult
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Talk to a Lawyer Section
-          <div className="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl shadow-emerald-100 relative overflow-hidden group">
-            <div className="relative z-10">
-              <h2 className="text-2xl font-black mb-2 flex items-center gap-2">
-                <Phone className="w-6 h-6 animate-pulse" /> Talk to a Lawyer
-              </h2>
-              <p className="text-emerald-50 text-sm mb-6 font-medium">Instantly connect with a verified legal expert for immediate advice.</p>
-              <button 
-                onClick={handleInstantConnect}
-                disabled={connecting}
-                className="w-full py-4 bg-white text-emerald-600 rounded-xl font-black text-center block hover:bg-emerald-50 transition-all shadow-lg active:scale-95 disabled:opacity-70"
-              >
-                {connecting ? 'Connecting...' : 'Connect Now'}
-              </button>
-            </div>
-            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-          </div>
-          */}
-
-          {/* Emergency Legal Helpline Banner */}
-          <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300">
+          {/* Emergency Legal Helpline Banner — Flow 4 */}
+          <div className="overflow-hidden rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:border-gray-200/50 transition-all duration-300 relative group">
             <img 
               src="/Application-Image.jpeg" 
               alt="Emergency Legal Helpline Banner" 
               className="w-full h-auto object-cover"
             />
+            {/* Overlay CTA button */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col items-center justify-end p-5">
+              <button
+                onClick={() => setEmergencyModalOpen(true)}
+                className="w-full py-3 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-900/30 transition-all flex items-center justify-center gap-2"
+              >
+                <Zap className="w-4 h-4" /> Create Emergency Case
+              </button>
+            </div>
           </div>
-
-
         </div>
       </div>
+
+      {/* Flow 4 — Create Emergency Case Modal */}
+      {emergencyModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => { setEmergencyModalOpen(false); setEmergencyForm({ category: '', city: '', description: '' }); }}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900">Create Emergency Case</h3>
+                  <p className="text-xs text-red-600 font-bold">Emergency Legal Helpline · 60-Min SLA</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 font-medium">Get connected with a verified lawyer within 60 minutes for urgent legal matters.</p>
+            </div>
+
+            <form onSubmit={handleEmergencyCaseSubmit} className="space-y-4">
+              {/* Name - read-only from profile */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  value={user?.name || ''}
+                  readOnly
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                />
+              </div>
+
+              {/* Phone - read-only from profile */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+91</span>
+                  <input
+                    type="text"
+                    value={user?.phone || ''}
+                    readOnly
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* City */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">City <span className="text-red-500">*</span></label>
+                <select
+                  value={emergencyForm.city}
+                  onChange={(e) => setEmergencyForm({ ...emergencyForm, city: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all bg-white"
+                >
+                  <option value="">Select City</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
+                  <option value="Ghaziabad">Ghaziabad</option>
+                </select>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Issue Category <span className="text-red-500">*</span></label>
+                <select
+                  value={emergencyForm.category}
+                  onChange={(e) => setEmergencyForm({ ...emergencyForm, category: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all bg-white"
+                >
+                  <option value="">Select Category</option>
+                  <option value="Family & Marriage">Family & Marriage</option>
+                  <option value="Domestic Violence">Domestic Violence</option>
+                  <option value="Property & Registry">Property & Registry</option>
+                  <option value="Criminal & Police">Criminal & Police</option>
+                  <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                  <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
+                  <option value="Employment & HR">Employment & HR</option>
+                  <option value="Consumer Complaints">Consumer Complaints</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brief Description <span className="text-gray-400 font-normal">(optional)</span></label>
+                <textarea
+                  value={emergencyForm.description}
+                  onChange={(e) => setEmergencyForm({ ...emergencyForm, description: e.target.value })}
+                  rows={3}
+                  placeholder="Briefly describe your emergency legal situation..."
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none transition-all resize-none"
+                />
+              </div>
+
+              {/* Payment notice */}
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹999 is required to activate the 60-min SLA and connect you with an expert lawyer.</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={emergencyLoading}
+                className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:opacity-70 text-white rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-100"
+              >
+                {emergencyLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Zap className="w-5 h-5" /> Create Case & Pay ₹999</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

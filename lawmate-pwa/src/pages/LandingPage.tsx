@@ -14,7 +14,7 @@ const LandingPage = () => {
     e.preventDefault();
     setIsSubmittingAssistance(true);
     try {
-      // POST to Google Sheets Webhook URL
+      // 1. POST to Google Sheets Webhook URL (Flow 1 - existing)
       const webhookUrl = "https://script.google.com/macros/s/AKfycbwEUrF7HoSkyB3eGuh5fe6OjL47Nv8-iwtALMtGPZuuUKvj3oXiFJA209Ae27tgYJ4JUQ/exec";
       if (webhookUrl) {
         await fetch(webhookUrl, {
@@ -26,6 +26,26 @@ const LandingPage = () => {
           body: JSON.stringify({ ...assistanceData, type: 'callback' }),
         });
       }
+
+      // 2. Also save to DB so it appears in Admin dashboard as Flow 1
+      try {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/leads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: assistanceData.name || 'Anonymous Callback',
+            phone: assistanceData.phone || 'N/A',
+            city: '',
+            category: 'General',
+            description: 'Callback requested from homepage.',
+            preferredTime: 'Callback',  // Stored as Flow 1 in Admin
+          }),
+        });
+      } catch (dbError) {
+        // DB save failure is non-critical; Google Sheets already captured the lead
+        console.warn('Flow 1 lead saved to Sheets but DB save failed:', dbError);
+      }
+
       setIsCallbackRequested(true);
     } catch (error) {
       console.error('Failed to save to Google Sheets:', error);

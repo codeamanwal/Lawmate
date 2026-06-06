@@ -187,11 +187,13 @@ const AdminDashboard = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads`);
       if (response.ok) {
         const data = await response.json();
-        // Categorize DB leads into Flow 2, 3, or 4
+        // Categorize DB leads into Flow 1, 2, 3, or 4 based on preferredTime
         dbLeads = data.map((lead: any) => {
           let flow = 'Flow 3'; // Same Day Default
           const time = (lead.preferredTime || '').toLowerCase();
-          if (time.includes('asap')) {
+          if (time.includes('callback')) {
+            flow = 'Flow 1';
+          } else if (time.includes('asap')) {
             flow = 'Flow 2';
           } else if (time.includes('emergency')) {
             flow = 'Flow 4';

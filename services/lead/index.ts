@@ -98,9 +98,9 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
 const leadSchema = z.object({
   fullName: z.string(),
   phone: z.string(),
-  city: z.string(),
-  category: z.string(),
-  description: z.string(),
+  city: z.string().optional().default(''),
+  category: z.string().optional().default('General'),
+  description: z.string().optional().default(''),
   preferredTime: z.string(),
   userId: z.string().optional()
 }).passthrough();
@@ -126,16 +126,19 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
     }
     */
 
+    const isCallback = data.preferredTime.toLowerCase().includes('callback');
+
     const lead = await prisma.lead.create({
       data: {
         name: data.fullName,
         phone: data.phone,
-        city: data.city,
-        category: data.category,
-        description: data.description,
+        city: data.city || '',
+        category: data.category || 'General',
+        description: data.description || '',
         preferredTime: data.preferredTime,
         userId: authUserId || data.userId || null,
-        status: 'NEW'
+        status: 'NEW',
+        slaStatus: isCallback ? 'CALLBACK_PENDING' : undefined
       }
     });
 
