@@ -490,7 +490,6 @@ fastify.post('/api/leads/:id/match', async (request: any, reply: any) => {
         });
       }
     }
-
     // 3. Trigger SLA lawyer matching
     await assignLeadToLawyer(id);
 
@@ -500,6 +499,80 @@ fastify.post('/api/leads/:id/match', async (request: any, reply: any) => {
     return reply.status(500).send({ error: 'Match failed' });
   }
 });
+
+fastify.post('/api/leads/:id/prepare-emergency', async (request: any, reply: any) => {
+  const { id } = request.params;
+  try {
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+
+    let updatedLead = lead;
+
+    // 1. If the lead has no userId, try to find a registered user by phone number (endsWith match)
+    if (!lead.userId && lead.phone) {
+      const cleanPhone10 = lead.phone.replace(/\D/g, '').slice(-10);
+      if (cleanPhone10.length === 10) {
+        const matchedUser = await prisma.user.findFirst({
+          where: {
+            role: 'CLIENT',
+            phone: {
+              endsWith: cleanPhone10
+            }
+          }
+        });
+        if (matchedUser) {
+          updatedLead = await prisma.lead.update({
+            where: { id },
+            data: { userId: matchedUser.id }
+          });
+          fastify.log.info(`Linked lead ${id} to user ${matchedUser.id} via phone match`);
+        }
+      }
+    }
+
+    // 2. Create a booking record if one doesn't exist (so client can pay from their dashboard)
+    if (updatedLead.userId) {
+      const existingBooking = await prisma.booking.findUnique({ where: { leadId: id } });
+      if (!existingBooking) {
+        let dummyLawyer = await prisma.lawyerProfile.findFirst();
+        if (!dummyLawyer) {
+          const dummyUser = await prisma.user.create({ 
+            data: { 
+              email: 'expert@lawmate.in',
+              phone: '9999999999', 
+              name: 'LawOnCall Expert', 
+              role: 'LAWYER' 
+            } 
+          });
+          dummyLawyer = await prisma.lawyerProfile.create({ 
+            data: { 
+              userId: dummyUser.id, 
+              categories: ['General'], 
+              verified: true,
+              name: dummyUser.name,
+              email: dummyUser.email,
+              phone: dummyUser.phone
+            } 
+          });
+        }
+        await prisma.booking.create({
+          data: {
+            leadId: id,
+            status: 'PENDING',
+            clientId: updatedLead.userId,
+            lawyerId: updatedLead.lawyerId || dummyLawyer.id
+          }
+        });
+      }
+    }
+
+    return { success: true, linkedUserId: updatedLead.userId };
+  } catch (err) {
+    fastify.log.error(err);
+    return reply.status(500).send({ error: 'Prepare failed' });
+  }
+});
+
 
 fastify.post('/api/leads/:id/accept', async (request: any, reply: any) => {
   const { id } = request.params;

@@ -112,6 +112,10 @@ fastify.post('/api/leads/:id/simulate-accept-timeout', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.post('/api/leads/:id/prepare-emergency', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.post('/api/leads/:id/simulate-attendance-timeout', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
 });

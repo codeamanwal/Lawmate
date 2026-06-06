@@ -324,13 +324,13 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        // Also trigger SLA matching so this lead enters the client's dashboard and 60-min flow
+        // Link the lead to user by phone and create the PENDING booking
         try {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}/match`, {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}/prepare-emergency`, {
             method: 'POST'
           });
-        } catch (matchErr) {
-          console.warn('SLA match trigger failed (non-critical):', matchErr);
+        } catch (prepErr) {
+          console.warn('Prepare emergency failed (non-critical):', prepErr);
         }
         toast.success('Emergency case created! Redirecting to payment...');
         setIsEditModalOpen(false);
