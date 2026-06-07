@@ -41,7 +41,11 @@ const Dashboard = () => {
       return;
     }
 
-    if (user) fetchLeads();
+    if (user) {
+      fetchLeads();
+      const interval = setInterval(fetchLeads, 5000);
+      return () => clearInterval(interval);
+    }
   }, [user, authLoading, navigate]);
 
   const handleDelete = async (id: string) => {
@@ -252,7 +256,12 @@ const Dashboard = () => {
                           {isPaid ? (
                             lead.slaStatus === 'NOT_ATTENDED' ? (
                               <p className="text-sm text-amber-600 font-bold flex items-center gap-1">
-                                ⏳ Case handled manually (Somebody from our team will reach out within an hour)
+                                ⏳ Case handled manually ({(() => {
+                                  const time = (lead.preferredTime || '').toLowerCase();
+                                  return time.includes('later') 
+                                    ? 'Somebody from our team will reach out within 24 hours.' 
+                                    : 'Somebody from our team will reach out within an hour.';
+                                })()})
                               </p>
                             ) : (
                               <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>

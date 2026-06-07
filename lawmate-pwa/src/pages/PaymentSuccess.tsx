@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Calendar, ArrowRight, Home, Loader2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,7 @@ const PaymentSuccess = () => {
   const [verifying, setVerifying] = useState(true);
   const [status, setStatus] = useState<'SUCCESS' | 'PENDING' | 'FAILED'>('PENDING');
   const [preferredTime, setPreferredTime] = useState<string | null>(null);
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -29,6 +31,9 @@ const PaymentSuccess = () => {
             setStatus('SUCCESS');
             setPreferredTime(response.data.preferredTime);
             setVerifying(false);
+            if (response.data.token && response.data.user) {
+              loginWithToken(response.data.token, response.data.user);
+            }
             toast.success('Payment verified!', { id: 'payment-verified' });
           } else if (attempts < maxAttempts) {
             attempts++;
@@ -58,6 +63,9 @@ const PaymentSuccess = () => {
         setStatus('SUCCESS');
         setPreferredTime(response.data.preferredTime);
         setVerifying(false);
+        if (response.data.token && response.data.user) {
+          loginWithToken(response.data.token, response.data.user);
+        }
       }
     } catch (e) {
       toast.error('Simulation failed.');

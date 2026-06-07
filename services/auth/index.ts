@@ -525,6 +525,24 @@ fastify.get('/api/profiles/lawyer/me', async (request: any, reply: any) => {
   }
 });
 
+// 8a. Get My Auth Profile (General)
+fastify.get('/api/auth/me', async (request: any, reply: any) => {
+  const authHeader = request.headers.authorization;
+  if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = fastify.jwt.verify(token) as { id: string };
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: { lawyerProfile: true }
+    });
+    return { success: true, user };
+  } catch (error) {
+    return reply.status(401).send({ error: 'Invalid token' });
+  }
+});
+
 // 8b. Update Availability
 fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: any) => {
   const { isAvailable } = request.body;

@@ -140,7 +140,14 @@ const MyBookings = () => {
                     <span className="text-xl shrink-0">⏳</span>
                     <div>
                       <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-0.5">Case to be handled manually</p>
-                      <p className="text-sm font-bold text-amber-700">Somebody from our team will reach out within an hour.</p>
+                      <p className="text-sm font-bold text-amber-700">
+                        {(() => {
+                          const time = (booking.preferredTime || '').toLowerCase();
+                          return time.includes('later') 
+                            ? 'Somebody from our team will reach out within 24 hours.' 
+                            : 'Somebody from our team will reach out within an hour.';
+                        })()}
+                      </p>
                     </div>
                   </div>
                 )}

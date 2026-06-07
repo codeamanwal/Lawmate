@@ -38,6 +38,29 @@ const phonePeClient = StandardCheckoutClient.getInstance(
 
 fastify.register(cors);
 
+function base64url(source: Buffer | string): string {
+  let encoded = typeof source === 'string' 
+    ? Buffer.from(source).toString('base64') 
+    : source.toString('base64');
+  return encoded
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+function signJwt(payload: any, secret: string): string {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const headerStr = base64url(JSON.stringify(header));
+  const payloadStr = base64url(JSON.stringify(payload));
+  const signatureInput = `${headerStr}.${payloadStr}`;
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(signatureInput)
+    .digest();
+  const signatureStr = base64url(signature);
+  return `${signatureInput}.${signatureStr}`;
+}
+
 fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
   const { leadId } = request.body as { leadId: string };
   
@@ -190,7 +213,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     // First, find the booking
     const booking = await prisma.booking.findUnique({
       where: { leadId: leadId },
-      include: { payment: true, lead: true }
+      include: { payment: true, lead: true, client: true }
     });
 
     let payment = booking?.payment;
@@ -199,7 +222,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     if (!payment) {
       payment = await prisma.payment.findFirst({
         where: { booking: { leadId: leadId } },
-        include: { booking: { include: { lead: true } } }
+        include: { booking: { include: { lead: true, client: true } } }
       });
     }
 
@@ -209,8 +232,36 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
 
     const bookingRecord = booking || payment.booking;
 
+    const clientUser = bookingRecord?.client;
+    let token = null;
+    let userResponse = null;
+
+    if (clientUser) {
+      const payload = {
+        id: clientUser.id,
+        email: clientUser.email,
+        role: clientUser.role
+      };
+      const secret = process.env.JWT_SECRET || 'super-secret-lawmate-key';
+      token = signJwt(payload, secret);
+      userResponse = {
+        id: clientUser.id,
+        email: clientUser.email,
+        phone: clientUser.phone,
+        name: clientUser.name,
+        city: clientUser.city,
+        role: clientUser.role
+      };
+    }
+
     if (payment.status === 'captured') {
-      return { status: 'SUCCESS', message: 'Payment verified successfully', preferredTime: bookingRecord?.lead?.preferredTime };
+      return { 
+        status: 'SUCCESS', 
+        message: 'Payment verified successfully', 
+        preferredTime: bookingRecord?.lead?.preferredTime,
+        token,
+        user: userResponse
+      };
     }
 
     // Automatically capture payment and confirm booking in local dev sandbox to enable instant checkout
@@ -233,7 +284,13 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     // Refetch the lead info to return preferredTime
     const lead = bookingRecord?.lead || await prisma.lead.findUnique({ where: { id: leadId } });
 
-    return { status: 'SUCCESS', message: 'Payment verified successfully', preferredTime: lead?.preferredTime };
+    return { 
+      status: 'SUCCESS', 
+      message: 'Payment verified successfully', 
+      preferredTime: lead?.preferredTime,
+      token,
+      user: userResponse
+    };
   } catch (error: any) {
     fastify.log.error('Verification failed:', error.message);
     return reply.status(500).send({ error: 'Failed to verify payment status' });

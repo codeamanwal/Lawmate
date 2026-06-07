@@ -35,6 +35,7 @@ interface AuthContextType {
   verifyOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   signupWithEmail: (email: string, pass: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string, role?: string) => Promise<void>;
+  loginWithToken: (token: string, user: any) => void;
   forgotPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: any) => void;
@@ -48,26 +49,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Check if we have a LAWYER token stored locally
+    // 1. Check if we have a LAWYER or CLIENT token stored locally
     const token = localStorage.getItem('token');
-    let isLawyer = false;
+    let currentRole: string | null = null;
     
     if (token) {
       try {
         const parts = token.split('.');
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1]));
-          if (payload.role === 'LAWYER') {
-            isLawyer = true;
-          }
+          currentRole = payload.role;
         }
       } catch (e) {
         console.error("Failed to parse local JWT token:", e);
       }
     }
 
-    if (isLawyer) {
+    if (currentRole === 'LAWYER') {
       axios.get(`${import.meta.env.VITE_API_URL}/api/profiles/lawyer/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then((res) => {
+        if (res.data.success) {
+          setUser(res.data.user);
+        } else {
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+        setLoading(false);
+      }).catch(() => {
+        localStorage.removeItem('token');
+        setUser(null);
+        setLoading(false);
+      });
+      
+      auth.signOut().catch(() => {});
+      return;
+    }
+
+    if (currentRole === 'CLIENT') {
+      axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       }).then((res) => {
         if (res.data.success) {
@@ -166,6 +186,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
+  const loginWithToken = (token: string, userData: any) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('intendedRole', userData.role || 'CLIENT');
+    setUser(userData);
+  };
+
   const forgotPassword = async (email: string) => {
     await sendPasswordResetEmail(auth, email);
   };
@@ -190,6 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       verifyOtp, 
       signupWithEmail,
       loginWithEmail, 
+      loginWithToken,
       forgotPassword,
       logout, 
       updateUser 
