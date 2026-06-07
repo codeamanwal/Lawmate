@@ -185,7 +185,7 @@ const Dashboard = () => {
                         <span className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1 block">{lead.category}</span>
                         <h3 className="text-xl font-bold text-gray-900">{lead.description.substring(0, 50)}...</h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {isCompleted ? (
                           <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 tracking-wider">Completed</span>
                         ) : isPaid ? (
@@ -194,6 +194,37 @@ const Dashboard = () => {
                           <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-700 tracking-wider">Payment Pending</span>
                         )}
                         
+                        {(() => {
+                          const time = (lead.preferredTime || '').toLowerCase();
+                          const isLater = time.includes('later');
+                          if (time.includes('callback')) {
+                            return (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-50 text-amber-700 border border-amber-100 tracking-wider">
+                                {isLater ? 'Callback (Later Today)' : 'Callback (60mins)'}
+                              </span>
+                            );
+                          }
+                          if (time.includes('emergency')) {
+                            return (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-red-50 text-red-700 border border-red-100 tracking-wider">
+                                {isLater ? 'Emergency - SLA (Later Today)' : 'Emergency - SLA (60mins)'}
+                              </span>
+                            );
+                          }
+                          if (time.includes('asap')) {
+                            return (
+                              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-100 tracking-wider">
+                                Flow 2: 60 Min
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-green-50 text-green-700 border border-green-100 tracking-wider">
+                              Flow 3: Same Day
+                            </span>
+                          );
+                        })()}
+
                         {lead.lawyerResolution && (
                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                             lead.lawyerResolution === 'CANCELLED' 
