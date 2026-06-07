@@ -136,7 +136,8 @@ const AdminDashboard = () => {
     phone: '',
     city: '',
     category: '',
-    description: ''
+    description: '',
+    preferredTime: 'ASAP' as 'ASAP' | 'LATER'
   });
   const [crudLoading, setCrudLoading] = useState(false);
 
@@ -280,7 +281,7 @@ const AdminDashboard = () => {
         city: formData.city,
         category: formData.category,
         description: formData.description || 'Emergency Helpline consultation request.',
-        preferredTime: 'Emergency' // Stored as Flow 4
+        preferredTime: formData.preferredTime === 'ASAP' ? 'Emergency - ASAP' : 'Emergency - LATER'
       };
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads`, {
@@ -313,12 +314,22 @@ const AdminDashboard = () => {
     try {
       const isSheetLead = selectedLead.id.startsWith('sheet-');
       
+      const isFlow1 = selectedLead.flow === 'Flow 1';
+      
+      let finalPreferredTime = 'ASAP';
+      if (isFlow1) {
+        finalPreferredTime = formData.preferredTime === 'ASAP' ? 'Callback - ASAP' : 'Callback - LATER';
+      } else {
+        finalPreferredTime = formData.preferredTime === 'ASAP' ? 'Emergency - ASAP' : 'Emergency - LATER';
+      }
+
       const payload = {
         name: formData.name,
         phone: formData.phone,
         city: formData.city,
         category: formData.category,
-        description: formData.description
+        description: formData.description,
+        preferredTime: finalPreferredTime
       };
 
       let response;
@@ -334,7 +345,7 @@ const AdminDashboard = () => {
             city: formData.city,
             category: formData.category,
             description: formData.description,
-            preferredTime: 'Callback' // Stored as Flow 1: Callback
+            preferredTime: finalPreferredTime
           })
         });
       } else {
@@ -396,14 +407,32 @@ const AdminDashboard = () => {
 
   const openEditModal = (lead: Lead) => {
     setSelectedLead(lead);
-    const validCategories = ['Property', 'Matrimonial', 'Criminal', 'Corporate'];
-    const resolvedCategory = validCategories.includes(lead.category) ? lead.category : 'Property';
+    const validCategories = [
+      'Family & Marriage',
+      'Domestic Violence',
+      'Property & Registry',
+      'Criminal & Police',
+      'Supreme Court Lawyer',
+      'Cyber & Digital Fraud',
+      'Employment & HR',
+      'Consumer Complaints',
+      'Other'
+    ];
+    const resolvedCategory = validCategories.includes(lead.category) ? lead.category : '';
+    
+    // Parse preferredTime
+    let resolvedPreferredTime: 'ASAP' | 'LATER' = 'ASAP';
+    if ((lead.preferredTime || '').toLowerCase().includes('later')) {
+      resolvedPreferredTime = 'LATER';
+    }
+
     setFormData({
       name: lead.name,
       phone: lead.phone,
       city: lead.city || '',
       category: resolvedCategory,
-      description: lead.description || ''
+      description: lead.description || '',
+      preferredTime: resolvedPreferredTime
     });
     setIsEditModalOpen(true);
   };
@@ -420,7 +449,8 @@ const AdminDashboard = () => {
       phone: '',
       city: '',
       category: '',
-      description: ''
+      description: '',
+      preferredTime: 'ASAP'
     });
     setSelectedLead(null);
   };
@@ -978,7 +1008,7 @@ const AdminDashboard = () => {
                       <td className="px-6 py-5">
                         {lead.flow === 'Flow 1' && (
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-xs font-black uppercase tracking-wider">
-                            <FileSpreadsheet className="w-3 h-3" /> Flow 1: Callback
+                            <FileSpreadsheet className="w-3 h-3" /> {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Callback (Later Today)' : 'Callback (60mins)'}
                           </span>
                         )}
                         {lead.flow === 'Flow 2' && (
@@ -993,7 +1023,7 @@ const AdminDashboard = () => {
                         )}
                         {lead.flow === 'Flow 4' && (
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-100 text-xs font-black uppercase tracking-wider">
-                            <AlertTriangle className="w-3 h-3" /> Flow 4: Emergency
+                            <AlertTriangle className="w-3 h-3" /> {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Emergency - SLA (Later Today)' : 'Emergency - SLA (60mins)'}
                           </span>
                         )}
                       </td>
@@ -1067,64 +1097,105 @@ const AdminDashboard = () => {
 
               <form onSubmit={handleAddLead} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Client Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
                   <input 
                     type="text" 
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="E.g. Vivek Malhotra"
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Phone Number</label>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+91</span>
                     <input 
                       type="tel" 
                       required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="10-digit phone"
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                      value={formData.phone.replace(/^\+91/, '')}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setFormData({ ...formData, phone: val ? `+91${val}` : '' });
+                      }}
+                      placeholder="10-digit mobile"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">City</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
+                    <select
                       required
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      placeholder="E.g. Delhi"
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
-                    />
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all bg-white cursor-pointer text-sm"
+                    >
+                      <option value="">Select City</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
+                      <option value="Ghaziabad">Ghaziabad</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Issue Category</label>
+                    <select
+                      required
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all bg-white cursor-pointer text-sm"
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Family & Marriage">Family & Marriage</option>
+                      <option value="Domestic Violence">Domestic Violence</option>
+                      <option value="Property & Registry">Property & Registry</option>
+                      <option value="Criminal & Police">Criminal & Police</option>
+                      <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                      <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
+                      <option value="Employment & HR">Employment & HR</option>
+                      <option value="Consumer Complaints">Consumer Complaints</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Category</label>
-                  <select 
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm cursor-pointer"
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Property">Property</option>
-                    <option value="Matrimonial">Matrimonial</option>
-                    <option value="Criminal">Criminal</option>
-                    <option value="Corporate">Corporate</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brief Description</label>
                   <textarea 
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Brief description of the legal urgency..."
+                    placeholder="Tell us a bit about your legal concern..."
                     rows={3}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none text-sm"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">When would you like to consult?</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.preferredTime === 'ASAP' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
+                      <input 
+                        type="radio" 
+                        name="preferredTime" 
+                        value="ASAP" 
+                        checked={formData.preferredTime === 'ASAP'}
+                        onChange={() => setFormData({ ...formData, preferredTime: 'ASAP' })}
+                        className="hidden" 
+                      />
+                      <span className="font-bold">ASAP (60 min)</span>
+                    </label>
+                    <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.preferredTime === 'LATER' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
+                      <input 
+                        type="radio" 
+                        name="preferredTime" 
+                        value="LATER" 
+                        checked={formData.preferredTime === 'LATER'}
+                        onChange={() => setFormData({ ...formData, preferredTime: 'LATER' })}
+                        className="hidden" 
+                      />
+                      <span className="font-bold">Later Today</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4">
@@ -1160,63 +1231,109 @@ const AdminDashboard = () => {
               className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl relative border border-gray-100"
             >
               <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">Create Emergency Case</h3>
-              <p className="text-sm text-gray-500 mb-6">Finalize details for lead id: <span className="font-mono text-xs">{selectedLead?.id}</span> — clicking <span className="font-bold text-indigo-600">Create Emergency Case</span> will save the details and activate 60-min SLA matching.</p>
+              <p className="text-sm text-gray-500 mb-6">Finalize details for lead id: <span className="font-mono text-xs">{selectedLead?.id}</span> — clicking <span className="font-bold text-indigo-600">Create Emergency Case</span> will save the details and activate SLA matching.</p>
 
               <form onSubmit={handleEditLead} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Client Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
                   <input 
                     type="text" 
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Phone Number</label>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">+91</span>
                     <input 
                       type="tel" 
                       required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                      value={formData.phone.replace(/^\+91/, '')}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setFormData({ ...formData, phone: val ? `+91${val}` : '' });
+                      }}
+                      placeholder="10-digit mobile"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">City</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
+                    <select
                       required
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
-                    />
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all bg-white cursor-pointer text-sm"
+                    >
+                      <option value="">Select City</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
+                      <option value="Ghaziabad">Ghaziabad</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Issue Category</label>
+                    <select
+                      required
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all bg-white cursor-pointer text-sm"
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Family & Marriage">Family & Marriage</option>
+                      <option value="Domestic Violence">Domestic Violence</option>
+                      <option value="Property & Registry">Property & Registry</option>
+                      <option value="Criminal & Police">Criminal & Police</option>
+                      <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                      <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
+                      <option value="Employment & HR">Employment & HR</option>
+                      <option value="Consumer Complaints">Consumer Complaints</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Category</label>
-                  <select 
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm cursor-pointer"
-                  >
-                    <option value="Property">Property</option>
-                    <option value="Matrimonial">Matrimonial</option>
-                    <option value="Criminal">Criminal</option>
-                    <option value="Corporate">Corporate</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brief Description</label>
                   <textarea 
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Tell us a bit about your legal concern..."
                     rows={3}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-indigo-500 transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none text-sm"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">When would you like to consult?</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.preferredTime === 'ASAP' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
+                      <input 
+                        type="radio" 
+                        name="preferredTime" 
+                        value="ASAP" 
+                        checked={formData.preferredTime === 'ASAP'}
+                        onChange={() => setFormData({ ...formData, preferredTime: 'ASAP' })}
+                        className="hidden" 
+                      />
+                      <span className="font-bold">ASAP (60 min)</span>
+                    </label>
+                    <label className={`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.preferredTime === 'LATER' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
+                      <input 
+                        type="radio" 
+                        name="preferredTime" 
+                        value="LATER" 
+                        checked={formData.preferredTime === 'LATER'}
+                        onChange={() => setFormData({ ...formData, preferredTime: 'LATER' })}
+                        className="hidden" 
+                      />
+                      <span className="font-bold">Later Today</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4">

@@ -246,9 +246,14 @@ const MyBookings = () => {
                         <p className="text-sm font-black text-gray-900">
                           {(() => {
                             const time = (booking.preferredTime || '').toLowerCase();
-                            if (time.includes('callback')) return 'Flow 1: Callback';
+                            const isLater = time.includes('later');
+                            if (time.includes('callback')) {
+                              return isLater ? 'Callback (Later Today)' : 'Callback (60mins)';
+                            }
+                            if (time.includes('emergency')) {
+                              return isLater ? 'Emergency - SLA (Later Today)' : 'Emergency - SLA (60mins)';
+                            }
                             if (time.includes('asap')) return 'Flow 2: 60 Min SLA';
-                            if (time.includes('emergency')) return 'Flow 4: Emergency';
                             return 'Flow 3: Same Day';
                           })()}
                         </p>

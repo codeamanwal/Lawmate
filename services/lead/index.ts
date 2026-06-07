@@ -320,7 +320,9 @@ setInterval(async () => {
       }
 
       const preferredTime = lead.preferredTime.toLowerCase();
-      const isAsapSla = preferredTime.includes('asap') || preferredTime.includes('emergency') || preferredTime.includes('callback');
+      const isAsapSla = preferredTime.includes('asap') || 
+                        (preferredTime.includes('emergency') && !preferredTime.includes('later')) || 
+                        (preferredTime.includes('callback') && !preferredTime.includes('later'));
       // ASAP: 5 mins acceptance window. 24HRS (LATER): 10 mins acceptance window.
       const acceptanceTimeoutMs = isAsapSla
         ? 5 * 60 * 1000
