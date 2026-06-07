@@ -218,7 +218,10 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-tighter text-gray-400 mb-6">
                       <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {['ASAP', 'EMERGENCY'].includes((lead.preferredTime || '').toUpperCase()) ? 'Within 60 mins' : 'Later Today'}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {(() => {
+                        const time = (lead.preferredTime || '').toLowerCase();
+                        return (time.includes('asap') || (time.includes('emergency') && !time.includes('later')) || (time.includes('callback') && !time.includes('later'))) ? 'Within 60 mins' : 'Later Today';
+                      })()}</span>
                     </div>
                     
                     {(() => {
