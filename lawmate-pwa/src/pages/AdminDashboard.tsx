@@ -196,10 +196,10 @@ const AdminDashboard = () => {
           const time = (lead.preferredTime || '').toLowerCase();
           if (time.includes('callback')) {
             flow = 'Flow 1';
-          } else if (time.includes('asap')) {
-            flow = 'Flow 2';
           } else if (time.includes('emergency')) {
             flow = 'Flow 4';
+          } else if (time.includes('asap')) {
+            flow = 'Flow 2';
           }
           return {
             ...lead,
@@ -1007,8 +1007,14 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-5">
                         {lead.flow === 'Flow 1' && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-xs font-black uppercase tracking-wider">
-                            <FileSpreadsheet className="w-3 h-3" /> {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Callback (Later Today)' : 'Callback (60mins)'}
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                            lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-100'
+                          }`}>
+                            <FileSpreadsheet className="w-3 h-3" /> 
+                            {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Callback (Later Today)' : 'Callback (60mins)'}
+                            {!(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED') && ' - Pending'}
                           </span>
                         )}
                         {lead.flow === 'Flow 2' && (
@@ -1022,22 +1028,45 @@ const AdminDashboard = () => {
                           </span>
                         )}
                         {lead.flow === 'Flow 4' && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-100 text-xs font-black uppercase tracking-wider">
-                            <AlertTriangle className="w-3 h-3" /> {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Emergency - SLA (Later Today)' : 'Emergency - SLA (60mins)'}
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                            lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED'
+                              ? 'bg-red-50 text-red-700 border border-red-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-100'
+                          }`}>
+                            <AlertTriangle className="w-3 h-3" /> 
+                            {(lead.preferredTime || '').toLowerCase().includes('later') ? 'Emergency - SLA (Later Today)' : 'Emergency - SLA (60mins)'}
+                            {!(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED') && ' - Pending'}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          lead.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                          lead.status === 'ASSIGNED' ? 'bg-indigo-100 text-indigo-800' :
-                          'bg-amber-100 text-amber-800'
-                        }`}>
-                          {lead.status || 'NEW'}
-                        </span>
-                        {lead.slaStatus && (
-                          <p className="text-xs text-gray-400 mt-1 font-mono">{lead.slaStatus}</p>
-                        )}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                              lead.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                              lead.status === 'ASSIGNED' ? 'bg-indigo-100 text-indigo-800' :
+                              'bg-amber-100 text-amber-800'
+                            }`}>
+                              {lead.status || 'NEW'}
+                            </span>
+                            
+                            {/* Payment Status Tag */}
+                            {(lead.flow === 'Flow 1' || lead.flow === 'Flow 4') && (
+                              lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black uppercase tracking-wider">
+                                  Paid
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100 text-[10px] font-black uppercase tracking-wider">
+                                  Payment Pending
+                                </span>
+                              )
+                            )}
+                          </div>
+                          {lead.slaStatus && (
+                            <p className="text-xs text-gray-400 font-mono">{lead.slaStatus}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
@@ -1476,6 +1505,20 @@ const AdminDashboard = () => {
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">SLA Status:</span>
                         <span className="col-span-2 font-mono text-xs text-indigo-600 uppercase font-black">{selectedLead.slaStatus || 'NONE'}</span>
+                      </div>
+                      <div className="grid grid-cols-3">
+                        <span className="text-gray-400 font-medium">Payment Status:</span>
+                        <span className="col-span-2">
+                          {selectedLead.booking?.payment?.status === 'captured' || selectedLead.booking?.status === 'CONFIRMED' ? (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                              PAID
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 text-xs font-bold border border-rose-100">
+                              PAYMENT PENDING
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>

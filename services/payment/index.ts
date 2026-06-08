@@ -255,10 +255,24 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     }
 
     if (payment.status === 'captured') {
+      let flow = 'Flow 3';
+      const lead = bookingRecord?.lead;
+      if (lead) {
+        const time = lead.preferredTime.toLowerCase();
+        if (time.includes('callback')) {
+          flow = 'Flow 1';
+        } else if (time.includes('emergency')) {
+          flow = 'Flow 4';
+        } else if (time.includes('asap')) {
+          flow = 'Flow 2';
+        }
+      }
+
       return { 
         status: 'SUCCESS', 
         message: 'Payment verified successfully', 
         preferredTime: bookingRecord?.lead?.preferredTime,
+        flow,
         token,
         user: userResponse
       };
@@ -284,10 +298,23 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     // Refetch the lead info to return preferredTime
     const lead = bookingRecord?.lead || await prisma.lead.findUnique({ where: { id: leadId } });
 
+    let flow = 'Flow 3';
+    if (lead) {
+      const time = lead.preferredTime.toLowerCase();
+      if (time.includes('callback')) {
+        flow = 'Flow 1';
+      } else if (time.includes('emergency')) {
+        flow = 'Flow 4';
+      } else if (time.includes('asap')) {
+        flow = 'Flow 2';
+      }
+    }
+
     return { 
       status: 'SUCCESS', 
       message: 'Payment verified successfully', 
       preferredTime: lead?.preferredTime,
+      flow,
       token,
       user: userResponse
     };

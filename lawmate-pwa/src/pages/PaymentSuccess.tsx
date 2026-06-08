@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Calendar, ArrowRight, Home, Loader2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -11,7 +11,9 @@ const PaymentSuccess = () => {
   const [verifying, setVerifying] = useState(true);
   const [status, setStatus] = useState<'SUCCESS' | 'PENDING' | 'FAILED'>('PENDING');
   const [preferredTime, setPreferredTime] = useState<string | null>(null);
+  const [flow, setFlow] = useState<string | null>(null);
   const { loginWithToken } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -30,11 +32,19 @@ const PaymentSuccess = () => {
           if (response.data.status === 'SUCCESS') {
             setStatus('SUCCESS');
             setPreferredTime(response.data.preferredTime);
+            setFlow(response.data.flow);
             setVerifying(false);
             if (response.data.token && response.data.user) {
               loginWithToken(response.data.token, response.data.user);
             }
             toast.success('Payment verified!', { id: 'payment-verified' });
+
+            if (response.data.flow === 'Flow 1' || response.data.flow === 'Flow 4') {
+              toast.success('Redirecting to Admin Portal...', { id: 'admin-redirect' });
+              setTimeout(() => {
+                navigate('/admin');
+              }, 2000);
+            }
           } else if (attempts < maxAttempts) {
             attempts++;
             setTimeout(check, 3000); // Check again in 3 seconds
@@ -51,7 +61,7 @@ const PaymentSuccess = () => {
     };
 
     verifyPayment();
-  }, [leadId]);
+  }, [leadId, navigate, loginWithToken]);
 
   const handleSimulateSuccess = async () => {
     try {
@@ -62,9 +72,18 @@ const PaymentSuccess = () => {
       if (response.data.status === 'SUCCESS') {
         setStatus('SUCCESS');
         setPreferredTime(response.data.preferredTime);
+        setFlow(response.data.flow);
         setVerifying(false);
         if (response.data.token && response.data.user) {
           loginWithToken(response.data.token, response.data.user);
+        }
+        toast.success('Payment verified!', { id: 'payment-verified' });
+
+        if (response.data.flow === 'Flow 1' || response.data.flow === 'Flow 4') {
+          toast.success('Redirecting to Admin Portal...', { id: 'admin-redirect' });
+          setTimeout(() => {
+            navigate('/admin');
+          }, 2000);
         }
       }
     } catch (e) {
@@ -126,12 +145,21 @@ const PaymentSuccess = () => {
               ⚙️ Simulate Payment Success
             </button>
           )}
-          <Link 
-            to="/my-bookings" 
-            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"
-          >
-            View My Bookings <ArrowRight className="w-5 h-5" />
-          </Link>
+          {flow === 'Flow 1' || flow === 'Flow 4' ? (
+            <Link 
+              to="/admin" 
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"
+            >
+              Go to Admin Dashboard <ArrowRight className="w-5 h-5" />
+            </Link>
+          ) : (
+            <Link 
+              to="/my-bookings" 
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100"
+            >
+              View My Bookings <ArrowRight className="w-5 h-5" />
+            </Link>
+          )}
           <Link 
             to="/" 
             className="w-full py-4 bg-white text-gray-600 rounded-2xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 border border-gray-100"
