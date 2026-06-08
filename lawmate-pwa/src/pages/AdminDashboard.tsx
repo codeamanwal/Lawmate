@@ -114,12 +114,12 @@ const getSlaStatusBadge = (lead: Lead) => {
       bgClass = 'bg-purple-50 text-purple-700 border-purple-200';
       break;
     case 'NOT_ATTENDED':
-      if (!lead.lawyerId) {
-        text = 'Manual Handled';
-        bgClass = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold';
-      } else {
+      if (lead.status === 'ASSIGNED') {
         text = 'Not Attended';
         bgClass = 'bg-red-50 text-red-700 border-red-200';
+      } else {
+        text = 'Manual Handled';
+        bgClass = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold';
       }
       break;
     case 'ACCEPTED':
