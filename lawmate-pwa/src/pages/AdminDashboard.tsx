@@ -1040,36 +1040,44 @@ const AdminDashboard = () => {
                         )}
                       </td>
                       <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => openDetailModal(lead)}
-                            className="p-2 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Inspect Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          {lead.flow === 'Flow 4' || lead.flow === 'Flow 1' ? (
-                            <>
-                              {!(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED') && (
-                                <button 
-                                  onClick={() => openEditModal(lead)}
-                                  className="p-2 text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors"
-                                  title="Edit Lead"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              )}
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Edit Slot */}
+                          <div className="w-9 h-9 flex items-center justify-center">
+                            {(lead.flow === 'Flow 4' || lead.flow === 'Flow 1') && 
+                             !(lead.booking?.payment?.status === 'captured' || lead.booking?.status === 'CONFIRMED' || lead.status === 'ASSIGNED' || lead.status === 'COMPLETED') ? (
+                              <button 
+                                onClick={() => openEditModal(lead)}
+                                className="p-2 text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors cursor-pointer"
+                                title="Edit Lead"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            ) : null}
+                          </div>
+
+                          {/* Delete Slot */}
+                          <div className="w-9 h-9 flex items-center justify-center">
+                            {lead.flow === 'Flow 4' || lead.flow === 'Flow 1' ? (
                               <button 
                                 onClick={() => handleDeleteLead(lead.id)}
-                                className="p-2 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100/80 rounded-lg transition-colors"
+                                className="p-2 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100/80 rounded-lg transition-colors cursor-pointer"
                                 title="Delete Lead"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
-                            </>
-                          ) : (
-                            <span className="text-xs text-gray-400 italic px-2">Read-only</span>
-                          )}
+                            ) : null}
+                          </div>
+
+                          {/* View/Inspect Slot */}
+                          <div className="w-9 h-9 flex items-center justify-center">
+                            <button 
+                              onClick={() => openDetailModal(lead)}
+                              className="p-2 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                              title="Inspect Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
