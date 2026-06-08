@@ -1664,9 +1664,9 @@ const AdminDashboard = () => {
                             className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer text-xs font-semibold"
                           >
                             <option value="">Select status...</option>
-                            <option value="Case closed">Case closed</option>
-                            <option value="cancelled">cancelled</option>
-                            <option value="abonded">abonded</option>
+                            <option value="Case Closed">Case Closed</option>
+                            <option value="Case Cancelled">Case Cancelled</option>
+                            <option value="Case Aborted">Case Aborted</option>
                           </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
