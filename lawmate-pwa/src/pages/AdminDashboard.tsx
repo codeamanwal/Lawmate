@@ -93,7 +93,7 @@ const MOCK_FLOW_1_LEADS: Lead[] = [
   }
 ];
 
-const getSlaStatusBadge = (lead: Lead) => {
+const getSlaStatusBadge = (lead: Lead, isModalView = false) => {
   const status = lead.slaStatus;
   if (!status) return null;
 
@@ -114,7 +114,7 @@ const getSlaStatusBadge = (lead: Lead) => {
       bgClass = 'bg-purple-50 text-purple-700 border-purple-200';
       break;
     case 'NOT_ATTENDED':
-      if ((lead.retryCount ?? 0) >= 3 || !lead.lawyerId) {
+      if (isModalView && ((lead.retryCount ?? 0) >= 3 || !lead.lawyerId)) {
         text = 'Manual Handled';
         bgClass = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold';
       } else {
@@ -1573,7 +1573,7 @@ const AdminDashboard = () => {
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">SLA Status:</span>
                         <span className="col-span-2">
-                          {selectedLead.slaStatus ? getSlaStatusBadge(selectedLead) : <span className="font-mono text-xs text-gray-400">NONE</span>}
+                          {selectedLead.slaStatus ? getSlaStatusBadge(selectedLead, true) : <span className="font-mono text-xs text-gray-400">NONE</span>}
                         </span>
                       </div>
                       <div className="grid grid-cols-3">
