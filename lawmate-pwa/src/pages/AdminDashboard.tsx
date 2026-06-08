@@ -23,6 +23,8 @@ interface Lead {
   slaStatus?: string;
   retryCount?: number;
   lawyerId?: string | null;
+  adminStatus?: string | null;
+  adminComment?: string | null;
   userId?: string | null;
   lawyerResolution?: string | null;
   feedbackRating?: number | null;
@@ -175,6 +177,9 @@ const AdminDashboard = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showRawJson, setShowRawJson] = useState(false);
+  const [tempAdminStatus, setTempAdminStatus] = useState<string>('');
+  const [tempAdminComment, setTempAdminComment] = useState<string>('');
+  const [saveAdminLoading, setSaveAdminLoading] = useState(false);
 
   // Form States for CRUD
   const [formData, setFormData] = useState({
@@ -512,8 +517,42 @@ const AdminDashboard = () => {
 
   const openDetailModal = (lead: Lead) => {
     setSelectedLead(lead);
+    setTempAdminStatus(lead.adminStatus || '');
+    setTempAdminComment(lead.adminComment || '');
     setShowRawJson(false);
     setIsDetailModalOpen(true);
+  };
+
+  const handleSaveAdminStatusComment = async () => {
+    if (!selectedLead) return;
+    setSaveAdminLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${selectedLead.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminStatus: tempAdminStatus || null,
+          adminComment: tempAdminComment || null
+        })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setSelectedLead(prev => prev ? {
+          ...prev,
+          adminStatus: updated.adminStatus,
+          adminComment: updated.adminComment
+        } : null);
+        toast.success('Admin case status and comment updated successfully!');
+        fetchLeads();
+      } else {
+        toast.error('Failed to save status and comment.');
+      }
+    } catch (err) {
+      toast.error('Error connecting to server.');
+    } finally {
+      setSaveAdminLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -1610,6 +1649,49 @@ const AdminDashboard = () => {
 
                 {/* Right Side: Relations data (Lawyers, Calls, Payments) */}
                 <div className="space-y-6">
+                  {/* Admin Case Management Box (Flow 1 & Flow 4 only) */}
+                  {(selectedLead.flow === 'Flow 1' || selectedLead.flow === 'Flow 4') && (
+                    <div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                      <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
+                        <Shield className="w-4 h-4 text-indigo-600" /> Admin Case Management
+                      </h4>
+                      <div className="space-y-4 text-sm">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Case Status (Admin)</label>
+                          <select
+                            value={tempAdminStatus}
+                            onChange={(e) => setTempAdminStatus(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer text-xs font-semibold"
+                          >
+                            <option value="">Select status...</option>
+                            <option value="Case closed">Case closed</option>
+                            <option value="cancelled">cancelled</option>
+                            <option value="abonded">abonded</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Admin Comment</label>
+                          <textarea
+                            value={tempAdminComment}
+                            onChange={(e) => setTempAdminComment(e.target.value)}
+                            placeholder="Add case management notes or comments here..."
+                            rows={3}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none text-xs"
+                          />
+                        </div>
+                        <button
+                          onClick={handleSaveAdminStatusComment}
+                          disabled={saveAdminLoading}
+                          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+                        >
+                          {saveAdminLoading ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : 'Save Case Details'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Assigned Lawyer */}
                   <div className="p-5 bg-gray-50/70 border border-gray-100 rounded-2xl">
                     <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">

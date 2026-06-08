@@ -74,6 +74,8 @@ model Lead {
   callSid              String?
   recordingUrl         String?
   retryCount           Int            @default(0)
+  adminStatus          String?
+  adminComment         String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   booking              Booking?

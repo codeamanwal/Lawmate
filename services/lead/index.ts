@@ -916,7 +916,9 @@ const leadUpdateSchema = z.object({
   category: z.string().optional(),
   description: z.string().optional(),
   preferredTime: z.string().optional(),
-  status: z.string().optional()
+  status: z.string().optional(),
+  adminStatus: z.string().optional().nullable(),
+  adminComment: z.string().optional().nullable()
 }).passthrough();
 
 fastify.put('/api/leads/:id', async (request: any, reply: any) => {
@@ -932,7 +934,9 @@ fastify.put('/api/leads/:id', async (request: any, reply: any) => {
         ...(data.category && { category: data.category }),
         ...(data.description && { description: data.description }),
         ...(data.preferredTime && { preferredTime: data.preferredTime }),
-        ...(data.status && { status: data.status as any })
+        ...(data.status && { status: data.status as any }),
+        adminStatus: data.adminStatus !== undefined ? data.adminStatus : undefined,
+        adminComment: data.adminComment !== undefined ? data.adminComment : undefined
       }
     });
 
