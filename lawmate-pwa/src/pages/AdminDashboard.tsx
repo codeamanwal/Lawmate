@@ -93,6 +93,52 @@ const MOCK_FLOW_1_LEADS: Lead[] = [
   }
 ];
 
+const getSlaStatusBadge = (lead: Lead) => {
+  const status = lead.slaStatus;
+  if (!status) return null;
+
+  let text = status;
+  let bgClass = "bg-gray-100 text-gray-700 border-gray-200";
+
+  switch (status) {
+    case 'CALLBACK_PENDING':
+      text = 'Callback Pending';
+      bgClass = 'bg-amber-50 text-amber-700 border-amber-200';
+      break;
+    case 'PENDING_ACCEPTANCE':
+      text = 'Pending Acceptance';
+      bgClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      break;
+    case 'REASSIGNING':
+      text = 'Reassigning';
+      bgClass = 'bg-purple-50 text-purple-700 border-purple-200';
+      break;
+    case 'NOT_ATTENDED':
+      if ((lead.retryCount ?? 0) >= 3 || !lead.lawyerId) {
+        text = 'Manual Handled';
+        bgClass = 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold';
+      } else {
+        text = 'Not Attended';
+        bgClass = 'bg-red-50 text-red-700 border-red-200';
+      }
+      break;
+    case 'ACCEPTED':
+      text = 'Accepted';
+      bgClass = 'bg-blue-50 text-blue-700 border-blue-200';
+      break;
+    case 'COMPLETED':
+      text = 'Completed';
+      bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      break;
+  }
+
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-bold ${bgClass}`}>
+      {text}
+    </span>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   // Authentication State
@@ -1077,7 +1123,9 @@ const AdminDashboard = () => {
                             )}
                           </div>
                           {lead.slaStatus && (
-                            <p className="text-xs text-gray-400 font-mono">{lead.slaStatus}</p>
+                            <div className="mt-1">
+                              {getSlaStatusBadge(lead)}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -1513,11 +1561,20 @@ const AdminDashboard = () => {
                       </div>
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">Retry Count:</span>
-                        <span className="col-span-2 font-mono font-bold text-gray-800">{selectedLead.retryCount ?? 0} / 3</span>
+                        <span className="col-span-2 font-mono font-bold text-gray-800">
+                          {selectedLead.retryCount ?? 0} / 3
+                          {(selectedLead.retryCount ?? 0) >= 3 && (
+                            <span className="text-xs text-rose-600 block mt-1 font-sans font-normal leading-normal">
+                              ⚠️ Manual Handling: Somebody from our team will assign a lawyer manually.
+                            </span>
+                          )}
+                        </span>
                       </div>
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">SLA Status:</span>
-                        <span className="col-span-2 font-mono text-xs text-indigo-600 uppercase font-black">{selectedLead.slaStatus || 'NONE'}</span>
+                        <span className="col-span-2">
+                          {selectedLead.slaStatus ? getSlaStatusBadge(selectedLead) : <span className="font-mono text-xs text-gray-400">NONE</span>}
+                        </span>
                       </div>
                       <div className="grid grid-cols-3">
                         <span className="text-gray-400 font-medium">Payment Status:</span>
