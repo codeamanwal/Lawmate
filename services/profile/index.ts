@@ -61,6 +61,17 @@ fastify.post('/api/profiles/update', async (request: any, reply: any) => {
       where: { id: userId },
       data: { name, city, phone }
     });
+
+    // Sync user details to all client's leads
+    await prisma.lead.updateMany({
+      where: { userId: userId },
+      data: {
+        ...(name && { name }),
+        ...(city && { city }),
+        ...(phone && { phone })
+      }
+    });
+
     return updatedUser;
   } catch (error) {
     fastify.log.error(error);

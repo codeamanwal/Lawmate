@@ -935,6 +935,18 @@ fastify.put('/api/leads/:id', async (request: any, reply: any) => {
         ...(data.status && { status: data.status as any })
       }
     });
+
+    if (updatedLead.userId) {
+      await prisma.user.update({
+        where: { id: updatedLead.userId },
+        data: {
+          ...(data.name && { name: data.name }),
+          ...(data.phone && { phone: data.phone }),
+          ...(data.city && { city: data.city })
+        }
+      });
+    }
+
     return updatedLead;
   } catch (error: any) {
     fastify.log.error(error);
