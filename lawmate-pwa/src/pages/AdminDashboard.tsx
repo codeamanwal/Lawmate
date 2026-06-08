@@ -306,8 +306,22 @@ const AdminDashboard = () => {
       setSheetStatus('fallback');
     }
 
+    // Deduplicate Google Sheet leads that already exist in DB as Flow 1
+    const dbFlow1Phones = new Set(
+      dbLeads
+        .filter(l => l.flow === 'Flow 1')
+        .map(l => (l.phone || '').replace(/\D/g, '').slice(-10))
+        .filter(Boolean)
+    );
+
+    const uniqueSheetLeads = sheetLeads.filter(sheetLead => {
+      const normalizedPhone = (sheetLead.phone || '').replace(/\D/g, '').slice(-10);
+      if (!normalizedPhone) return true;
+      return !dbFlow1Phones.has(normalizedPhone);
+    });
+
     // 3. Merge & Save Leads
-    setLeads([...dbLeads, ...sheetLeads]);
+    setLeads([...dbLeads, ...uniqueSheetLeads]);
     setLoading(false);
   };
 
