@@ -291,10 +291,23 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        toast.success('Emergency lead (Flow 4) created successfully.');
+        const result = await response.json();
+        const leadId = result.id;
+
+        // Link the lead to user by phone and create the PENDING booking
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}/prepare-emergency`, {
+            method: 'POST'
+          });
+        } catch (prepErr) {
+          console.warn('Prepare emergency failed (non-critical):', prepErr);
+        }
+
+        toast.success('Emergency lead (Flow 4) created! Redirecting to payment...');
         setIsAddModalOpen(false);
         resetForm();
         fetchLeads();
+        navigate('/payment', { state: { leadId } });
       } else {
         toast.error('Failed to create lead.');
       }
