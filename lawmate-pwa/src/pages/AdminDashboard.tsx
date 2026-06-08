@@ -1649,48 +1649,46 @@ const AdminDashboard = () => {
 
                 {/* Right Side: Relations data (Lawyers, Calls, Payments) */}
                 <div className="space-y-6">
-                  {/* Admin Case Management Box (Flow 1 & Flow 4 only) */}
-                  {(selectedLead.flow === 'Flow 1' || selectedLead.flow === 'Flow 4') && (
-                    <div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-                      <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
-                        <Shield className="w-4 h-4 text-indigo-600" /> Admin Case Management
-                      </h4>
-                      <div className="space-y-4 text-sm">
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Case Status (Admin)</label>
-                          <select
-                            value={tempAdminStatus}
-                            onChange={(e) => setTempAdminStatus(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer text-xs font-semibold"
-                          >
-                            <option value="">Select status...</option>
-                            <option value="Case Closed">Case Closed</option>
-                            <option value="Case Cancelled">Case Cancelled</option>
-                            <option value="Case Aborted">Case Aborted</option>
-                          </select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Admin Comment</label>
-                          <textarea
-                            value={tempAdminComment}
-                            onChange={(e) => setTempAdminComment(e.target.value)}
-                            placeholder="Add case management notes or comments here..."
-                            rows={3}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none text-xs"
-                          />
-                        </div>
-                        <button
-                          onClick={handleSaveAdminStatusComment}
-                          disabled={saveAdminLoading}
-                          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+                  {/* Admin Case Management Box */}
+                  <div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                    <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
+                      <Shield className="w-4 h-4 text-indigo-600" /> Admin Case Management
+                    </h4>
+                    <div className="space-y-4 text-sm">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Case Status (Admin)</label>
+                        <select
+                          value={tempAdminStatus}
+                          onChange={(e) => setTempAdminStatus(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer text-xs font-semibold"
                         >
-                          {saveAdminLoading ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : 'Save Case Details'}
-                        </button>
+                          <option value="">Select status...</option>
+                          <option value="Case Closed">Case Closed</option>
+                          <option value="Case Cancelled">Case Cancelled</option>
+                          <option value="Case Aborted">Case Aborted</option>
+                        </select>
                       </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Admin Comment</label>
+                        <textarea
+                          value={tempAdminComment}
+                          onChange={(e) => setTempAdminComment(e.target.value)}
+                          placeholder="Add case management notes or comments here..."
+                          rows={3}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none text-xs"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSaveAdminStatusComment}
+                        disabled={saveAdminLoading}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+                      >
+                        {saveAdminLoading ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : 'Save Case Details'}
+                      </button>
                     </div>
-                  )}
+                  </div>
 
                   {/* Assigned Lawyer */}
                   <div className="p-5 bg-gray-50/70 border border-gray-100 rounded-2xl">
