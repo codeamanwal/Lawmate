@@ -188,7 +188,7 @@ def build_pdf():
     # ================= PAGE 2: SYSTEM ARCHITECTURE OVERVIEW =================
     story.append(Paragraph("1. System Architecture Overview", h1_style))
     story.append(Paragraph(
-        "The LawMate (LawOnCall) application is a decoupled, modern multi-service system. It is composed of a single-page PWA client (React/Vite) and five containerized Fastify backend microservices coordinated behind an API Gateway proxy. Native AWS services are leveraged to ensure high availability, fast response times, database backups, and SSL security.",
+        "The LawMate (LawOnCall) application is a decoupled, modern multi-service system. It is composed of a single-page PWA client (React/Vite) and six backend microservices (Gateway, Auth, Lead, Payment, Notification, and Profile) coordinated behind an API Gateway proxy. Native AWS services are leveraged to ensure high availability, fast response times, database backups, and SSL security.",
         body_style
     ))
     story.append(Spacer(1, 10))
@@ -196,7 +196,7 @@ def build_pdf():
     
     # Table Width must be exactly 504 points (7 inches)
     table_headers = [
-        Paragraph("<b>Component</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Component / Port</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
         Paragraph("<b>Folder / Repo</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
         Paragraph("<b>AWS Target</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
         Paragraph("<b>Purpose & Access</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
@@ -205,43 +205,49 @@ def build_pdf():
     table_rows = [
         table_headers,
         [
-            Paragraph("Client App", body_style),
+            Paragraph("Client App<br/><font color='#64748b'>Port: 80/443 (via CDN)</font>", body_style),
             Paragraph("<code>lawmate-pwa</code>", body_style),
             Paragraph("S3 + CloudFront + ACM", body_style),
             Paragraph("Builds React JS/CSS files and distributes globally via S3 & CDN under HTTPS.", body_style)
         ],
         [
-            Paragraph("API Gateway", body_style),
+            Paragraph("API Gateway<br/><font color='#64748b'>Port: 8000 (Public)</font>", body_style),
             Paragraph("<code>services/gateway</code>", body_style),
             Paragraph("EC2 / ECS Fargate + ALB", body_style),
-            Paragraph("Entrypoint route for all client API queries. Validates JWT and routes requests.", body_style)
+            Paragraph("Entrypoint route for all client API queries. Validates JWT and proxies requests.", body_style)
         ],
         [
-            Paragraph("Auth Service", body_style),
+            Paragraph("Auth Service<br/><font color='#64748b'>Port: 3001 (Internal)</font>", body_style),
             Paragraph("<code>services/auth</code>", body_style),
             Paragraph("EC2 / ECS (Internal)", body_style),
             Paragraph("Handles user sign-in, Firebase JWT verification, and email OTP codes.", body_style)
         ],
         [
-            Paragraph("Lead Service", body_style),
+            Paragraph("Lead Service<br/><font color='#64748b'>Port: 3002 (Internal)</font>", body_style),
             Paragraph("<code>services/lead</code>", body_style),
             Paragraph("EC2 / ECS (Internal)", body_style),
             Paragraph("Runs automated lawyer matching logic and SLA background timers.", body_style)
         ],
         [
-            Paragraph("Payment Service", body_style),
+            Paragraph("Payment Service<br/><font color='#64748b'>Port: 3003 (Internal)</font>", body_style),
             Paragraph("<code>services/payment</code>", body_style),
             Paragraph("EC2 / ECS (Internal)", body_style),
             Paragraph("Processes Razorpay & PhonePe callback webhooks and transaction states.", body_style)
         ],
         [
-            Paragraph("Profile/Notif", body_style),
-            Paragraph("<code>services/profile</code>", body_style),
+            Paragraph("Notification Service<br/><font color='#64748b'>Port: 3004 (Internal)</font>", body_style),
+            Paragraph("<code>services/notification</code>", body_style),
             Paragraph("EC2 / ECS (Internal)", body_style),
-            Paragraph("Manages user advocate profiles, document uploads, and SMS logs.", body_style)
+            Paragraph("Sends push notifications (Firebase), WhatsApp alerts, and logs SMS.", body_style)
         ],
         [
-            Paragraph("Database", body_style),
+            Paragraph("Profile Service<br/><font color='#64748b'>Port: 3005 (Internal)</font>", body_style),
+            Paragraph("<code>services/profile</code>", body_style),
+            Paragraph("EC2 / ECS (Internal)", body_style),
+            Paragraph("Manages user advocate profiles, ratings, and profile updates.", body_style)
+        ],
+        [
+            Paragraph("Database<br/><font color='#64748b'>Port: 5432 (Isolated)</font>", body_style),
             Paragraph("<code>packages/db</code>", body_style),
             Paragraph("AWS RDS PostgreSQL", body_style),
             Paragraph("Managed PostgreSQL database with automatic backups and failovers.", body_style)
@@ -249,7 +255,7 @@ def build_pdf():
     ]
     
     col_widths = [1.1*inch, 1.2*inch, 1.6*inch, 3.1*inch]
-    t_arch = Table(table_rows, colWidths=col_widths)
+    t_arch = Table(table_rows, colWidths=col_widths, repeatRows=1)
     t_arch.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
@@ -442,10 +448,13 @@ def build_pdf():
     story.append(Paragraph("<b>Step 5.2: Connect to the Server & Install Software:</b>", h2_style))
     story.append(Paragraph("1. In the EC2 instances list, select <code>lawmate-backend-server</code> and click the <b>Connect</b> button at the top.", list_style))
     story.append(Paragraph("2. Under the <b>EC2 Instance Connect</b> tab, click the orange <b>Connect</b> button. (This opens a secure server command line terminal directly in your web browser, removing the need for any SSH client software!).", list_style))
-    story.append(Paragraph("3. Once the command prompt appears, copy and paste the following command to update packages and install Docker, Docker Compose, Nginx, and Certbot:", list_style))
+    story.append(Paragraph("3. Once the command prompt appears, copy and paste the following commands to install Node.js 20, Docker, Docker Compose, Git, Nginx, and Certbot:", list_style))
     
     code_install = [
-        [Paragraph("sudo apt update && sudo apt install -y docker.io docker-compose certbot python3-certbot-nginx", code_style)]
+        [Paragraph("# Setup nodesource Node.js repository and install required tools", code_style)],
+        [Paragraph("curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -", code_style)],
+        [Paragraph("sudo apt-get update", code_style)],
+        [Paragraph("sudo apt-get install -y nodejs docker.io docker-compose git certbot python3-certbot-nginx", code_style)]
     ]
     t_install = Table(code_install, colWidths=[7.0*inch])
     t_install.setStyle(TableStyle([
@@ -456,19 +465,72 @@ def build_pdf():
     story.append(t_install)
     
     story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Step 5.3: Set Up Project Files:</b>", h2_style))
-    story.append(Paragraph("1. Create the application folder on the EC2 server: <code>mkdir -p /app/lawmate</code>", list_style))
-    story.append(Paragraph("2. Navigate to the folder: <code>cd /app/lawmate</code>", list_style))
-    story.append(Paragraph("3. Create the <code>docker-compose.yml</code> file: <code>nano docker-compose.yml</code>. (Paste the configuration template shown on the next page, then press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit).", list_style))
-    story.append(Paragraph("4. Create the <code>.env</code> environment file: <code>nano .env</code>. (Paste the variables template from Section 7, edit the placeholders with your actual passwords and keys, then save and exit).", list_style))
-    story.append(Paragraph("5. Start all backend microservices: <code>sudo docker-compose up -d</code>. (This downloads, builds, and launches all microservices in the background). Verify status with: <code>sudo docker-compose ps</code>.", list_style))
+    story.append(Paragraph("<b>Step 5.3: Set Up Project Files & Dependencies:</b>", h2_style))
+    story.append(Paragraph("1. Create the application folder under <code>/app</code> on the EC2 server and grant ownership permissions to the current user (ubuntu):", list_style))
+    
+    code_dir_setup = [
+        [Paragraph("sudo mkdir -p /app", code_style)],
+        [Paragraph("sudo chown -R ubuntu:ubuntu /app", code_style)]
+    ]
+    t_dir_setup = Table(code_dir_setup, colWidths=[7.0*inch])
+    t_dir_setup.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_dir_setup)
+    
+    story.append(Paragraph("2. Clone the Git repository of the project into the <code>/app/lawmate</code> directory:", list_style))
+    
+    code_clone = [
+        [Paragraph("git clone https://github.com/codeamanwal/Lawmate.git /app/lawmate", code_style)],
+        [Paragraph("cd /app/lawmate", code_style)]
+    ]
+    t_clone = Table(code_clone, colWidths=[7.0*inch])
+    t_clone.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_clone)
+
+    story.append(Paragraph("3. Create the <code>.env</code> environment file inside the project directory: <code>nano .env</code>. Paste the configuration checklist from Section 6, replacing placeholders with your actual secrets. Press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit.", list_style))
+    story.append(Paragraph("4. Install all project dependencies recursively for all microservices (this handles standard compilation for the host OS environment):", list_style))
+    
+    code_npm_install = [
+        [Paragraph("npm run install:all", code_style)]
+    ]
+    t_npm_install = Table(code_npm_install, colWidths=[7.0*inch])
+    t_npm_install.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_npm_install)
+
+    story.append(Paragraph("5. Generate the database Prisma Client models and push the database schema directly to your RDS instance:", list_style))
+    
+    code_db_push = [
+        [Paragraph("npm run db:generate", code_style)],
+        [Paragraph("npm run db:push", code_style)]
+    ]
+    t_db_push = Table(code_db_push, colWidths=[7.0*inch])
+    t_db_push.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_db_push)
+
+    story.append(Paragraph("6. Create the <code>docker-compose.yml</code> file: <code>nano docker-compose.yml</code>. Paste the configuration template shown on the next page, then press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit.", list_style))
+    story.append(Paragraph("7. Start all backend microservices using Docker Compose: <code>sudo docker-compose up -d</code>. (This downloads Node.js, mounts the local files, and launches all microservices in the background). Verify status with: <code>sudo docker-compose ps</code>.", list_style))
     
     story.append(PageBreak())
 
     # ================= PAGE 6: DOCKER COMPOSE CONFIGURATION =================
     story.append(Paragraph("5.4: docker-compose.yml Production Template", h2_style))
     story.append(Paragraph(
-        "This configuration launches all the LawMate microservices on the EC2 instance, enabling them to communicate internally and securely share database resources.",
+        "This configuration launches all the LawMate microservices on the EC2 instance, using network_mode: 'host' for optimal performance and cross-service communication.",
         body_style
     ))
     story.append(Spacer(1, 5))
@@ -477,72 +539,107 @@ def build_pdf():
 
 services:
   gateway:
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
     volumes:
       - .:/app
     command: npx tsx services/gateway/index.ts
-    ports:
-      - "8000:8000"
+    network_mode: "host"
     environment:
       - PORT=8000
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
-      - AUTH_SERVICE=http://auth:3001
-      - LEAD_SERVICE=http://lead:3002
-      - PROFILE_SERVICE=http://profile:3003
-      - PAYMENT_SERVICE=http://payment:3004
-      - NOTIFICATION_SERVICE=http://notification:3005
-    depends_on:
-      - auth
-      - lead
+      - AUTH_SERVICE=http://127.0.0.1:3001
+      - LEAD_SERVICE=http://127.0.0.1:3002
+      - PROFILE_SERVICE=http://127.0.0.1:3005
+      - PAYMENT_SERVICE=http://127.0.0.1:3003
+      - NOTIFICATION_SERVICE=http://127.0.0.1:3004
+    restart: always
 
   auth:
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
     volumes:
       - .:/app
     command: npx tsx services/auth/index.ts
+    network_mode: "host"
     environment:
       - PORT=3001
       - DATABASE_URL=${DATABASE_URL}
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
       - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
       - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    restart: always
 
   lead:
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
     volumes:
       - .:/app
     command: npx tsx services/lead/index.ts
+    network_mode: "host"
     environment:
       - PORT=3002
       - DATABASE_URL=${DATABASE_URL}
+      - EXOTEL_API_KEY=${EXOTEL_API_KEY}
+      - EXOTEL_API_TOKEN=${EXOTEL_API_TOKEN}
+      - EXOTEL_ACCOUNT_SID=${EXOTEL_ACCOUNT_SID}
+      - EXOTEL_SUBDOMAIN=${EXOTEL_SUBDOMAIN}
+      - EXOTEL_EXOPHONE=${EXOTEL_EXOPHONE}
+      - EXOTEL_STATUS_CALLBACK_URL=${EXOTEL_STATUS_CALLBACK_URL}
+    restart: always
 
   payment:
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
     volumes:
       - .:/app
     command: npx tsx services/payment/index.ts
+    network_mode: "host"
+    environment:
+      - PORT=3003
+      - DATABASE_URL=${DATABASE_URL}
+      - PHONEPE_CLIENT_ID=${PHONEPE_CLIENT_ID}
+      - PHONEPE_CLIENT_SECRET=${PHONEPE_CLIENT_SECRET}
+      - PHONEPE_CLIENT_VERSION=${PHONEPE_CLIENT_VERSION}
+      - PHONEPE_ENV=${PHONEPE_ENV}
+      - PHONEPE_WEBHOOK_USERNAME=${PHONEPE_WEBHOOK_USERNAME}
+      - PHONEPE_WEBHOOK_PASSWORD=${PHONEPE_WEBHOOK_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: always
+
+  notification:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/notification/index.ts
+    network_mode: "host"
     environment:
       - PORT=3004
       - DATABASE_URL=${DATABASE_URL}
-      - PHONEPE_MERCHANT_ID=${PHONEPE_MERCHANT_ID}
-      - PHONEPE_CLIENT_ID=${PHONEPE_CLIENT_ID}
-      - PHONEPE_CLIENT_SECRET=${PHONEPE_CLIENT_SECRET}
-      - PHONEPE_ENV=${PHONEPE_ENV}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+    restart: always
 
   profile:
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
     volumes:
       - .:/app
     command: npx tsx services/profile/index.ts
+    network_mode: "host"
     environment:
-      - PORT=3003
-      - DATABASE_URL=${DATABASE_URL}"""
+      - PORT=3005
+      - DATABASE_URL=${DATABASE_URL}
+    restart: always"""
 
     code_lines = [[Paragraph(line.replace(' ', '&nbsp;'), code_style)] for line in docker_compose_code.split('\n')]
     t_compose = Table(code_lines, colWidths=[7.0*inch])
@@ -650,6 +747,11 @@ services:
             Paragraph("Any cryptographically secure random string used to sign user auth tokens.", body_style)
         ],
         [
+            Paragraph("<code>FRONTEND_URL</code>", body_style),
+            Paragraph("Security", body_style),
+            Paragraph("The URL of your frontend CloudFront CDN (e.g. <code>https://www.yourdomain.com</code>).", body_style)
+        ],
+        [
             Paragraph("<code>FIREBASE_PROJECT_ID</code>", body_style),
             Paragraph("Auth", body_style),
             Paragraph("Your Firebase Console project ID (e.g. <code>lawmate-prod</code>).", body_style)
@@ -662,17 +764,12 @@ services:
         [
             Paragraph("<code>FIREBASE_PRIVATE_KEY</code>", body_style),
             Paragraph("Auth", body_style),
-            Paragraph("<b>IMPORTANT NOTICE:</b> Copy the service account private key. Ensure you replace all escaped newlines (<code>\\n</code>) with actual literal newlines inside the file.", body_style)
-        ],
-        [
-            Paragraph("<code>PHONEPE_MERCHANT_ID</code>", body_style),
-            Paragraph("Payment", body_style),
-            Paragraph("Your production PhonePe Merchant ID.", body_style)
+            Paragraph("<b>CRITICAL FORMATTING:</b> Copy the service account private key from the JSON file. Paste it enclosed in double quotes (e.g. <code>\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"</code>). The backslash-n characters are resolved programmatically at runtime.", body_style)
         ],
         [
             Paragraph("<code>PHONEPE_CLIENT_ID</code>", body_style),
             Paragraph("Payment", body_style),
-            Paragraph("Your PhonePe API integration Client ID.", body_style)
+            Paragraph("Your PhonePe API Merchant Client ID.", body_style)
         ],
         [
             Paragraph("<code>PHONEPE_CLIENT_SECRET</code>", body_style),
@@ -680,9 +777,54 @@ services:
             Paragraph("Your PhonePe API Client Secret key.", body_style)
         ],
         [
+            Paragraph("<code>PHONEPE_CLIENT_VERSION</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("PhonePe API integration Client Version (defaults to <code>1</code>).", body_style)
+        ],
+        [
             Paragraph("<code>PHONEPE_ENV</code>", body_style),
             Paragraph("Payment", body_style),
-            Paragraph("Set to <code>PRODUCTION</code> for live checkout, or <code>SANDBOX</code> for testing.", body_style)
+            Paragraph("Set to <code>PRODUCTION</code> for live payment checkouts, or <code>SANDBOX</code> for testing.", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_WEBHOOK_USERNAME</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Basic Auth username for securing PhonePe webhooks (defaults to <code>admin</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_WEBHOOK_PASSWORD</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Basic Auth password for securing PhonePe webhooks (defaults to <code>password123</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_API_KEY</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Your Exotel account API key.", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_API_TOKEN</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Your Exotel account API token.", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_ACCOUNT_SID</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Your Exotel Account SID.", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_SUBDOMAIN</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Exotel API subdomain (typically <code>api.exotel.com</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_EXOPHONE</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Your Exotel virtual ExoPhone phone number.", body_style)
+        ],
+        [
+            Paragraph("<code>EXOTEL_STATUS_CALLBACK_URL</code>", body_style),
+            Paragraph("Calls/Exotel", body_style),
+            Paragraph("Your backend call callback URL (e.g. <code>https://api.yourdomain.com/api/leads/call-status</code>).", body_style)
         ],
         [
             Paragraph("<code>SMTP_HOST</code>", body_style),
@@ -706,7 +848,7 @@ services:
         ],
     ]
     
-    t_env = Table(env_rows, colWidths=[2.2*inch, 0.9*inch, 3.9*inch])
+    t_env = Table(env_rows, colWidths=[2.2*inch, 0.9*inch, 3.9*inch], repeatRows=1)
     t_env.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
@@ -762,12 +904,20 @@ services:
             Paragraph("<code>sudo docker ps && sudo docker stats</code>", body_style)
         ],
         [
-            Paragraph("Test backend API Gateway status check", body_style),
-            Paragraph("<code>curl http://localhost:8000/api/health</code>", body_style)
+            Paragraph("Check if microservice ports are binding correctly", body_style),
+            Paragraph("<code>sudo ss -tuln | grep -E '8000|3001|3002|3003|3004|3005'</code>", body_style)
+        ],
+        [
+            Paragraph("Test backend API Gateway health endpoint", body_style),
+            Paragraph("<code>curl -i http://localhost:8000/api/health</code>", body_style)
+        ],
+        [
+            Paragraph("Test microservices direct status checks", body_style),
+            Paragraph("<code>curl -i http://localhost:3001/ && curl -i http://localhost:3002/</code>", body_style)
         ]
     ]
     
-    t_cmd = Table(cmd_rows, colWidths=[2.2*inch, 4.8*inch])
+    t_cmd = Table(cmd_rows, colWidths=[2.2*inch, 4.8*inch], repeatRows=1)
     t_cmd.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
