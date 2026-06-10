@@ -20,7 +20,6 @@ def draw_cover_page(canvas, doc):
     canvas.setFont('Helvetica', 8)
     canvas.setFillColor(HexColor('#64748b'))
     canvas.drawString(54, 54, "CONFIDENTIAL - FOR INTERNAL USE ONLY")
-    canvas.drawRightString(558, 54, "Version 1.1.0")
     canvas.restoreState()
 
 def draw_later_page(canvas, doc):
@@ -170,9 +169,7 @@ def build_pdf():
     
     meta_data = [
         [Paragraph("<b>Status:</b>", meta_style), Paragraph("Production-Ready / Deployed", meta_style)],
-        [Paragraph("<b>Last Updated:</b>", meta_style), Paragraph("June 10, 2026", meta_style)],
-        [Paragraph("<b>Version:</b>", meta_style), Paragraph("1.1.0 (Detailed Edition)", meta_style)],
-        [Paragraph("<b>Author:</b>", meta_style), Paragraph("Antigravity Dev Team", meta_style)]
+        [Paragraph("<b>Last Updated:</b>", meta_style), Paragraph("June 10, 2026", meta_style)]
     ]
     t_meta = Table(meta_data, colWidths=[1.2*inch, 4*inch])
     t_meta.setStyle(TableStyle([
