@@ -270,52 +270,75 @@ def build_pdf():
     story.append(t_arch)
     
     story.append(Spacer(1, 20))
-    story.append(Paragraph("2. Prerequisites & Identity Management (IAM)", h1_style))
+    story.append(Paragraph("2. Identity and Access Management (IAM) Configuration", h1_style))
     story.append(Paragraph(
-        "Before deploying, you must create a dedicated <b>Deployment IAM User</b> in the AWS Console. This IAM user provides secure access keys allowing automated GitHub Actions pipelines or developer machines to build and deploy code.",
+        "AWS IAM (Identity and Access Management) allows us to create secure, restricted access keys for deploying code to AWS without sharing our master root account. Follow these visual console clicks exactly to create a deployer user:",
         body_style
     ))
     story.append(Spacer(1, 8))
-    story.append(Paragraph("<b>Step 2.1: Step-by-Step IAM User Creation:</b>", h2_style))
-    story.append(Paragraph("1. Log in to the <b>AWS Management Console</b> (https://aws.amazon.com/console).", list_style))
-    story.append(Paragraph("2. In the search bar at the top, type <b>IAM</b> and click on the first search result.", list_style))
-    story.append(Paragraph("3. On the left sidebar menu, click on <b>Users</b>, then click the orange <b>Create user</b> button.", list_style))
-    story.append(Paragraph("4. User Details: Set the User name to <code>lawoncall-deployer</code>. Keep 'Provide user access to AWS Management Console' <b>unchecked</b> (this user only needs API Access). Click <b>Next</b>.", list_style))
-    story.append(Paragraph("5. Permissions Options: Select <b>Attach policies directly</b>.", list_style))
-    story.append(Paragraph("6. In the search box, search and check the boxes for the following AWS managed policies:", list_style))
-    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonEC2ContainerRegistryFullAccess</code> (Allows pushing docker images)", list_style))
-    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonECS_FullAccess</code> (Allows updating running Fargate containers)", list_style))
-    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonS3FullAccess</code> (Allows uploading PWA client files)", list_style))
-    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>CloudFrontFullAccess</code> (Allows invalidating CDN cache)", list_style))
-    story.append(Paragraph("7. Click <b>Next</b>, review the details, and click <b>Create user</b>.", list_style))
-    story.append(Paragraph("8. Once created, click on the user name <code>lawoncall-deployer</code>, go to the <b>Security credentials</b> tab, scroll down to <b>Access keys</b>, and click <b>Create access key</b>.", list_style))
-    story.append(Paragraph("9. Select <b>Command Line Interface (CLI)</b>, check the confirmation box, and click <b>Next</b>. Click <b>Create access key</b>.", list_style))
-    story.append(Paragraph("10. <b>IMPORTANT:</b> Copy the <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> immediately, or click <b>Download .csv file</b>. Keep these keys safe. They will be used to configure environment variables.", list_style))
+    story.append(Paragraph("<b>Step-by-Step Deployer IAM User Creation:</b>", h2_style))
+    story.append(Paragraph("1. Open a new web browser tab, go to <b>https://aws.amazon.com/console</b>, and click <b>Sign In to the Console</b> in the top right corner. Select <b>Root User</b>, enter your administrator email address, enter your password, and complete any multi-factor authentication (MFA) prompts.", list_style))
+    story.append(Paragraph("2. Once logged in, locate the search bar at the very top center of the console window. Type <b>IAM</b>. Click the first matching service named <b>IAM</b> (Manage access to AWS resources).", list_style))
+    story.append(Paragraph("3. On the left-side navigation sidebar, locate the <b>Access management</b> drop-down menu and click on <b>Users</b>.", list_style))
+    story.append(Paragraph("4. Click the orange <b>Create user</b> button located in the top-right corner of the screen.", list_style))
+    story.append(Paragraph("5. **Step 1 (Specify user details)**: In the <b>User name</b> input text field, type <code>lawmate-deployer</code>. Ensure the checkbox for 'Provide user access to the AWS Management Console' remains <b>UNCHECKED</b> (this account is purely for programmatic developer/CI-CD access, not web logins). Click the orange <b>Next</b> button.", list_style))
+    story.append(Paragraph("6. **Step 2 (Set permissions)**: Under **Permissions options**, click the third card labeled <b>Attach policies directly</b>.", list_style))
+    story.append(Paragraph("7. In the **Permissions policies** table search box, type each of the following policy names one-by-one and check the selection box on the left of each row:", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonEC2ContainerRegistryFullAccess</code> (Allows pushing docker images to AWS ECR)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonECS_FullAccess</code> (Allows management of Fargate containerized services)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonS3FullAccess</code> (Required to write and delete client build assets in S3 buckets)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>CloudFrontFullAccess</code> (Allows invalidating and refreshing CDN caches globally)", list_style))
+    story.append(Paragraph("8. Click the orange <b>Next</b> button at the bottom-right. Review the user details and click <b>Create user</b>.", list_style))
+    story.append(Paragraph("9. On the Users list table, find and click on the blue text name <code>lawmate-deployer</code> that you just created.", list_style))
+    story.append(Paragraph("10. Click on the <b>Security credentials</b> tab in the middle of the screen.", list_style))
+    story.append(Paragraph("11. Scroll down to the section titled **Access keys** and click the button labeled <b>Create access key</b>.", list_style))
+    story.append(Paragraph("12. Select the first radio option labeled <b>Command Line Interface (CLI)</b>. Scroll down, check the acknowledgment box confirming you understand the alternatives, and click <b>Next</b>.", list_style))
+    story.append(Paragraph("13. Leave the Description tag blank, then click the orange <b>Create access key</b> button.", list_style))
+    story.append(Paragraph("14. **CRITICAL ACTION REQUIRED:** You will see a screen displaying `Access key` and `Secret access key`. Click the gray <b>Download .csv file</b> button in the bottom left. Store this file securely; you cannot retrieve this secret key again once you leave this page.", list_style))
     
     story.append(PageBreak())
 
     # ================= PAGE 3: DATABASE PROVISIONING =================
-    story.append(Paragraph("3. Database Provisioning (AWS RDS)", h1_style))
+    story.append(Paragraph("3. Relational Database Service (RDS) Provisioning", h1_style))
     story.append(Paragraph(
-        "AWS RDS (Relational Database Service) hosts our PostgreSQL database. This ensures automated daily backups, security patching, and scaling. Follow these step-by-step instructions to create the database:",
+        "AWS RDS handles our managed PostgreSQL instance, ensuring regular automated daily backups, automatic database OS patching, and storage scaling.",
         body_style
     ))
     story.append(Spacer(1, 8))
-    story.append(Paragraph("<b>Step 3.1: Step-by-Step RDS PostgreSQL Setup:</b>", h2_style))
-    story.append(Paragraph("1. Open the search bar in the AWS Console, type <b>RDS</b>, and select the RDS service.", list_style))
+    story.append(Paragraph("<b>Step-by-Step RDS PostgreSQL Cluster Setup:</b>", h2_style))
+    story.append(Paragraph("1. In the top console search bar, type <b>RDS</b> and select the RDS service from the results.", list_style))
     story.append(Paragraph("2. On the RDS dashboard, click the orange <b>Create database</b> button.", list_style))
-    story.append(Paragraph("3. Database creation method: Select <b>Standard create</b>.", list_style))
-    story.append(Paragraph("4. Engine options: Select <b>PostgreSQL</b>. Under Engine Version, select <b>PostgreSQL 16.1 or newer</b>.", list_style))
-    story.append(Paragraph("5. Templates: For a production database, select <b>Production</b>. (Select <b>Free Tier</b> or <b>Dev/Test</b> if setting up a staging environment).", list_style))
-    story.append(Paragraph("6. Settings: Set the <b>DB instance identifier</b> to <code>lawoncall-prod-db</code>. Master username: <code>postgres</code>. Enter a strong <b>Master password</b> and note it down safely.", list_style))
-    story.append(Paragraph("7. Instance configuration: Choose <b>Burstable classes</b> and select <code>db.t4g.micro</code> (for staging) or <code>db.t4g.medium</code> (for production).", list_style))
-    story.append(Paragraph("8. Storage: Allocate 20 GiB (minimum) with <b>gp3</b> storage. Keep Storage Autoscaling enabled with a threshold of 100 GiB.", list_style))
-    story.append(Paragraph("9. Connectivity: Choose your target Virtual Private Cloud (VPC). Under <b>Public access</b>, select <b>No</b> (this isolates the database from public internet scanners, allowing connections only from your backend server).", list_style))
-    story.append(Paragraph("10. VPC Security Group: Select <b>Create new</b>. Set the name to <code>lawoncall-rds-sg</code>.", list_style))
-    story.append(Paragraph("11. Click <b>Create database</b>. It will take 5–10 minutes to provision the database instance.", list_style))
+    story.append(Paragraph("3. Choose a database creation method: Click the radio button for <b>Standard create</b> (allows custom network settings).", list_style))
+    story.append(Paragraph("4. Engine options: Select **PostgreSQL**.", list_style))
+    story.append(Paragraph("5. Engine version: Select the default stable version, **PostgreSQL 16.1 or newer**.", list_style))
+    story.append(Paragraph("6. Templates: Select **Production** for live company deployment. *(For testing or staging, you may select Free Tier to minimize billing).* ", list_style))
+    story.append(Paragraph("7. Settings details:", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **DB instance identifier**: Type <code>lawoncall-prod-db</code>.", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **Master username**: Enter <code>postgres</code>.", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **Credentials management**: Select **Self managed**. Type a strong master password in the fields and write it down in a secure credentials manager.", list_style))
+    story.append(Paragraph("8. Instance configuration: Choose **Burstable classes** and select `db.t4g.medium` (2 vCPUs, 4 GiB memory, cost-effective ARM-based machine suitable for live loads).", list_style))
+    story.append(Paragraph("9. Storage details:", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• Storage type: Select **gp3** (General Purpose SSD, offers best balance of speed and cost).", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• Allocated storage: Set to **20 GiB** (minimum threshold).", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• Keep **Enable storage autoscaling** checked, and set the **Maximum storage threshold** to **100 GiB**.", list_style))
+    story.append(Paragraph("10. Connectivity details:", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **Virtual Private Cloud (VPC)**: Select the default VPC or your production VPC.", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **Public access**: Select **No**. *(This isolates the database inside the private network so hacker scanners cannot scan port 5432).* ", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **VPC security group**: Select **Create new**. Type the name <code>lawoncall-rds-sg</code> in the text field.", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• **Database port**: Leave set to **5432**.", list_style))
+    story.append(Paragraph("11. Click the orange <b>Create database</b> button at the bottom. The database instance status will show as 'Creating'. Wait 5–10 minutes until it changes to a green **Available** status.", list_style))
+    story.append(Paragraph("12. Click on the name <code>lawoncall-prod-db</code>. Under the **Connectivity & security** tab, copy the value under **Endpoint** (e.g. <code>lawoncall-prod-db.xxxxxx.ap-south-1.rds.amazonaws.com</code>). This is your database server address.", list_style))
     
     story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Step 3.2: Allow Backend Connection in Security Group:</b>", h2_style))
+    story.append(Paragraph("<b>Step-by-Step Security Group Rules Config:</b>", h2_style))
+    story.append(Paragraph("To allow your backend server to connect to this database, we must modify the database firewall rules:", list_style))
+    story.append(Paragraph("1. In RDS console -> Click on <code>lawoncall-prod-db</code>. Under the **Connectivity & security** tab, look at the **VPC security groups** section. Click on the link for <code>lawoncall-rds-sg</code>.", list_style))
+    story.append(Paragraph("2. You will be redirected to the Security Groups screen. Select the checkbox for <code>lawoncall-rds-sg</code>.", list_style))
+    story.append(Paragraph("3. In the lower half of the screen, click the **Inbound rules** tab, then click the **Edit inbound rules** button.", list_style))
+    story.append(Paragraph("4. Click **Add rule**.", list_style))
+    story.append(Paragraph("5. Under **Type**, choose **PostgreSQL (Port 5432)**.", list_style))
+    story.append(Paragraph("6. Under **Source**, select **Custom**. In the text field, start typing the security group of your EC2 backend server (usually named something like <code>launch-wizard-1</code> or <code>lawoncall-ec2-sg</code>) and select it. Alternatively, type the VPC CIDR range (e.g. <code>172.31.0.0/16</code>) to allow any internal server in the private subnet to connect.", list_style))
+    story.append(Paragraph("7. Click the orange **Save rules** button.", list_style))
     
     # Callout Warning block
     warning_data = [[
@@ -332,26 +355,27 @@ def build_pdf():
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE')
     ]))
     story.append(t_warning)
-    
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Step 3.3: Step-by-Step Security Group Rules Config:</b>", h2_style))
-    story.append(Paragraph("1. In RDS console, click on your database identifier <code>lawoncall-prod-db</code>. Under <b>Connectivity & security</b>, click on the link under <b>VPC security groups</b>.", list_style))
-    story.append(Paragraph("2. Select the security group checkbox, go to the <b>Inbound rules</b> tab at the bottom, and click <b>Edit inbound rules</b>.", list_style))
-    story.append(Paragraph("3. Click <b>Add rule</b>. Set Type to <b>PostgreSQL (TCP Port 5432)</b>.", list_style))
-    story.append(Paragraph("4. Source: Choose <b>Custom</b>. In the search box, select the security group of your EC2 backend server (e.g. <code>launch-wizard-1</code> or <code>lawoncall-ec2-sg</code>) or type the VPC CIDR block (e.g. <code>172.31.0.0/16</code>). Click <b>Save rules</b>.", list_style))
-    
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Step 3.4: Database Schema Migration:</b>", h2_style))
+
+    story.append(PageBreak())
+
+    # ================= DATABASE MIGRATION =================
+    story.append(Paragraph("3.2: Running Database Schema Migration", h2_style))
     story.append(Paragraph(
-        "To initialize the tables, you must apply the Prisma schema migration. Run the following command from the root of your local repository targeting your RDS database endpoint:",
+        "To initialize the tables inside the RDS PostgreSQL instance, you must execute the Prisma migration tool. This will look at the schema definition in the project files and automatically generate tables, indexes, and relations inside your blank database.",
         body_style
     ))
+    story.append(Paragraph("1. Open the command terminal on your local system (Command Prompt on Windows, Terminal on Mac/Linux).", list_style))
+    story.append(Paragraph("2. Navigate to the folder where you have downloaded the project: <code>cd /path/to/Lawmate</code>", list_style))
+    story.append(Paragraph("3. Set the database URL variable in your terminal session, substituting the database endpoint and master password you wrote down in Section 3:", list_style))
     
     # Code block
     code_migration = [
-        [Paragraph("# Set your database URL with the RDS endpoint, master username, and password", code_style)],
-        [Paragraph("DATABASE_URL=\"postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require\"", code_style)],
-        [Paragraph("cd packages/db && npx prisma db push", code_style)]
+        [Paragraph("# For Windows Command Prompt (cmd):", code_style)],
+        [Paragraph("set DATABASE_URL=\"postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require\"", code_style)],
+        [Paragraph("# For Windows PowerShell:", code_style)],
+        [Paragraph("$env:DATABASE_URL=\"postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require\"", code_style)],
+        [Paragraph("# For Mac or Linux Terminal:", code_style)],
+        [Paragraph("export DATABASE_URL=\"postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require\"", code_style)]
     ]
     t_migration = Table(code_migration, colWidths=[7.0*inch])
     t_migration.setStyle(TableStyle([
@@ -361,17 +385,21 @@ def build_pdf():
     ]))
     story.append(t_migration)
     
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("4. Navigate to the database utility package: <code>cd packages/db</code>", list_style))
+    story.append(Paragraph("5. Run the push command: <code>npx prisma db push</code>. Wait for the terminal to print <code>✔ Your database is now in sync with your Prisma schema.</code>", list_style))
+
     story.append(PageBreak())
 
     # ================= PAGE 4: FRONTEND DEPLOYMENT =================
-    story.append(Paragraph("4. Frontend Deployment (AWS S3 + CloudFront)", h1_style))
+    story.append(Paragraph("4. Frontend Deployment (AWS S3 + CloudFront + ACM)", h1_style))
     story.append(Paragraph(
         "The React PWA frontend (single-page application) is built into static assets (HTML, JS, CSS) and hosted on AWS S3, while CloudFront acts as a global CDN to distribute files under HTTPS with minimum latency.",
         body_style
     ))
     story.append(Spacer(1, 8))
-    story.append(Paragraph("<b>Step 4.1: Build React Assets locally or via CI/CD:</b>", h2_style))
-    story.append(Paragraph("1. Create an <code>.env.production</code> file inside the <code>lawmate-pwa</code> directory.", list_style))
+    story.append(Paragraph("<b>Step 4.1: Build React Assets locally:</b>", h2_style))
+    story.append(Paragraph("1. Create an <code>.env.production</code> file inside the <code>lawmate-pwa</code> directory using Notepad (Windows) or TextEdit (Mac).", list_style))
     story.append(Paragraph("2. Paste your production environment configuration (Vite requires variables to be prefixed with <code>VITE_</code>):", list_style))
     
     code_env_prod = [
@@ -412,10 +440,19 @@ def build_pdf():
     story.append(Paragraph("1. Open S3 console and click <b>Create bucket</b>.", list_style))
     story.append(Paragraph("2. Bucket Name: Enter a unique name (e.g. <code>lawmate-pwa-prod-bucket</code>). Select your deployment Region.", list_style))
     story.append(Paragraph("3. Under <b>Block Public Access settings for this bucket</b>, make sure <b>Block all public access</b> is <b>checked</b>. (This ensures files are served only through the CloudFront CDN securely). Click <b>Create bucket</b>.", list_style))
-    story.append(Paragraph("4. Click on the newly created bucket, click <b>Upload</b>, and drag all files and folders <i>inside</i> the local <code>lawmate-pwa/dist/</code> directory into the upload console. Click <b>Upload</b>.", list_style))
+    story.append(Paragraph("4. Uploading assets step-by-step: Click on the name of the bucket <code>lawmate-pwa-prod-bucket</code> from the S3 list. Click the <b>Upload</b> button. Click the **Add files** button, select all files inside the local <code>lawmate-pwa/dist/</code> directory, and click open. Click the **Add folder** button, select the <code>assets</code> folder inside <code>lawmate-pwa/dist/</code>, and click open. Click the orange **Upload** button at the bottom of the page and wait for the green bar.", list_style))
+
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 4.3: Request SSL Certificate (ACM):</b>", h2_style))
+    story.append(Paragraph("To enable secure HTTPS encryption for the frontend, we must request a certificate:", list_style))
+    story.append(Paragraph("1. In AWS Console search bar, type <b>Certificate Manager</b> and click on it.", list_style))
+    story.append(Paragraph("2. Click **Request certificate** in the top right. Select **Request a public certificate**, then click **Next**.", list_style))
+    story.append(Paragraph("3. **Fully qualified domain name**: Enter `www.yourdomain.com`. Click **Add another name** and enter `yourdomain.com`.", list_style))
+    story.append(Paragraph("4. Select **DNS validation** as the validation method and click **Request**.", list_style))
+    story.append(Paragraph("5. Refresh the certificates list, click on the ID of your request, and scroll down to the **Domains** section. Copy the CNAME Name and CNAME Value, and add them as a CNAME record at your domain provider (e.g., GoDaddy, Namecheap) to prove ownership. Once done, the status will turn to a green **Issued**.", list_style))
     
     story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Step 4.3: Configure CloudFront Distribution:</b>", h2_style))
+    story.append(Paragraph("<b>Step 4.4: Configure CloudFront Distribution:</b>", h2_style))
     story.append(Paragraph("1. Open CloudFront console, click <b>Create distribution</b>.", list_style))
     story.append(Paragraph("2. Origin Domain: Select your S3 bucket (e.g., <code>lawmate-pwa-prod-bucket.s3.amazonaws.com</code>).", list_style))
     story.append(Paragraph("3. Origin Access: Select <b>Origin Access Control (OAC)</b>. Click <b>Create control setting</b>, accept defaults, and click <b>Create</b>.", list_style))
@@ -423,8 +460,8 @@ def build_pdf():
     story.append(Paragraph("5. Web Application Firewall (WAF): Select <b>Do not enable security protections</b> for basic setup, or enable it for DDoS guard.", list_style))
     story.append(Paragraph("6. SSL Certificate & Domain: Under <b>Alternate domain name (CNAME)</b>, enter your domain name (e.g., <code>www.yourdomain.com</code>). Under <b>Custom SSL certificate</b>, select your requested ACM certificate.", list_style))
     story.append(Paragraph("7. Default Root Object: Type <code>index.html</code>. Click <b>Create distribution</b>.", list_style))
-    story.append(Paragraph("8. <b>CRITICAL STEP:</b> Once created, copy the S3 bucket policy suggested by CloudFront, go to your S3 bucket's <b>Permissions</b> tab, scroll to <b>Bucket policy</b>, click <b>Edit</b>, and paste the policy to grant CloudFront access. Click <b>Save changes</b>.", list_style))
-    story.append(Paragraph("9. <b>CRITICAL React Router Configuration:</b> In the CloudFront console under your distribution, go to the <b>Error pages</b> tab. Click <b>Create custom error response</b>. For HTTP Error Code, select <b>404: Not Found</b>. Select <b>Customize Error Response</b>. Set Response Page Path to <code>/index.html</code> and HTTP Response Code to <b>200: OK</b>. Click <b>Create</b>. (This ensures client-side routing handles direct URL requests without causing S3 404 errors).", list_style))
+    story.append(Paragraph("8. **CRITICAL STEP (Link S3 and CDN)**: Once created, a yellow alert bar will appear at the top saying: 'The S3 bucket policy needs to be updated'. Click the **Copy policy** button. Go to your S3 bucket's **Permissions** tab, scroll to **Bucket policy**, click **Edit**, paste the policy, and click **Save changes**.", list_style))
+    story.append(Paragraph("9. **CRITICAL React Router Configuration**: In the CloudFront console under your distribution, go to the **Error pages** tab. Click **Create custom error response**. For HTTP Error Code, select **404: Not Found**. Select **Customize Error Response** -> **Yes**. Set Response Page Path to <code>/index.html</code> and HTTP Response Code to <b>200: OK</b>. Click **Create**.", list_style))
     
     story.append(PageBreak())
 
@@ -439,7 +476,7 @@ def build_pdf():
     story.append(Paragraph("1. Open the EC2 dashboard, click <b>Launch instance</b>.", list_style))
     story.append(Paragraph("2. Instance name: <code>lawmate-backend-server</code>. OS: Select <b>Ubuntu Server 22.04 LTS</b>.", list_style))
     story.append(Paragraph("3. Instance Type: Select <code>t3.medium</code> (2 vCPUs, 4 GiB memory) to handle running all microservices smoothly.", list_style))
-    story.append(Paragraph("4. Key Pair: Select an existing key pair or click <b>Create new key pair</b>. Download the <code>.pem</code> file and keep it secure.", list_style))
+    story.append(Paragraph("4. Key Pair: Select an existing key pair or click <b>Create new key pair</b>. Download the <code>.pem</code> file and keep it secure on your system.", list_style))
     story.append(Paragraph("5. Network Settings: Check the boxes for <b>Allow SSH traffic from</b>, <b>Allow HTTPS traffic from the internet</b>, and <b>Allow HTTP traffic from the internet</b>.", list_style))
     story.append(Paragraph("6. Click <b>Launch instance</b>.", list_style))
     story.append(Paragraph("7. <b>Allocate Elastic IP:</b> On the EC2 sidebar, select <b>Elastic IPs</b>, click <b>Allocate Elastic IP address</b>. Select the allocated IP, click <b>Actions</b> -> <b>Associate Elastic IP address</b>, and select your running <code>lawmate-backend-server</code> instance. (This ensures the IP address stays constant after restarts).", list_style))
@@ -494,7 +531,7 @@ def build_pdf():
     ]))
     story.append(t_clone)
 
-    story.append(Paragraph("3. Create the <code>.env</code> environment file inside the project directory: <code>nano .env</code>. Paste the configuration checklist from Section 6, replacing placeholders with your actual secrets. Press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit.", list_style))
+    story.append(Paragraph("3. Create the <code>.env</code> environment file inside the project directory: <code>nano .env</code>. (Paste the configuration checklist from Section 6, replacing placeholders with your actual secrets). Paste using right-click in browser terminal. Press <code>Ctrl+O</code> to save, press <code>Enter</code> to confirm file name, and then press <code>Ctrl+X</code> to exit the nano editor.", list_style))
     story.append(Paragraph("4. Install all project dependencies recursively for all microservices (this handles standard compilation for the host OS environment):", list_style))
     
     code_npm_install = [
@@ -522,7 +559,7 @@ def build_pdf():
     ]))
     story.append(t_db_push)
 
-    story.append(Paragraph("6. Create the <code>docker-compose.yml</code> file: <code>nano docker-compose.yml</code>. Paste the configuration template shown on the next page, then press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit.", list_style))
+    story.append(Paragraph("6. Create the <code>docker-compose.yml</code> file: <code>nano docker-compose.yml</code>. Paste the configuration template shown on the next page, then press <code>Ctrl+O</code> to save, press <code>Enter</code> to confirm file name, and then press <code>Ctrl+X</code> to exit.", list_style))
     story.append(Paragraph("7. Start all backend microservices using Docker Compose: <code>sudo docker-compose up -d</code>. (This downloads Node.js, mounts the local files, and launches all microservices in the background). Verify status with: <code>sudo docker-compose ps</code>.", list_style))
     
     story.append(PageBreak())
