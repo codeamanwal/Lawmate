@@ -1,0 +1,803 @@
+import os
+import sys
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.colors import HexColor
+
+# Custom Page Templates for Header & Footer
+def draw_cover_page(canvas, doc):
+    canvas.saveState()
+    canvas.setFont('Helvetica-Bold', 8)
+    canvas.setFillColor(HexColor('#4f46e5'))
+    canvas.drawString(54, 738, "LAWMATE PLATFORM DOCUMENTATION")
+    
+    canvas.setStrokeColor(HexColor('#e2e8f0'))
+    canvas.setLineWidth(1)
+    canvas.line(54, 728, 558, 728)
+    
+    canvas.setFont('Helvetica', 8)
+    canvas.setFillColor(HexColor('#64748b'))
+    canvas.drawString(54, 54, "CONFIDENTIAL - FOR INTERNAL USE ONLY")
+    canvas.drawRightString(558, 54, "Version 1.1.0")
+    canvas.restoreState()
+
+def draw_later_page(canvas, doc):
+    canvas.saveState()
+    canvas.setFont('Helvetica', 8)
+    canvas.setFillColor(HexColor('#64748b'))
+    canvas.drawString(54, 738, "LawMate / LawOnCall Full-Stack - Production Deployment Guide (AWS)")
+    
+    canvas.setStrokeColor(HexColor('#e2e8f0'))
+    canvas.setLineWidth(0.5)
+    canvas.line(54, 730, 558, 730)
+    
+    canvas.drawString(54, 54, "CONFIDENTIAL - INTERNAL DEPLOYMENT DOCUMENT")
+    page_num = canvas.getPageNumber()
+    canvas.drawRightString(558, 54, f"Page {page_num}")
+    canvas.restoreState()
+
+def build_pdf():
+    pdf_path = "AWS_Deployment_Guide.pdf"
+    
+    # Page setup: letter size is 612 x 792 points. 0.75-inch margin = 54 points. Printable width = 504 points.
+    doc = SimpleDocTemplate(
+        pdf_path, 
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Custom Palette Colors
+    PRIMARY = HexColor('#1e293b') # Slate 800
+    ACCENT = HexColor('#4f46e5')  # Indigo 600
+    TEXT_COLOR = HexColor('#334155') # Slate 700
+    BG_LIGHT = HexColor('#f8fafc') # Slate 50
+    BORDER_COLOR = HexColor('#cbd5e1') # Slate 300
+    
+    # Modify default styles
+    styles['Normal'].textColor = TEXT_COLOR
+    styles['Normal'].fontSize = 9.5
+    styles['Normal'].leading = 14
+    
+    # Custom Heading & Text Styles
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=28,
+        leading=34,
+        textColor=PRIMARY,
+        spaceAfter=15,
+        spaceBefore=120
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'DocSub',
+        parent=styles['Normal'],
+        fontSize=12,
+        leading=18,
+        textColor=HexColor('#64748b'),
+        spaceAfter=180
+    )
+    
+    meta_style = ParagraphStyle(
+        'DocMeta',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=16,
+        textColor=TEXT_COLOR
+    )
+    
+    h1_style = ParagraphStyle(
+        'Heading1_Custom',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        leading=22,
+        textColor=PRIMARY,
+        spaceBefore=18,
+        spaceAfter=10,
+        keepWithNext=True
+    )
+    
+    h2_style = ParagraphStyle(
+        'Heading2_Custom',
+        parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=13,
+        leading=16,
+        textColor=ACCENT,
+        spaceBefore=14,
+        spaceAfter=8,
+        keepWithNext=True
+    )
+    
+    h3_style = ParagraphStyle(
+        'Heading3_Custom',
+        parent=styles['Heading3'],
+        fontName='Helvetica-Bold',
+        fontSize=10.5,
+        leading=14,
+        textColor=HexColor('#0f172a'),
+        spaceBefore=10,
+        spaceAfter=6,
+        keepWithNext=True
+    )
+    
+    body_style = ParagraphStyle(
+        'Body_Custom',
+        parent=styles['Normal'],
+        spaceAfter=8
+    )
+    
+    list_style = ParagraphStyle(
+        'List_Custom',
+        parent=styles['Normal'],
+        leftIndent=20,
+        firstLineIndent=-10,
+        spaceAfter=6
+    )
+    
+    code_style = ParagraphStyle(
+        'Code_Custom',
+        parent=styles['Normal'],
+        fontName='Courier',
+        fontSize=8,
+        leading=10,
+        textColor=HexColor('#0f172a')
+    )
+    
+    callout_style = ParagraphStyle(
+        'Callout_Custom',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=13,
+        textColor=HexColor('#c2410c') # Rust Orange/Red
+    )
+
+    story = []
+
+    # ================= PAGE 1: COVER PAGE =================
+    story.append(Paragraph("LAWONCALL PLATFORM", ParagraphStyle('CoverPre', parent=styles['Normal'], fontSize=11, fontName='Helvetica-Bold', textColor=ACCENT, spaceAfter=10)))
+    story.append(Paragraph("AWS Production Deployment Guide", title_style))
+    story.append(Paragraph("A comprehensive, step-by-step documentation for deploying the LawMate Full-Stack application (React PWA Frontend, Fastify Microservices Gateway, and PostgreSQL Database) on Amazon Web Services. Written for both technical administrators and non-technical managers.", subtitle_style))
+    
+    meta_data = [
+        [Paragraph("<b>Status:</b>", meta_style), Paragraph("Production-Ready / Deployed", meta_style)],
+        [Paragraph("<b>Last Updated:</b>", meta_style), Paragraph("June 10, 2026", meta_style)],
+        [Paragraph("<b>Version:</b>", meta_style), Paragraph("1.1.0 (Detailed Edition)", meta_style)],
+        [Paragraph("<b>Author:</b>", meta_style), Paragraph("Antigravity Dev Team", meta_style)]
+    ]
+    t_meta = Table(meta_data, colWidths=[1.2*inch, 4*inch])
+    t_meta.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(t_meta)
+    story.append(PageBreak())
+
+    # ================= PAGE 2: SYSTEM ARCHITECTURE OVERVIEW =================
+    story.append(Paragraph("1. System Architecture Overview", h1_style))
+    story.append(Paragraph(
+        "The LawMate (LawOnCall) application is a decoupled, modern multi-service system. It is composed of a single-page PWA client (React/Vite) and five containerized Fastify backend microservices coordinated behind an API Gateway proxy. Native AWS services are leveraged to ensure high availability, fast response times, database backups, and SSL security.",
+        body_style
+    ))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Components and Target AWS Services:</b>", h2_style))
+    
+    # Table Width must be exactly 504 points (7 inches)
+    table_headers = [
+        Paragraph("<b>Component</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Folder / Repo</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>AWS Target</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Purpose & Access</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+    ]
+    
+    table_rows = [
+        table_headers,
+        [
+            Paragraph("Client App", body_style),
+            Paragraph("<code>lawmate-pwa</code>", body_style),
+            Paragraph("S3 + CloudFront + ACM", body_style),
+            Paragraph("Builds React JS/CSS files and distributes globally via S3 & CDN under HTTPS.", body_style)
+        ],
+        [
+            Paragraph("API Gateway", body_style),
+            Paragraph("<code>services/gateway</code>", body_style),
+            Paragraph("EC2 / ECS Fargate + ALB", body_style),
+            Paragraph("Entrypoint route for all client API queries. Validates JWT and routes requests.", body_style)
+        ],
+        [
+            Paragraph("Auth Service", body_style),
+            Paragraph("<code>services/auth</code>", body_style),
+            Paragraph("EC2 / ECS (Internal)", body_style),
+            Paragraph("Handles user sign-in, Firebase JWT verification, and email OTP codes.", body_style)
+        ],
+        [
+            Paragraph("Lead Service", body_style),
+            Paragraph("<code>services/lead</code>", body_style),
+            Paragraph("EC2 / ECS (Internal)", body_style),
+            Paragraph("Runs automated lawyer matching logic and SLA background timers.", body_style)
+        ],
+        [
+            Paragraph("Payment Service", body_style),
+            Paragraph("<code>services/payment</code>", body_style),
+            Paragraph("EC2 / ECS (Internal)", body_style),
+            Paragraph("Processes Razorpay & PhonePe callback webhooks and transaction states.", body_style)
+        ],
+        [
+            Paragraph("Profile/Notif", body_style),
+            Paragraph("<code>services/profile</code>", body_style),
+            Paragraph("EC2 / ECS (Internal)", body_style),
+            Paragraph("Manages user advocate profiles, document uploads, and SMS logs.", body_style)
+        ],
+        [
+            Paragraph("Database", body_style),
+            Paragraph("<code>packages/db</code>", body_style),
+            Paragraph("AWS RDS PostgreSQL", body_style),
+            Paragraph("Managed PostgreSQL database with automatic backups and failovers.", body_style)
+        ]
+    ]
+    
+    col_widths = [1.1*inch, 1.2*inch, 1.6*inch, 3.1*inch]
+    t_arch = Table(table_rows, colWidths=col_widths)
+    t_arch.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING', (0,0), (-1,-1), 6),
+        ('RIGHTPADDING', (0,0), (-1,-1), 6),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [HexColor('#ffffff'), HexColor('#f8fafc')])
+    ]))
+    story.append(t_arch)
+    
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("2. Prerequisites & Identity Management (IAM)", h1_style))
+    story.append(Paragraph(
+        "Before deploying, you must create a dedicated <b>Deployment IAM User</b> in the AWS Console. This IAM user provides secure access keys allowing automated GitHub Actions pipelines or developer machines to build and deploy code.",
+        body_style
+    ))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Step 2.1: Step-by-Step IAM User Creation:</b>", h2_style))
+    story.append(Paragraph("1. Log in to the <b>AWS Management Console</b> (https://aws.amazon.com/console).", list_style))
+    story.append(Paragraph("2. In the search bar at the top, type <b>IAM</b> and click on the first search result.", list_style))
+    story.append(Paragraph("3. On the left sidebar menu, click on <b>Users</b>, then click the orange <b>Create user</b> button.", list_style))
+    story.append(Paragraph("4. User Details: Set the User name to <code>lawoncall-deployer</code>. Keep 'Provide user access to AWS Management Console' <b>unchecked</b> (this user only needs API Access). Click <b>Next</b>.", list_style))
+    story.append(Paragraph("5. Permissions Options: Select <b>Attach policies directly</b>.", list_style))
+    story.append(Paragraph("6. In the search box, search and check the boxes for the following AWS managed policies:", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonEC2ContainerRegistryFullAccess</code> (Allows pushing docker images)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonECS_FullAccess</code> (Allows updating running Fargate containers)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>AmazonS3FullAccess</code> (Allows uploading PWA client files)", list_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>CloudFrontFullAccess</code> (Allows invalidating CDN cache)", list_style))
+    story.append(Paragraph("7. Click <b>Next</b>, review the details, and click <b>Create user</b>.", list_style))
+    story.append(Paragraph("8. Once created, click on the user name <code>lawoncall-deployer</code>, go to the <b>Security credentials</b> tab, scroll down to <b>Access keys</b>, and click <b>Create access key</b>.", list_style))
+    story.append(Paragraph("9. Select <b>Command Line Interface (CLI)</b>, check the confirmation box, and click <b>Next</b>. Click <b>Create access key</b>.", list_style))
+    story.append(Paragraph("10. <b>IMPORTANT:</b> Copy the <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> immediately, or click <b>Download .csv file</b>. Keep these keys safe. They will be used to configure environment variables.", list_style))
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 3: DATABASE PROVISIONING =================
+    story.append(Paragraph("3. Database Provisioning (AWS RDS)", h1_style))
+    story.append(Paragraph(
+        "AWS RDS (Relational Database Service) hosts our PostgreSQL database. This ensures automated daily backups, security patching, and scaling. Follow these step-by-step instructions to create the database:",
+        body_style
+    ))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Step 3.1: Step-by-Step RDS PostgreSQL Setup:</b>", h2_style))
+    story.append(Paragraph("1. Open the search bar in the AWS Console, type <b>RDS</b>, and select the RDS service.", list_style))
+    story.append(Paragraph("2. On the RDS dashboard, click the orange <b>Create database</b> button.", list_style))
+    story.append(Paragraph("3. Database creation method: Select <b>Standard create</b>.", list_style))
+    story.append(Paragraph("4. Engine options: Select <b>PostgreSQL</b>. Under Engine Version, select <b>PostgreSQL 16.1 or newer</b>.", list_style))
+    story.append(Paragraph("5. Templates: For a production database, select <b>Production</b>. (Select <b>Free Tier</b> or <b>Dev/Test</b> if setting up a staging environment).", list_style))
+    story.append(Paragraph("6. Settings: Set the <b>DB instance identifier</b> to <code>lawoncall-prod-db</code>. Master username: <code>postgres</code>. Enter a strong <b>Master password</b> and note it down safely.", list_style))
+    story.append(Paragraph("7. Instance configuration: Choose <b>Burstable classes</b> and select <code>db.t4g.micro</code> (for staging) or <code>db.t4g.medium</code> (for production).", list_style))
+    story.append(Paragraph("8. Storage: Allocate 20 GiB (minimum) with <b>gp3</b> storage. Keep Storage Autoscaling enabled with a threshold of 100 GiB.", list_style))
+    story.append(Paragraph("9. Connectivity: Choose your target Virtual Private Cloud (VPC). Under <b>Public access</b>, select <b>No</b> (this isolates the database from public internet scanners, allowing connections only from your backend server).", list_style))
+    story.append(Paragraph("10. VPC Security Group: Select <b>Create new</b>. Set the name to <code>lawoncall-rds-sg</code>.", list_style))
+    story.append(Paragraph("11. Click <b>Create database</b>. It will take 5–10 minutes to provision the database instance.", list_style))
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 3.2: Allow Backend Connection in Security Group:</b>", h2_style))
+    
+    # Callout Warning block
+    warning_data = [[
+        Paragraph(
+            "<b>SECURITY WARNING:</b> Never open database access port 5432 to <code>0.0.0.0/0</code> (the entire internet). This exposes the database to brute force attempts. You must restrict port 5432 inbound connections exclusively to the security group assigned to your backend EC2 instance or ECS Fargate task.",
+            callout_style
+        )
+    ]]
+    t_warning = Table(warning_data, colWidths=[7.0*inch])
+    t_warning.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#fff7ed')), # Orange-50 tint
+        ('BOX', (0,0), (-1,-1), 1, HexColor('#fed7aa')),
+        ('PADDING', (0,0), (-1,-1), 10),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE')
+    ]))
+    story.append(t_warning)
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 3.3: Step-by-Step Security Group Rules Config:</b>", h2_style))
+    story.append(Paragraph("1. In RDS console, click on your database identifier <code>lawoncall-prod-db</code>. Under <b>Connectivity & security</b>, click on the link under <b>VPC security groups</b>.", list_style))
+    story.append(Paragraph("2. Select the security group checkbox, go to the <b>Inbound rules</b> tab at the bottom, and click <b>Edit inbound rules</b>.", list_style))
+    story.append(Paragraph("3. Click <b>Add rule</b>. Set Type to <b>PostgreSQL (TCP Port 5432)</b>.", list_style))
+    story.append(Paragraph("4. Source: Choose <b>Custom</b>. In the search box, select the security group of your EC2 backend server (e.g. <code>launch-wizard-1</code> or <code>lawoncall-ec2-sg</code>) or type the VPC CIDR block (e.g. <code>172.31.0.0/16</code>). Click <b>Save rules</b>.", list_style))
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 3.4: Database Schema Migration:</b>", h2_style))
+    story.append(Paragraph(
+        "To initialize the tables, you must apply the Prisma schema migration. Run the following command from the root of your local repository targeting your RDS database endpoint:",
+        body_style
+    ))
+    
+    # Code block
+    code_migration = [
+        [Paragraph("# Set your database URL with the RDS endpoint, master username, and password", code_style)],
+        [Paragraph("DATABASE_URL=\"postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require\"", code_style)],
+        [Paragraph("cd packages/db && npx prisma db push", code_style)]
+    ]
+    t_migration = Table(code_migration, colWidths=[7.0*inch])
+    t_migration.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_migration)
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 4: FRONTEND DEPLOYMENT =================
+    story.append(Paragraph("4. Frontend Deployment (AWS S3 + CloudFront)", h1_style))
+    story.append(Paragraph(
+        "The React PWA frontend (single-page application) is built into static assets (HTML, JS, CSS) and hosted on AWS S3, while CloudFront acts as a global CDN to distribute files under HTTPS with minimum latency.",
+        body_style
+    ))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Step 4.1: Build React Assets locally or via CI/CD:</b>", h2_style))
+    story.append(Paragraph("1. Create an <code>.env.production</code> file inside the <code>lawmate-pwa</code> directory.", list_style))
+    story.append(Paragraph("2. Paste your production environment configuration (Vite requires variables to be prefixed with <code>VITE_</code>):", list_style))
+    
+    code_env_prod = [
+        [Paragraph("VITE_API_URL=https://api.yourdomain.com", code_style)],
+        [Paragraph("VITE_FIREBASE_API_KEY=AIzaSyA123456789...", code_style)],
+        [Paragraph("VITE_FIREBASE_AUTH_DOMAIN=lawmate-prod.firebaseapp.com", code_style)],
+        [Paragraph("VITE_FIREBASE_PROJECT_ID=lawmate-prod", code_style)],
+        [Paragraph("VITE_FIREBASE_STORAGE_BUCKET=lawmate-prod.appspot.com", code_style)],
+        [Paragraph("VITE_FIREBASE_MESSAGING_SENDER_ID=8877665544", code_style)],
+        [Paragraph("VITE_FIREBASE_APP_ID=1:8877665544:web:abcd1234ef", code_style)]
+    ]
+    t_env_prod = Table(code_env_prod, colWidths=[7.0*inch])
+    t_env_prod.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_env_prod)
+    
+    story.append(Spacer(1, 5))
+    story.append(Paragraph("3. Open your terminal, navigate to the PWA folder, and compile the static build:", list_style))
+    
+    code_build = [
+        [Paragraph("cd lawmate-pwa", code_style)],
+        [Paragraph("npm install", code_style)],
+        [Paragraph("npm run build  # This outputs all static files in the lawmate-pwa/dist/ folder", code_style)]
+    ]
+    t_build = Table(code_build, colWidths=[7.0*inch])
+    t_build.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_build)
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 4.2: Create and Configure S3 Bucket:</b>", h2_style))
+    story.append(Paragraph("1. Open S3 console and click <b>Create bucket</b>.", list_style))
+    story.append(Paragraph("2. Bucket Name: Enter a unique name (e.g. <code>lawmate-pwa-prod-bucket</code>). Select your deployment Region.", list_style))
+    story.append(Paragraph("3. Under <b>Block Public Access settings for this bucket</b>, make sure <b>Block all public access</b> is <b>checked</b>. (This ensures files are served only through the CloudFront CDN securely). Click <b>Create bucket</b>.", list_style))
+    story.append(Paragraph("4. Click on the newly created bucket, click <b>Upload</b>, and drag all files and folders <i>inside</i> the local <code>lawmate-pwa/dist/</code> directory into the upload console. Click <b>Upload</b>.", list_style))
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 4.3: Configure CloudFront Distribution:</b>", h2_style))
+    story.append(Paragraph("1. Open CloudFront console, click <b>Create distribution</b>.", list_style))
+    story.append(Paragraph("2. Origin Domain: Select your S3 bucket (e.g., <code>lawmate-pwa-prod-bucket.s3.amazonaws.com</code>).", list_style))
+    story.append(Paragraph("3. Origin Access: Select <b>Origin Access Control (OAC)</b>. Click <b>Create control setting</b>, accept defaults, and click <b>Create</b>.", list_style))
+    story.append(Paragraph("4. Viewer Protocol Policy: Select <b>Redirect HTTP to HTTPS</b>.", list_style))
+    story.append(Paragraph("5. Web Application Firewall (WAF): Select <b>Do not enable security protections</b> for basic setup, or enable it for DDoS guard.", list_style))
+    story.append(Paragraph("6. SSL Certificate & Domain: Under <b>Alternate domain name (CNAME)</b>, enter your domain name (e.g., <code>www.yourdomain.com</code>). Under <b>Custom SSL certificate</b>, select your requested ACM certificate.", list_style))
+    story.append(Paragraph("7. Default Root Object: Type <code>index.html</code>. Click <b>Create distribution</b>.", list_style))
+    story.append(Paragraph("8. <b>CRITICAL STEP:</b> Once created, copy the S3 bucket policy suggested by CloudFront, go to your S3 bucket's <b>Permissions</b> tab, scroll to <b>Bucket policy</b>, click <b>Edit</b>, and paste the policy to grant CloudFront access. Click <b>Save changes</b>.", list_style))
+    story.append(Paragraph("9. <b>CRITICAL React Router Configuration:</b> In the CloudFront console under your distribution, go to the <b>Error pages</b> tab. Click <b>Create custom error response</b>. For HTTP Error Code, select <b>404: Not Found</b>. Select <b>Customize Error Response</b>. Set Response Page Path to <code>/index.html</code> and HTTP Response Code to <b>200: OK</b>. Click <b>Create</b>. (This ensures client-side routing handles direct URL requests without causing S3 404 errors).", list_style))
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 5: BACKEND DEPLOYMENT =================
+    story.append(Paragraph("5. Cost-Effective Backend EC2 Deployment", h1_style))
+    story.append(Paragraph(
+        "For cost-efficiency, ease of setup, and single-instance management, we deploy the Fastify Gateway API and microservices on a single AWS EC2 instance orchestrated via Docker Compose and served behind an Nginx reverse proxy with SSL.",
+        body_style
+    ))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Step 5.1: Provision EC2 Instance:</b>", h2_style))
+    story.append(Paragraph("1. Open the EC2 dashboard, click <b>Launch instance</b>.", list_style))
+    story.append(Paragraph("2. Instance name: <code>lawmate-backend-server</code>. OS: Select <b>Ubuntu Server 22.04 LTS</b>.", list_style))
+    story.append(Paragraph("3. Instance Type: Select <code>t3.medium</code> (2 vCPUs, 4 GiB memory) to handle running all microservices smoothly.", list_style))
+    story.append(Paragraph("4. Key Pair: Select an existing key pair or click <b>Create new key pair</b>. Download the <code>.pem</code> file and keep it secure.", list_style))
+    story.append(Paragraph("5. Network Settings: Check the boxes for <b>Allow SSH traffic from</b>, <b>Allow HTTPS traffic from the internet</b>, and <b>Allow HTTP traffic from the internet</b>.", list_style))
+    story.append(Paragraph("6. Click <b>Launch instance</b>.", list_style))
+    story.append(Paragraph("7. <b>Allocate Elastic IP:</b> On the EC2 sidebar, select <b>Elastic IPs</b>, click <b>Allocate Elastic IP address</b>. Select the allocated IP, click <b>Actions</b> -> <b>Associate Elastic IP address</b>, and select your running <code>lawmate-backend-server</code> instance. (This ensures the IP address stays constant after restarts).", list_style))
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 5.2: Connect to the Server & Install Software:</b>", h2_style))
+    story.append(Paragraph("1. In the EC2 instances list, select <code>lawmate-backend-server</code> and click the <b>Connect</b> button at the top.", list_style))
+    story.append(Paragraph("2. Under the <b>EC2 Instance Connect</b> tab, click the orange <b>Connect</b> button. (This opens a secure server command line terminal directly in your web browser, removing the need for any SSH client software!).", list_style))
+    story.append(Paragraph("3. Once the command prompt appears, copy and paste the following command to update packages and install Docker, Docker Compose, Nginx, and Certbot:", list_style))
+    
+    code_install = [
+        [Paragraph("sudo apt update && sudo apt install -y docker.io docker-compose certbot python3-certbot-nginx", code_style)]
+    ]
+    t_install = Table(code_install, colWidths=[7.0*inch])
+    t_install.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_install)
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 5.3: Set Up Project Files:</b>", h2_style))
+    story.append(Paragraph("1. Create the application folder on the EC2 server: <code>mkdir -p /app/lawmate</code>", list_style))
+    story.append(Paragraph("2. Navigate to the folder: <code>cd /app/lawmate</code>", list_style))
+    story.append(Paragraph("3. Create the <code>docker-compose.yml</code> file: <code>nano docker-compose.yml</code>. (Paste the configuration template shown on the next page, then press <code>Ctrl+O</code> to save and <code>Ctrl+X</code> to exit).", list_style))
+    story.append(Paragraph("4. Create the <code>.env</code> environment file: <code>nano .env</code>. (Paste the variables template from Section 7, edit the placeholders with your actual passwords and keys, then save and exit).", list_style))
+    story.append(Paragraph("5. Start all backend microservices: <code>sudo docker-compose up -d</code>. (This downloads, builds, and launches all microservices in the background). Verify status with: <code>sudo docker-compose ps</code>.", list_style))
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 6: DOCKER COMPOSE CONFIGURATION =================
+    story.append(Paragraph("5.4: docker-compose.yml Production Template", h2_style))
+    story.append(Paragraph(
+        "This configuration launches all the LawMate microservices on the EC2 instance, enabling them to communicate internally and securely share database resources.",
+        body_style
+    ))
+    story.append(Spacer(1, 5))
+    
+    docker_compose_code = """version: '3.8'
+
+services:
+  gateway:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/gateway/index.ts
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - AUTH_SERVICE=http://auth:3001
+      - LEAD_SERVICE=http://lead:3002
+      - PROFILE_SERVICE=http://profile:3003
+      - PAYMENT_SERVICE=http://payment:3004
+      - NOTIFICATION_SERVICE=http://notification:3005
+    depends_on:
+      - auth
+      - lead
+
+  auth:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/auth/index.ts
+    environment:
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+
+  lead:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/lead/index.ts
+    environment:
+      - PORT=3002
+      - DATABASE_URL=${DATABASE_URL}
+
+  payment:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/payment/index.ts
+    environment:
+      - PORT=3004
+      - DATABASE_URL=${DATABASE_URL}
+      - PHONEPE_MERCHANT_ID=${PHONEPE_MERCHANT_ID}
+      - PHONEPE_CLIENT_ID=${PHONEPE_CLIENT_ID}
+      - PHONEPE_CLIENT_SECRET=${PHONEPE_CLIENT_SECRET}
+      - PHONEPE_ENV=${PHONEPE_ENV}
+
+  profile:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/profile/index.ts
+    environment:
+      - PORT=3003
+      - DATABASE_URL=${DATABASE_URL}"""
+
+    code_lines = [[Paragraph(line.replace(' ', '&nbsp;'), code_style)] for line in docker_compose_code.split('\n')]
+    t_compose = Table(code_lines, colWidths=[7.0*inch])
+    t_compose.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 4),
+    ]))
+    story.append(t_compose)
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 7: NGINX & SSL =================
+    story.append(Paragraph("5.5: Nginx Web Server SSL Setup (Certbot)", h2_style))
+    story.append(Paragraph(
+        "Nginx acts as a reverse proxy. It listens on public ports 80 (HTTP) and 443 (HTTPS), redirects all HTTP web requests to HTTPS, and forwards API queries targeting <code>/api</code> directly to the local Gateway running on port 8000.",
+        body_style
+    ))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Step 5.5.1: Create Nginx Site Configuration:</b>", h2_style))
+    story.append(Paragraph("1. Open the Nginx config editor: <code>sudo nano /etc/nginx/sites-available/lawoncall</code>", list_style))
+    story.append(Paragraph("2. Paste the following configuration, replacing <code>api.yourdomain.com</code> with your actual backend subdomain:", list_style))
+    
+    nginx_config = """server {
+    listen 80;
+    server_name api.yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}"""
+    nginx_lines = [[Paragraph(line.replace(' ', '&nbsp;'), code_style)] for line in nginx_config.split('\n')]
+    t_nginx = Table(nginx_lines, colWidths=[7.0*inch])
+    t_nginx.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(t_nginx)
+    
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("3. Enable the configuration by linking it to the active sites folder:", list_style))
+    
+    code_link = [
+        [Paragraph("sudo ln -s /etc/nginx/sites-available/lawoncall /etc/nginx/sites-enabled/", code_style)],
+        [Paragraph("sudo rm /etc/nginx/sites-enabled/default  # Remove default page config", code_style)],
+        [Paragraph("sudo nginx -t  # Test if syntax is correct", code_style)],
+        [Paragraph("sudo systemctl restart nginx  # Apply changes", code_style)]
+    ]
+    t_link = Table(code_link, colWidths=[7.0*inch])
+    t_link.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_link)
+    
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Step 5.5.2: Install Free SSL Certificate via Let's Encrypt:</b>", h2_style))
+    story.append(Paragraph("To enable secure HTTPS encryption, run Certbot to automatically request and install your SSL certificate. Certbot will also automatically update Nginx settings for you.", body_style))
+    
+    code_certbot = [
+        [Paragraph("sudo certbot --nginx -d api.yourdomain.com", code_style)]
+    ]
+    t_certbot = Table(code_certbot, colWidths=[7.0*inch])
+    t_certbot.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), HexColor('#f1f5f9')),
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_certbot)
+    story.append(Paragraph("Follow the prompts on-screen: Enter your email, agree to the terms, and choose to <b>Redirect all HTTP traffic to HTTPS</b> automatically.", list_style))
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 8: ENV CHECKLIST =================
+    story.append(Paragraph("6. Environment Variables & Credentials Checklist", h1_style))
+    story.append(Paragraph(
+        "Make sure your production environment variables inside the <code>/app/lawmate/.env</code> file on the EC2 instance are populated with the correct API keys. Below is the checklist of required values:",
+        body_style
+    ))
+    story.append(Spacer(1, 5))
+    
+    env_headers = [
+        Paragraph("<b>Variable Key</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Category</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Value Description / Production Placeholder</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+    ]
+    
+    env_rows = [
+        env_headers,
+        [
+            Paragraph("<code>DATABASE_URL</code>", body_style),
+            Paragraph("Database", body_style),
+            Paragraph("<code>postgresql://postgres:YOUR_PASSWORD@rds-endpoint.amazonaws.com:5432/neondb?sslmode=require</code>", body_style)
+        ],
+        [
+            Paragraph("<code>JWT_SECRET</code>", body_style),
+            Paragraph("Security", body_style),
+            Paragraph("Any cryptographically secure random string used to sign user auth tokens.", body_style)
+        ],
+        [
+            Paragraph("<code>FIREBASE_PROJECT_ID</code>", body_style),
+            Paragraph("Auth", body_style),
+            Paragraph("Your Firebase Console project ID (e.g. <code>lawmate-prod</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>FIREBASE_CLIENT_EMAIL</code>", body_style),
+            Paragraph("Auth", body_style),
+            Paragraph("Firebase Service Account client email address.", body_style)
+        ],
+        [
+            Paragraph("<code>FIREBASE_PRIVATE_KEY</code>", body_style),
+            Paragraph("Auth", body_style),
+            Paragraph("<b>IMPORTANT NOTICE:</b> Copy the service account private key. Ensure you replace all escaped newlines (<code>\\n</code>) with actual literal newlines inside the file.", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_MERCHANT_ID</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Your production PhonePe Merchant ID.", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_CLIENT_ID</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Your PhonePe API integration Client ID.", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_CLIENT_SECRET</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Your PhonePe API Client Secret key.", body_style)
+        ],
+        [
+            Paragraph("<code>PHONEPE_ENV</code>", body_style),
+            Paragraph("Payment", body_style),
+            Paragraph("Set to <code>PRODUCTION</code> for live checkout, or <code>SANDBOX</code> for testing.", body_style)
+        ],
+        [
+            Paragraph("<code>SMTP_HOST</code>", body_style),
+            Paragraph("Email", body_style),
+            Paragraph("Mail server domain (e.g. <code>smtp.gmail.com</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>SMTP_PORT</code>", body_style),
+            Paragraph("Email", body_style),
+            Paragraph("Mail port (typically <code>587</code> for TLS/STARTTLS).", body_style)
+        ],
+        [
+            Paragraph("<code>SMTP_USER</code>", body_style),
+            Paragraph("Email", body_style),
+            Paragraph("Email account username (e.g. <code>support@yourdomain.com</code>).", body_style)
+        ],
+        [
+            Paragraph("<code>SMTP_PASS</code>", body_style),
+            Paragraph("Email", body_style),
+            Paragraph("Email account password (use a Gmail App Password if using Gmail).", body_style)
+        ],
+    ]
+    
+    t_env = Table(env_rows, colWidths=[2.2*inch, 0.9*inch, 3.9*inch])
+    t_env.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('LEFTPADDING', (0,0), (-1,-1), 5),
+        ('RIGHTPADDING', (0,0), (-1,-1), 5),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [HexColor('#ffffff'), HexColor('#f8fafc')])
+    ]))
+    story.append(t_env)
+    
+    story.append(PageBreak())
+
+    # ================= PAGE 9: TROUBLESHOOTING & SUMMARY =================
+    story.append(Paragraph("7. Troubleshooting & Verification Checklist", h1_style))
+    story.append(Paragraph(
+        "Use these common administrative commands on your EC2 instance terminal to manage the services and troubleshoot errors:",
+        body_style
+    ))
+    story.append(Spacer(1, 5))
+    
+    cmd_headers = [
+        Paragraph("<b>Action Needed</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+        Paragraph("<b>Exact Command to Run</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=HexColor('#ffffff'))),
+    ]
+    
+    cmd_rows = [
+        cmd_headers,
+        [
+            Paragraph("Check microservice logs in real-time", body_style),
+            Paragraph("<code>sudo docker-compose logs -f [service_name]</code><br/>(e.g., <code>sudo docker-compose logs -f gateway</code>)", body_style)
+        ],
+        [
+            Paragraph("Check logs for all backend services", body_style),
+            Paragraph("<code>sudo docker-compose logs --tail=100 -f</code>", body_style)
+        ],
+        [
+            Paragraph("Restart all backend microservices", body_style),
+            Paragraph("<code>sudo docker-compose restart</code>", body_style)
+        ],
+        [
+            Paragraph("Apply environment variable changes", body_style),
+            Paragraph("<code>sudo docker-compose down && sudo docker-compose up -d</code>", body_style)
+        ],
+        [
+            Paragraph("Check server memory and disk space usage", body_style),
+            Paragraph("<code>df -h && free -h</code>", body_style)
+        ],
+        [
+            Paragraph("Check active Docker containers and resource usage", body_style),
+            Paragraph("<code>sudo docker ps && sudo docker stats</code>", body_style)
+        ],
+        [
+            Paragraph("Test backend API Gateway status check", body_style),
+            Paragraph("<code>curl http://localhost:8000/api/health</code>", body_style)
+        ]
+    ]
+    
+    t_cmd = Table(cmd_rows, colWidths=[2.2*inch, 4.8*inch])
+    t_cmd.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), HexColor('#1e293b')),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('LEFTPADDING', (0,0), (-1,-1), 6),
+        ('RIGHTPADDING', (0,0), (-1,-1), 6),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [HexColor('#ffffff'), HexColor('#f8fafc')])
+    ]))
+    story.append(t_cmd)
+    
+    story.append(Spacer(1, 15))
+    story.append(Paragraph("<b>8. Verification Checklist for Go-Live:</b>", h2_style))
+    story.append(Paragraph("• <b>DNS Mapping</b>: Point `api.yourdomain.com` (backend) to the EC2 Elastic IP using an A Record in your registrar console (e.g. Route53, GoDaddy).", list_style))
+    story.append(Paragraph("• <b>CloudFront SSL</b>: CNAME `www.yourdomain.com` points to the CloudFront distribution domain (`xxxx.cloudfront.net`).", list_style))
+    story.append(Paragraph("• <b>Database Connectivity</b>: Confirm backend services show successful PostgreSQL connection logs.", list_style))
+    story.append(Paragraph("• <b>Let's Encrypt SSL Auto-renewal</b>: Certbot handles renewals automatically, check cron status using `sudo systemctl status certbot.timer`.", list_style))
+    
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("End of Documentation.", ParagraphStyle('EndDoc', parent=styles['Normal'], fontName='Helvetica-Oblique', textColor=HexColor('#64748b'), alignment=1)))
+
+    # Build the document
+    doc.build(
+        story,
+        onFirstPage=draw_cover_page,
+        onLaterPages=draw_later_page
+    )
+    print("PDF AWS_Deployment_Guide.pdf built successfully!")
+
+if __name__ == '__main__':
+    build_pdf()
