@@ -83,15 +83,16 @@ fastify.register(jwt, {
 });
 
 // Configure Email Transporter
+const smtpPort = parseInt(process.env.SMTP_PORT || '587');
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false, 
-  requireTLS: true, // Force TLS
+  port: smtpPort,
+  secure: smtpPort === 465, // True for 465 (SSL), false for 587 (TLS/STARTTLS)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  ...(smtpPort !== 465 ? { requireTLS: true } : {})
 });
 
 // Helpers for OTP Generation and Email Transmission
