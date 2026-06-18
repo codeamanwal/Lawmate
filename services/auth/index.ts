@@ -92,11 +92,12 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  family: 4, // Force IPv4 to prevent ENETUNREACH errors on IPv6-unfriendly environments like Render
   connectionTimeout: 5000, // 5 seconds connection timeout
   greetingTimeout: 5000,   // 5 seconds greeting timeout
   socketTimeout: 5000,     // 5 seconds socket timeout
   ...(smtpPort !== 465 ? { requireTLS: true } : {})
-});
+} as any);
 
 // Helpers for OTP Generation and Email Transmission
 const generateOTP = (): string => {
