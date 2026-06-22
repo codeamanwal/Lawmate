@@ -116,21 +116,29 @@ const sendOTPEmail = async (
   let emailSent = false;
   let mailError = null;
 
-  // 1. Try Resend HTTP API if configured (Port 443 - never blocked by Render)
-  if (process.env.RESEND_API_KEY) {
+  // 1. Try Brevo HTTP API if configured (Port 443 - never blocked by Render)
+  if (process.env.BREVO_API_KEY) {
     try {
-      console.log(`[RESEND] Attempting HTTPS email delivery for ${actionName}...`);
-      const response = await fetch('https://api.resend.com/emails', {
+      console.log(`[BREVO] Attempting HTTPS email delivery for ${actionName}...`);
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json'
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-          to: email,
+          sender: {
+            name: "LawOnCall",
+            email: process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || "no-reply@lawoncall.com"
+          },
+          to: [
+            {
+              email: email
+            }
+          ],
           subject: subject,
-          html: `
+          htmlContent: `
             <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
               <h2 style="color: #4f46e5;">LawOnCall Verification</h2>
               <p>Hello,</p>
@@ -144,19 +152,19 @@ const sendOTPEmail = async (
 
       if (response.ok) {
         emailSent = true;
-        console.log(`[RESEND] Successfully sent OTP to ${email} for ${actionName}`);
+        console.log(`[BREVO] Successfully sent OTP to ${email} for ${actionName}`);
       } else {
         const errText = await response.text();
-        mailError = `Resend API returned status ${response.status}: ${errText}`;
-        console.error(`[RESEND ERROR]`, mailError);
+        mailError = `Brevo API returned status ${response.status}: ${errText}`;
+        console.error(`[BREVO ERROR]`, mailError);
       }
     } catch (err: any) {
       mailError = err.message;
-      console.error(`[RESEND ERROR] Failed to send via HTTP:`, err);
+      console.error(`[BREVO ERROR] Failed to send via HTTP:`, err);
     }
   }
 
-  // 2. Fallback to SMTP if Resend is not configured
+  // 2. Fallback to SMTP if Brevo is not configured
   if (!emailSent && process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
       console.log(`[SMTP] Attempting SMTP email delivery for ${actionName}...`);
@@ -183,8 +191,8 @@ const sendOTPEmail = async (
     }
   }
 
-  if (!emailSent && !process.env.RESEND_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
-    console.warn(`[MAIL WARNING] Neither Resend nor SMTP is configured. Falling back to console logging.`);
+  if (!emailSent && !process.env.BREVO_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
+    console.warn(`[MAIL WARNING] Neither Brevo nor SMTP is configured. Falling back to console logging.`);
   }
 
   return {
