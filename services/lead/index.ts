@@ -705,6 +705,81 @@ fastify.post('/api/leads/call-status', async (request: any, reply: any) => {
   return { success: true };
 });
 
+fastify.get('/api/leads/exotel-connect', async (request: any, reply: any) => {
+  const { From, To } = request.query as { From: string; To: string };
+  fastify.log.info(`Exotel Connect Webhook received call from ${From} to virtual number ${To}`);
+
+  try {
+    // 1. Clean the incoming From number to search in DB
+    const cleanFrom = From ? From.replace(/\D/g, '').slice(-10) : '';
+
+    let destinations: Array<{ contact_uri: string }> = [];
+
+    if (cleanFrom) {
+      // Find the user by phone number (matching last 10 digits to be safe)
+      const clientUser = await prisma.user.findFirst({
+        where: {
+          phone: { endsWith: cleanFrom }
+        }
+      });
+
+      if (clientUser) {
+        // Find the latest active lead for this user with an assigned lawyer
+        const lead = await prisma.lead.findFirst({
+          where: {
+            userId: clientUser.id,
+            lawyerId: { not: null },
+            status: { in: ['NEW', 'ASSIGNED'] }
+          },
+          orderBy: { createdAt: 'desc' },
+          include: { lawyer: true }
+        });
+
+        if (lead && lead.lawyer && lead.lawyer.phone) {
+          const lawyerPhone = formatPhoneNumber(lead.lawyer.phone);
+          destinations.push({ contact_uri: lawyerPhone });
+          fastify.log.info(`Exotel Connect: Routed client ${cleanFrom} to assigned lawyer ${lawyerPhone}`);
+        }
+      }
+    }
+
+    // Fallback destinations if no active lead/assigned lawyer found
+    if (destinations.length === 0) {
+      // Default fallback numbers (e.g. support or main admin numbers)
+      const defaultPhones = ['+916307640107', '+919163080411'];
+      destinations = defaultPhones.map(phone => ({ contact_uri: phone }));
+      fastify.log.info(`Exotel Connect: No active assignment found, routing to default fallback numbers`);
+    }
+
+    // Return the response format expected by CCM Programmable Connect
+    return reply.status(200).send({
+      fetch_after_attempt: false,
+      destination: destinations,
+      state_management: true,
+      outgoing_phone_number: To, // Dial out using the same virtual ExoPhone number
+      sticky_agent: false,
+      recording: {
+        record: true,
+        channels: "single"
+      },
+      max_ringing_duration: 30,
+      max_conversation_duration: 900,
+      music_on_hold: {
+        type: "default_tone"
+      }
+    });
+  } catch (error: any) {
+    fastify.log.error('Exotel Connect Webhook Error:', error);
+    // If anything fails, return fallback support number so call doesn't get dropped
+    return reply.status(200).send({
+      fetch_after_attempt: false,
+      destination: [{ contact_uri: "+916307640107" }],
+      state_management: false,
+      recording: { record: false }
+    });
+  }
+});
+
 fastify.post('/api/leads/:id/decline', async (request: any, reply: any) => {
   const { id } = request.params;
   const userId = request.headers['x-user-id'] as string;

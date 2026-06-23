@@ -124,6 +124,10 @@ fastify.post('/api/leads/call-status', (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
 });
 
+fastify.get('/api/leads/exotel-connect', (request, reply) => {
+  return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request));
+});
+
 fastify.get('/api/payments/verify/:leadId', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
