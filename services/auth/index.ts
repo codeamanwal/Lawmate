@@ -137,16 +137,20 @@ const sendOTPEmail = async (
               email: email
             }
           ],
+          replyTo: {
+            email: process.env.BREVO_REPLY_TO || "no-reply@lawoncall.com",
+            name: "No Reply"
+          },
           subject: subject,
           htmlContent: `
             <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #4f46e5;">LawOnCall Verification</h2>
-              <p>Hello,</p>
-              <p>Your verification code for LawOnCall (${actionName}) is:</p>
-              <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #111; margin: 20px 0;">${otp}</div>
-              <p>This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
-            </div>
-          `
+               <h2 style="color: #4f46e5;">LawOnCall Verification</h2>
+               <p>Hello,</p>
+               <p>Your verification code for LawOnCall (${actionName}) is:</p>
+               <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #111; margin: 20px 0;">${otp}</div>
+               <p>This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+             </div>
+           `
         })
       });
 
@@ -171,6 +175,7 @@ const sendOTPEmail = async (
       await transporter.sendMail({
         from: `"LawOnCall" <${process.env.SMTP_USER}>`,
         to: email,
+        replyTo: `"No Reply" <${process.env.BREVO_REPLY_TO || "no-reply@lawoncall.com"}>`,
         subject: subject,
         text: `Your verification code is ${otp}. It will expire in 10 minutes.`,
         html: `
