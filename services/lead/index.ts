@@ -48,7 +48,7 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
     throw new Error('Call service not fully configured.');
   }
 
-  const url = `https://${subdomain}/v1/Accounts/${accountSid}/Calls/connect`;
+  const url = `https://${subdomain}/v1/Accounts/${accountSid}/Calls/connect.json`;
   const authHeader = 'Basic ' + Buffer.from(`${apiKey}:${apiToken}`).toString('base64');
 
   const formattedLawyer = formatPhoneNumber(lawyerPhone);
