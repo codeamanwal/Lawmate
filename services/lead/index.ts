@@ -25,7 +25,10 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter }); // Reload trigger to pick up new env keys and database schema
 
 function formatPhoneNumber(phone: string): string {
-  const clean = phone.replace(/\D/g, '');
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 11 && clean.startsWith('0')) {
+    clean = clean.substring(1);
+  }
   if (clean.length === 10) {
     return `+91${clean}`;
   }
@@ -53,11 +56,12 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
 
   const formattedLawyer = formatPhoneNumber(lawyerPhone);
   const formattedClient = formatPhoneNumber(clientPhone);
+  const formattedExophone = formatPhoneNumber(exophone);
 
   const params = new URLSearchParams();
   params.append('From', formattedLawyer);
   params.append('To', formattedClient);
-  params.append('CallerId', exophone);
+  params.append('CallerId', formattedExophone);
   params.append('Record', 'true');
   
   if (statusCallbackUrl) {
