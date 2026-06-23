@@ -677,7 +677,7 @@ fastify.post('/api/leads/:id/call', async (request: any, reply: any) => {
     return { success: true, callSid: callResult?.Call?.Sid };
   } catch (error: any) {
     fastify.log.error(error);
-    return reply.status(500).send({ error: error.message || 'Failed to initiate call via Exotel' });
+    return reply.status(400).send({ error: error.message || 'Failed to initiate call via Exotel' });
   }
 });
 
