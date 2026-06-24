@@ -330,15 +330,6 @@ const Dashboard = () => {
               alt="Emergency Legal Helpline Banner" 
               className="w-full h-auto object-cover"
             />
-            {/* Overlay CTA button */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col items-center justify-end p-5">
-              <button
-                onClick={() => setEmergencyModalOpen(true)}
-                className="w-full py-3 bg-red-600 hover:bg-red-505 active:scale-95 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-900/30 transition-all flex items-center justify-center gap-2"
-              >
-                <Zap className="w-4 h-4" /> Create Emergency Case
-              </button>
-            </div>
           </div>
         </div>
       </div>
