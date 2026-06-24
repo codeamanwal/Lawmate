@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, 
@@ -44,6 +44,29 @@ const LawyerOnboarding = () => {
     monday: true, tuesday: true, wednesday: true, thursday: true, friday: true,
     saturday: false, sunday: false
   });
+  
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (user?.lawyerProfile && !isInitializedRef.current) {
+      if (user.lawyerProfile.categories && user.lawyerProfile.categories.length > 0) {
+        setSelectedPracticeAreas(user.lawyerProfile.categories);
+      }
+      if (user.lawyerProfile.bio) {
+        setBio(user.lawyerProfile.bio);
+      }
+      if (user.lawyerProfile.languages && user.lawyerProfile.languages.length > 0) {
+        setSelectedLanguages(user.lawyerProfile.languages);
+      }
+      setFiles({
+        'Enrollment Certificate': user.lawyerProfile.enrollmentCert || '',
+        'PAN Card': user.lawyerProfile.panCard || '',
+        'Degree Certificate': user.lawyerProfile.degreeCert || '',
+        'Headshot Photo': user.lawyerProfile.photo || ''
+      });
+      isInitializedRef.current = true;
+    }
+  }, [user]);
   
   const handleFileUpload = (label: string, file: File | undefined) => {
     if (file) {
