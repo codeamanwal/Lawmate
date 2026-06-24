@@ -58,6 +58,27 @@ const LawyerOnboarding = () => {
       if (user.lawyerProfile.languages && user.lawyerProfile.languages.length > 0) {
         setSelectedLanguages(user.lawyerProfile.languages);
       }
+      if (user.lawyerProfile.availability) {
+        try {
+          const availObj = typeof user.lawyerProfile.availability === 'string'
+            ? JSON.parse(user.lawyerProfile.availability)
+            : user.lawyerProfile.availability;
+          if (availObj && Array.isArray(availObj.days)) {
+            const daysLower = availObj.days.map((d: string) => d.toLowerCase());
+            setAvailability({
+              monday: daysLower.includes('monday'),
+              tuesday: daysLower.includes('tuesday'),
+              wednesday: daysLower.includes('wednesday'),
+              thursday: daysLower.includes('thursday'),
+              friday: daysLower.includes('friday'),
+              saturday: daysLower.includes('saturday'),
+              sunday: daysLower.includes('sunday')
+            });
+          }
+        } catch (err) {
+          console.error('Error parsing availability in frontend:', err);
+        }
+      }
       setFiles({
         'Enrollment Certificate': user.lawyerProfile.enrollmentCert || '',
         'PAN Card': user.lawyerProfile.panCard || '',

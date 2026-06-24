@@ -223,6 +223,25 @@ async function assignLeadToLawyer(leadId: string) {
       return;
     }
 
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Kolkata' }).toLowerCase();
+
+    const isLawyerAvailableToday = (lawyer: any) => {
+      if (lawyer.isAvailable === false) return false;
+      const avail = lawyer.availability;
+      if (!avail) {
+        return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(currentDay);
+      }
+      try {
+        const availObj = typeof avail === 'string' ? JSON.parse(avail) : avail;
+        if (availObj && Array.isArray(availObj.days)) {
+          return availObj.days.map((d: string) => d.toLowerCase()).includes(currentDay);
+        }
+      } catch (err) {
+        console.error(`[SLA Matcher] Error parsing availability for lawyer ${lawyer.id}:`, err);
+      }
+      return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(currentDay);
+    };
+
     // Find available matching lawyers
     let availableLawyers = await prisma.lawyerProfile.findMany({
       where: {
@@ -232,7 +251,8 @@ async function assignLeadToLawyer(leadId: string) {
     });
 
     let matchingLawyers = availableLawyers.filter((lawyer: any) => 
-      lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase())
+      lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase()) &&
+      isLawyerAvailableToday(lawyer)
     ).slice(0, 5);
 
     // If we exhausted all matching lawyers in the database, reset declined list and retry (up to 3 times)
@@ -269,7 +289,8 @@ async function assignLeadToLawyer(leadId: string) {
         where: { isAvailable: true }
       });
       matchingLawyers = availableLawyers.filter((lawyer: any) => 
-        lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase())
+        lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase()) &&
+        isLawyerAvailableToday(lawyer)
       ).slice(0, 5);
     }
 
