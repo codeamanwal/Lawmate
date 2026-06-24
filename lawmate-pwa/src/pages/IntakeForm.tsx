@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-import { ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronRight, Loader2, AlertCircle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -24,6 +24,8 @@ type FormData = z.infer<typeof formSchema>;
 
 const IntakeForm = () => {
   const [loading, setLoading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -211,7 +213,7 @@ const IntakeForm = () => {
               className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
             />
             <label htmlFor="agreed" className="text-sm text-gray-600 leading-tight">
-              I agree to <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>
+              I agree to <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</a> and <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacyModal(true); }} className="text-indigo-600 font-semibold hover:underline">Privacy Policy</a>
             </label>
 
           </div>
@@ -227,6 +229,97 @@ const IntakeForm = () => {
           </button>
         </form>
       </div>
+
+      {showTermsModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl relative border border-gray-100 p-8 flex flex-col my-4">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowTermsModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 absolute right-6 top-6"
+              aria-label="Close Terms of Use"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Terms & Conditions
+            </h2>
+
+            {/* Content */}
+            <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
+              <h3 className="text-lg font-bold text-gray-900">1. Services</h3>
+              <p>LawOnCall provides a platform to connect clients with legal professionals. We do not provide legal advice ourselves.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">2. Payments</h3>
+              <p>Payments are handled via Razorpay. Fees are non-refundable once the consultation has started.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">3. User Conduct</h3>
+              <p>Users must provide accurate information when filling out the intake form.</p>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowTermsModal(false)}
+                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showPrivacyModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl relative border border-gray-100 p-8 flex flex-col my-4">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowPrivacyModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 absolute right-6 top-6"
+              aria-label="Close Privacy Policy"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Privacy Policy
+            </h2>
+
+            {/* Content */}
+            <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
+              <p>This Privacy Policy describes how LawOnCall collects, uses, and shares your personal information.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">1. Data Collection</h3>
+              <p>We collect your mobile number, name, and details about your legal issues to facilitate matching with lawyers.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">2. DPDP Compliance</h3>
+              <p>We comply with India's Digital Personal Data Protection Act. Your data is stored securely and used only for the purposes stated.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">3. Data Retention</h3>
+              <p>We retain your data as long as necessary to provide our services or as required by law.</p>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowPrivacyModal(false)}
+                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

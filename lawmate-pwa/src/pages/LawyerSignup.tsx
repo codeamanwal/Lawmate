@@ -19,7 +19,8 @@ import {
   Gavel,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  X
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -58,6 +59,7 @@ const LawyerSignup = () => {
   const [passwords, setPasswords] = useState({ password: '', confirm: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const { loginWithEmail } = useAuth();
   const navigate = useNavigate();
 
@@ -291,7 +293,7 @@ const LawyerSignup = () => {
                   className="mt-1 w-5 h-5 text-indigo-600 rounded-lg border-gray-300 focus:ring-indigo-500 shadow-sm"
                 />
                 <label htmlFor="agreed" className="text-xs font-bold text-gray-500 leading-tight">
-                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Terms of Use</Link>.
+                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-indigo-600 hover:underline">Terms of Use</a>.
                 </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs font-bold text-red-500">{errors.agreed.message}</p>}
@@ -401,6 +403,51 @@ const LawyerSignup = () => {
           Already have an account? <Link to="/auth" className="text-indigo-600 hover:underline">Log in</Link>
         </p>
       </div>
+
+      {showTermsModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl relative border border-gray-100 p-8 flex flex-col my-4">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowTermsModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 absolute right-6 top-6"
+              aria-label="Close Terms of Use"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Terms of Use
+            </h2>
+
+            {/* Content */}
+            <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
+              <h3 className="text-lg font-bold text-gray-900">1. Services</h3>
+              <p>LawOnCall provides a platform to connect clients with legal professionals. We do not provide legal advice ourselves.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">2. Payments</h3>
+              <p>Payments are handled via Razorpay. Fees are non-refundable once the consultation has started.</p>
+              
+              <h3 className="text-lg font-bold text-gray-900">3. User Conduct</h3>
+              <p>Users must provide accurate information when filling out the registration and onboarding forms.</p>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowTermsModal(false)}
+                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
