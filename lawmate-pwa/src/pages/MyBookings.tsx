@@ -362,50 +362,7 @@ const MyBookings = () => {
                   </div>
                 )}
 
-                {/* Developer Sandbox Controls */}
-                {(() => {
-                  const isPaid = booking.booking?.payment?.status === 'captured' || booking.booking?.status === 'CONFIRMED' || booking.status === 'ASSIGNED' || booking.status === 'COMPLETED';
-                  return isPaid && (booking.status === 'NEW' || booking.status === 'ASSIGNED') && (
-                    <div 
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-6 bg-indigo-50/30 border border-indigo-100 rounded-2xl p-4 text-left"
-                    >
-                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        ⚙️ Developer SLA Sandbox
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          onClick={async () => {
-                            try {
-                              await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${booking.id}/simulate-accept-timeout`);
-                              alert('SLA Acceptance Timeout triggered! Lead is reassigned immediately.');
-                              fetchBookings();
-                            } catch (e) {
-                              alert('Simulation failed.');
-                            }
-                          }}
-                          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 transition-all text-white rounded-xl text-xs font-black cursor-pointer shadow-md shadow-indigo-100"
-                        >
-                          Simulate Scenario B (Acceptance Timeout)
-                        </button>
-                        <button
-                          onClick={async () => {
-                            try {
-                              await axios.post(`${import.meta.env.VITE_API_URL}/api/leads/${booking.id}/simulate-attendance-timeout`);
-                              alert('SLA Attendance Timeout triggered! Sorry delay banner activated & reassigning.');
-                              fetchBookings();
-                            } catch (e) {
-                              alert('Simulation failed.');
-                            }
-                          }}
-                          className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 transition-all text-white rounded-xl text-xs font-black cursor-pointer shadow-md shadow-rose-100"
-                        >
-                          Simulate Scenario C (Attendance Timeout)
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
+
 
               </div>
             </div>
