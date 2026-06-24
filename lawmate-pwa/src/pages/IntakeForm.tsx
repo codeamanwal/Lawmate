@@ -211,7 +211,7 @@ const IntakeForm = () => {
               className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
             />
             <label htmlFor="agreed" className="text-sm text-gray-600 leading-tight">
-              I agree to <Link to="/terms" className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>
+              I agree to <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>
             </label>
 
           </div>

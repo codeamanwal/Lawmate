@@ -291,7 +291,7 @@ const LawyerSignup = () => {
                   className="mt-1 w-5 h-5 text-indigo-600 rounded-lg border-gray-300 focus:ring-indigo-500 shadow-sm"
                 />
                 <label htmlFor="agreed" className="text-xs font-bold text-gray-500 leading-tight">
-                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" className="text-indigo-600 hover:underline">Terms of Use</Link>.
+                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Terms of Use</Link>.
                 </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs font-bold text-red-500">{errors.agreed.message}</p>}
