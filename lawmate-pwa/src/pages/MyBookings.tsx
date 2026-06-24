@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Clock, MapPin, CheckCircle2, Star, Loader2, Award, ShieldCheck, CreditCard, AlertCircle, User, AlertTriangle } from 'lucide-react';
@@ -16,6 +16,7 @@ const MyBookings = () => {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const location = useLocation();
   const highlightLeadId = location.state?.highlightLeadId;
+  const hasScrolledRef = useRef(false);
 
   const fetchBookings = async () => {
     try {
@@ -51,11 +52,12 @@ const MyBookings = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (bookings.length > 0 && highlightLeadId) {
+    if (bookings.length > 0 && highlightLeadId && !hasScrolledRef.current) {
       const timer = setTimeout(() => {
         const element = document.getElementById(`booking-${highlightLeadId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          hasScrolledRef.current = true;
         }
       }, 500);
       return () => clearTimeout(timer);
