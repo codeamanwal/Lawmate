@@ -56,7 +56,7 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
 
   const formattedLawyer = formatPhoneNumber(lawyerPhone);
   const formattedClient = formatPhoneNumber(clientPhone);
-  const formattedExophone = formatPhoneNumber(exophone);
+  const formattedExophone = exophone;
 
   const params = new URLSearchParams();
   params.append('From', formattedLawyer);
