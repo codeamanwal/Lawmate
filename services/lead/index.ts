@@ -38,6 +38,22 @@ function formatPhoneNumber(phone: string): string {
   return phone.startsWith('+') ? phone : `+${phone}`;
 }
 
+function formatExotelPhoneNumber(phone: string): string {
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 12 && clean.startsWith('91')) {
+    clean = clean.substring(2);
+  } else if (clean.length === 11 && clean.startsWith('0')) {
+    clean = clean.substring(1);
+  }
+  if (clean.length === 10) {
+    return `0${clean}`;
+  }
+  if (clean.length === 11 && clean.startsWith('0')) {
+    return clean;
+  }
+  return phone;
+}
+
 async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadId: string): Promise<any> {
   const apiKey = process.env.EXOTEL_API_KEY;
   const apiToken = process.env.EXOTEL_API_TOKEN;
@@ -54,8 +70,8 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
   const url = `https://${subdomain}/v1/Accounts/${accountSid}/Calls/connect.json`;
   const authHeader = 'Basic ' + Buffer.from(`${apiKey}:${apiToken}`).toString('base64');
 
-  const formattedLawyer = formatPhoneNumber(lawyerPhone);
-  const formattedClient = formatPhoneNumber(clientPhone);
+  const formattedLawyer = formatExotelPhoneNumber(lawyerPhone);
+  const formattedClient = formatExotelPhoneNumber(clientPhone);
   const formattedExophone = exophone;
 
   const params = new URLSearchParams();
