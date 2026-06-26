@@ -1,0 +1,38 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Monorepo Root Dependencies
+      run: npm install
+
+    - name: Install All Services Dependencies
+      run: |
+        npm run install:all
+
+    - name: Run Test Suite
+      run: npm run test
+      env:
+        DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+        JWT_SECRET: "test-secret"
+        EXOTEL_API_KEY: "dummy"
+        EXOTEL_API_TOKEN: "dummy"
+        EXOTEL_ACCOUNT_SID: "dummy"
+        EXOTEL_EXOPHONE: "dummy"

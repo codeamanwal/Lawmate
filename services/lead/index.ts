@@ -11,7 +11,7 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
-const fastify = Fastify({ logger: true });
+export const fastify = Fastify({ logger: process.env.NODE_ENV === 'test' ? false : true });
 
 fastify.register(cors, {
   origin: true,
@@ -20,11 +20,11 @@ fastify.register(cors, {
 });
 
 const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter }); // Reload trigger to pick up new env keys and database schema
+export const prisma = new PrismaClient({ adapter }); // Reload trigger to pick up new env keys and database schema
 
-function formatPhoneNumber(phone: string): string {
+export function formatPhoneNumber(phone: string): string {
   let clean = phone.replace(/\D/g, '');
   if (clean.length === 11 && clean.startsWith('0')) {
     clean = clean.substring(1);
@@ -38,7 +38,7 @@ function formatPhoneNumber(phone: string): string {
   return phone.startsWith('+') ? phone : `+${phone}`;
 }
 
-function formatExotelPhoneNumber(phone: string): string {
+export function formatExotelPhoneNumber(phone: string): string {
   let clean = phone.replace(/\D/g, '');
   if (clean.length === 12 && clean.startsWith('91')) {
     clean = clean.substring(2);
@@ -267,7 +267,7 @@ async function assignLeadToLawyer(leadId: string) {
     });
 
     let matchingLawyers = availableLawyers.filter((lawyer: any) => 
-      lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase()) &&
+      lawyer.categories.some((cat: string) => cat.toLowerCase() === lead!.category.toLowerCase()) &&
       isLawyerAvailableToday(lawyer)
     ).slice(0, 5);
 
@@ -305,7 +305,7 @@ async function assignLeadToLawyer(leadId: string) {
         where: { isAvailable: true }
       });
       matchingLawyers = availableLawyers.filter((lawyer: any) => 
-        lawyer.categories.some((cat: string) => cat.toLowerCase() === lead.category.toLowerCase()) &&
+        lawyer.categories.some((cat: string) => cat.toLowerCase() === lead!.category.toLowerCase()) &&
         isLawyerAvailableToday(lawyer)
       ).slice(0, 5);
     }
@@ -1152,6 +1152,8 @@ const start = async () => {
   }
 };
 
-start();
+if (process.env.NODE_ENV !== 'test') {
+  start();
+}
 
 // Cache clear trigger

@@ -63,15 +63,15 @@ admin.initializeApp({
   }),
 });
 
-const fastify = Fastify({ 
-  logger: true,
+export const fastify = Fastify({ 
+  logger: process.env.NODE_ENV === 'test' ? false : true,
   bodyLimit: 52428800 // 50MB
 });
 
 const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+export const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
 fastify.register(fastifyStatic, {
@@ -800,4 +800,6 @@ const start = async () => {
   }
 };
 
-start();
+if (process.env.NODE_ENV !== 'test') {
+  start();
+}
