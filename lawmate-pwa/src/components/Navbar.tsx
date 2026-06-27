@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, User } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -18,7 +19,7 @@ const Navbar = () => {
             <img src="/logo-main.png" alt="LawOnCall Logo" className="h-9 sm:h-10 md:h-11 w-auto object-contain" />
             <span className="text-lg sm:text-xl font-black text-gray-900 tracking-tight">Law<span className="text-indigo-600">OnCall</span></span>
           </Link>
-
+          
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             <Link to="/about" className="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-colors uppercase tracking-widest text-[10px]">About</Link>
@@ -38,17 +39,43 @@ const Navbar = () => {
                     My Bookings
                   </Link>
                 )}
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                  <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center text-[10px] text-white font-black">
-                    {user.name?.[0] || user.fullName?.[0] || 'U'}
+                
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowDropdown(true)}
+                  onMouseLeave={() => setShowDropdown(false)}
+                >
+                  <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-100/50 transition-all">
+                    <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center text-[10px] text-white font-black">
+                      {user.name?.[0] || user.fullName?.[0] || 'U'}
+                    </div>
+                    <span className="text-xs font-black text-gray-900">{user.name || user.fullName}</span>
                   </div>
-                  <span className="text-xs font-black text-gray-900">{user.name || user.fullName}</span>
-                  <button 
-                    onClick={() => { logout(); navigate('/'); }}
-                    className="ml-2 p-1 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-all"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
+
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-100">
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          navigate(user.role === 'LAWYER' ? "/lawyer/dashboard" : "/dashboard");
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" /> Profile
+                      </button>
+                      <div className="border-t border-gray-50 my-1" />
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          logout();
+                          navigate('/');
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" /> Log out
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
