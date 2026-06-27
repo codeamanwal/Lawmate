@@ -36,6 +36,15 @@ jest.mock('../../packages/db/node_modules/@prisma/client', () => {
           findUnique: jest.fn(),
           update: jest.fn()
         },
+        lawyerProfile: {
+          findUnique: jest.fn(),
+          update: jest.fn(),
+          create: jest.fn()
+        },
+        lead: {
+          findMany: jest.fn(),
+          update: jest.fn()
+        },
         $disconnect: jest.fn().mockImplementation(() => Promise.resolve())
       };
     })
@@ -87,5 +96,54 @@ describe('Auth Service OTP API Endpoint', () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'Invalid verification code' });
+  });
+
+  test('POST /api/profiles/lawyer/availability should update isAvailable to false', async () => {
+    const token = fastify.jwt.sign({ id: 'lawyer-user-id', role: 'LAWYER' });
+
+    (prisma.lawyerProfile.findUnique as any).mockResolvedValue({
+      id: 'profile-id',
+      userId: 'lawyer-user-id',
+      isAvailable: true
+    });
+    (prisma.lawyerProfile.update as any).mockResolvedValue({
+      id: 'profile-id',
+      userId: 'lawyer-user-id',
+      isAvailable: false
+    });
+    (prisma.lead.findMany as any).mockResolvedValue([
+      {
+        id: 'lead-id',
+        notifiedLawyerIds: ['profile-id', 'other-profile-id'],
+        declinedLawyerIds: []
+      }
+    ]);
+    (prisma.lead.update as any).mockResolvedValue({});
+
+    // Mock global fetch to prevent actual HTTP calls during testing
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockImplementation(() => Promise.resolve({} as any)) as any;
+
+    const response = await supertest(fastify.server)
+      .post('/api/profiles/lawyer/availability')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isAvailable: false });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ success: true, isAvailable: false });
+    expect(prisma.lawyerProfile.update).toHaveBeenCalledWith({
+      where: { userId: 'lawyer-user-id' },
+      data: { isAvailable: false }
+    });
+    expect(prisma.lead.findMany).toHaveBeenCalled();
+    expect(prisma.lead.update).toHaveBeenCalledWith({
+      where: { id: 'lead-id' },
+      data: {
+        notifiedLawyerIds: ['other-profile-id'],
+        declinedLawyerIds: ['profile-id']
+      }
+    });
+
+    global.fetch = originalFetch;
   });
 });

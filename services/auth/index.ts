@@ -694,6 +694,39 @@ fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: an
         where: { userId: decoded.id },
         data: { isAvailable }
       });
+
+      const profileId = profile.id;
+
+      // If the lawyer went offline, clean up any active pending notifications immediately
+      if (isAvailable === false) {
+        try {
+          const activeLeads = await prisma.lead.findMany({
+            where: {
+              status: 'NEW',
+              notifiedLawyerIds: { has: profileId }
+            }
+          });
+
+          for (const lead of activeLeads) {
+            const remainingNotified = lead.notifiedLawyerIds.filter(id => id !== profileId);
+            const updatedDeclined = Array.from(new Set([...lead.declinedLawyerIds, profileId]));
+
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: {
+                notifiedLawyerIds: remainingNotified,
+                declinedLawyerIds: updatedDeclined
+              }
+            });
+
+            // Trigger reassignment immediately in Lead Service
+            fetch(`http://127.0.0.1:3002/api/leads/${lead.id}/match`, { method: 'POST' })
+              .catch(err => console.error(`[Availability Sync] Failed to trigger matching for lead ${lead.id}:`, err));
+          }
+        } catch (syncErr) {
+          console.error('[Availability Sync] Error cleaning up pending leads:', syncErr);
+        }
+      }
     } else {
       const userRecord = await prisma.user.findUnique({
         where: { id: decoded.id }
