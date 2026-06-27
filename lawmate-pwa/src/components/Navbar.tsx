@@ -58,7 +58,7 @@ const Navbar = () => {
                         <button
                           onClick={() => {
                             setShowDropdown(false);
-                            navigate(user.role === 'LAWYER' ? "/lawyer/dashboard" : "/dashboard");
+                            navigate(user.role === 'LAWYER' ? "/lawyer/dashboard" : "/edit-profile");
                           }}
                           className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
                         >
