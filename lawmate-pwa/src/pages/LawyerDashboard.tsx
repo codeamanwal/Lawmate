@@ -300,7 +300,7 @@ const LawyerDashboard = () => {
                   <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                       <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
-                      <p className="text-gray-500 font-bold text-sm">{call.phone}</p>
+                      <p className="text-gray-500 font-bold text-sm">09513886363 (Virtual Number)</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {call.booking?.payment?.status === 'captured' ? (
@@ -371,7 +371,7 @@ const LawyerDashboard = () => {
                             <h3 className="font-black text-gray-900 text-lg">{call.name}</h3>
                             <span className="text-[10px] font-bold text-gray-400">#{call.id.slice(0, 8)}</span>
                           </div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category} • {call.phone}</p>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{call.category} • 09513886363 (Virtual Number)</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
