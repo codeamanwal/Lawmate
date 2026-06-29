@@ -213,7 +213,13 @@ fastify.get('/api/leads/lawyer-calls', async (request: any, reply: any) => {
     }
   });
 
-  return leads;
+  const exophone = process.env.EXOTEL_EXOPHONE || '09513886363';
+  const maskedLeads = leads.map(lead => ({
+    ...lead,
+    phone: exophone
+  }));
+
+  return maskedLeads;
 });
 
 // SLA Matching & Reassignment Helper
