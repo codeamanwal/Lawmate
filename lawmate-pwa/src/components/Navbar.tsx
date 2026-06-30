@@ -50,6 +50,16 @@ const Navbar = () => {
                       {user.name?.[0] || user.fullName?.[0] || 'U'}
                     </div>
                     <span className="text-xs font-black text-gray-900">{user.name || user.fullName}</span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        logout();
+                        navigate('/');
+                      }}
+                      className="ml-2 p-1 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-all"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
                   </div>
 
                   {showDropdown && (
