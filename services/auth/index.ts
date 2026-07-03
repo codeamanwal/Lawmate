@@ -823,6 +823,118 @@ fastify.post('/api/auth/reset-password', async (request: any, reply: any) => {
   }
 });
 
+// 9. Delete Profile / Account
+fastify.post('/api/profiles/delete', async (request: any, reply: any) => {
+  const userId = request.headers['x-user-id'] as string;
+  if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { lawyerProfile: true }
+    });
+
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+
+    // 1. Delete associated bookings and payments first to prevent foreign key errors
+    if (user.role === 'LAWYER' && user.lawyerProfile) {
+      const lawyerId = user.lawyerProfile.id;
+
+      // Find lawyer bookings
+      const bookings = await prisma.booking.findMany({
+        where: { lawyerId }
+      });
+      const bookingIds = bookings.map(b => b.id);
+      const paymentIds = bookings.map(b => b.paymentId).filter(Boolean) as string[];
+
+      if (bookingIds.length > 0) {
+        await prisma.booking.deleteMany({ where: { id: { in: bookingIds } } });
+      }
+      if (paymentIds.length > 0) {
+        await prisma.payment.deleteMany({ where: { id: { in: paymentIds } } });
+      }
+
+      // Update leads assigned to this lawyer (clear lawyerId, reset status to NEW)
+      await prisma.lead.updateMany({
+        where: { lawyerId },
+        data: {
+          lawyerId: null,
+          status: 'NEW',
+          acceptedAt: null,
+          assignedAt: null
+        }
+      });
+
+      // Remove lawyer's profile ID from notified/declined lists in all other leads
+      const allActiveLeads = await prisma.lead.findMany({
+        where: {
+          OR: [
+            { notifiedLawyerIds: { has: lawyerId } },
+            { declinedLawyerIds: { has: lawyerId } }
+          ]
+        }
+      });
+
+      for (const lead of allActiveLeads) {
+        const remainingNotified = lead.notifiedLawyerIds.filter(id => id !== lawyerId);
+        const remainingDeclined = lead.declinedLawyerIds.filter(id => id !== lawyerId);
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            notifiedLawyerIds: remainingNotified,
+            declinedLawyerIds: remainingDeclined
+          }
+        });
+      }
+
+      // Delete LawyerProfile
+      await prisma.lawyerProfile.delete({
+        where: { id: lawyerId }
+      });
+
+    } else if (user.role === 'CLIENT') {
+      // Find client bookings
+      const bookings = await prisma.booking.findMany({
+        where: { clientId: userId }
+      });
+      const bookingIds = bookings.map(b => b.id);
+      const paymentIds = bookings.map(b => b.paymentId).filter(Boolean) as string[];
+
+      if (bookingIds.length > 0) {
+        await prisma.booking.deleteMany({ where: { id: { in: bookingIds } } });
+      }
+      if (paymentIds.length > 0) {
+        await prisma.payment.deleteMany({ where: { id: { in: paymentIds } } });
+      }
+
+      // Delete client's leads
+      await prisma.lead.deleteMany({
+        where: { userId }
+      });
+    }
+
+    // 2. Delete from PostgreSQL User table
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    // 3. Delete from Firebase Auth
+    try {
+      const fbUser = await admin.auth().getUserByEmail(user.email);
+      if (fbUser) {
+        await admin.auth().deleteUser(fbUser.uid);
+      }
+    } catch (fbErr) {
+      console.error('Firebase Auth deletion skipped or user not found:', fbErr);
+    }
+
+    return { success: true, message: 'Account and profile deleted successfully.' };
+  } catch (error: any) {
+    console.error('CRITICAL: Delete Account Failed:', error);
+    return reply.status(500).send({ error: `Delete Account Failed: ${error.message}` });
+  }
+});
+
 const start = async () => {
   try {
     await fastify.listen({ port: 3001, host: '0.0.0.0' });

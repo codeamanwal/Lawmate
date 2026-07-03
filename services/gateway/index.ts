@@ -193,6 +193,14 @@ fastify.register(async (instance) => {
     }));
   });
 
+  instance.post('/api/profiles/delete', (request, reply) => {
+    const user = request.user as any;
+    return reply.from(`${AUTH_SERVICE}${request.url}`, proxyOptions(request, {
+      'x-user-id': user.id,
+      'x-user-email': user.email
+    }));
+  });
+
   instance.post('/api/leads/:id/match', (request, reply) => {
     const user = request.user as any;
     return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, {

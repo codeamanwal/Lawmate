@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const LawyerDashboard = () => {
-  const { user, loading, updateUser } = useAuth();
+  const { user, loading, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('calls');
   const [isAvailable, setIsAvailable] = useState(() => {
@@ -93,6 +93,27 @@ const LawyerDashboard = () => {
       console.error("Failed to update availability in database", error);
       setIsAvailable(isAvailable);
       toast.error("Failed to update availability. Please try again.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("Are you absolutely sure you want to delete your profile? This action is permanent and cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/delete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        toast.success("Profile deleted successfully.");
+        logout();
+        navigate('/');
+      }
+    } catch (error) {
+      console.error("Failed to delete profile", error);
+      toast.error("Failed to delete profile. Please try again.");
     }
   };
 
@@ -630,6 +651,21 @@ const LawyerDashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-red-50/20 rounded-[32px] p-6 sm:p-8 border border-red-100 shadow-sm mt-6">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-red-100">
+                <h3 className="font-black text-red-600 uppercase tracking-widest text-xs">Danger Zone</h3>
+              </div>
+              <p className="text-xs font-medium text-gray-500 mb-6">
+                Deleting your profile is permanent. Once deleted, you will no longer receive consult requests and all your dashboard records will be completely removed.
+              </p>
+              <button
+                onClick={handleDeleteAccount}
+                className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-red-100 cursor-pointer"
+              >
+                Delete My Profile
+              </button>
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const EditProfile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState(user?.city || '');
@@ -34,6 +34,27 @@ const EditProfile = () => {
       toast.error('Failed to update profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("Are you absolutely sure you want to delete your profile? This action is permanent and cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/delete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        toast.success("Profile deleted successfully.");
+        logout();
+        navigate('/');
+      }
+    } catch (error) {
+      console.error("Failed to delete profile", error);
+      toast.error("Failed to delete profile. Please try again.");
     }
   };
 
@@ -128,6 +149,21 @@ const EditProfile = () => {
               Save Changes
             </button>
           </form>
+        </div>
+
+        <div className="bg-red-50/20 rounded-3xl p-6 sm:p-8 border border-red-100 mt-6 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-red-600 mb-1">Danger Zone</h2>
+            <p className="text-xs text-gray-500 font-medium">
+              Deleting your account is permanent. This will delete all your booking history, leads, and account information from our system.
+            </p>
+          </div>
+          <button
+            onClick={handleDeleteAccount}
+            className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm shadow-red-50"
+          >
+            Delete My Account
+          </button>
         </div>
       </div>
     </div>
