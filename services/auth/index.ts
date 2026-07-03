@@ -33,7 +33,7 @@ const saveBase64File = (base64String: string | undefined, prefix: string, userId
     if (extension === 'jpeg') extension = 'jpg';
     
     const filename = `${prefix}_${userId}_${Date.now()}.${extension}`;
-    const uploadsDir = path.join(__dirname, 'uploads');
+    const uploadsDir = path.resolve(__dirname, '../../uploads');
     
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
@@ -75,7 +75,7 @@ export const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
 fastify.register(fastifyStatic, {
-  root: path.join(__dirname, 'uploads'),
+  root: path.resolve(__dirname, '../../uploads'),
   prefix: '/uploads/',
 });
 fastify.register(jwt, {
