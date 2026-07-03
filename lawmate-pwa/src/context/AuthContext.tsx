@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 1. Check if we have a LAWYER or CLIENT token stored locally
     const token = localStorage.getItem('token');
     let currentRole: string | null = null;
+    let unsubscribe: (() => void) | null = null;
     
     if (token) {
       try {
@@ -64,6 +65,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Failed to parse local JWT token:", e);
       }
     }
+
+    const setupFirebaseFlow = () => {
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setLoading(true);
+        if (firebaseUser) {
+          const idToken = await firebaseUser.getIdToken();
+          const intendedRole = localStorage.getItem('intendedRole');
+          try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
+              idToken,
+              role: intendedRole
+            });
+            const { token: verifiedToken, user: backendUser } = response.data;
+            localStorage.setItem('token', verifiedToken);
+            setUser(backendUser);
+            const showToast = sessionStorage.getItem('showSignInToast');
+            if (showToast === 'true') {
+              toast.success('Signed in successfully!');
+              sessionStorage.removeItem('showSignInToast');
+            }
+          } catch (error: any) {
+            console.error('Backend auth failed', error);
+            if (error.response?.status === 403) {
+              await auth.signOut();
+              localStorage.removeItem('token');
+              setUser(null);
+              toast.error(error.response?.data?.error || 'Invalid credentials');
+            } else {
+              setUser(null);
+            }
+          }
+        } else {
+          const currentToken = localStorage.getItem('token');
+          let currentRole = null;
+          if (currentToken) {
+            try {
+              const parts = currentToken.split('.');
+              if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1]));
+                currentRole = payload.role;
+              }
+            } catch (e) {}
+          }
+          
+          if (currentRole !== 'LAWYER') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('intendedRole');
+            setUser(null);
+          }
+        }
+        setLoading(false);
+      });
+    };
 
     if (currentRole === 'LAWYER') {
       axios.get(`${import.meta.env.VITE_API_URL}/api/profiles/lawyer/me`, {
@@ -92,15 +146,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }).then((res) => {
         if (res.data.success) {
           setUser(res.data.user);
+          setLoading(false);
         } else {
           localStorage.removeItem('token');
           setUser(null);
+          setupFirebaseFlow();
         }
-        setLoading(false);
       }).catch(() => {
         localStorage.removeItem('token');
         setUser(null);
-        setLoading(false);
+        setupFirebaseFlow();
       });
       
       auth.signOut().catch(() => {});
@@ -108,58 +163,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // 2. Client / no token Firebase flow
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        const intendedRole = localStorage.getItem('intendedRole');
-        try {
-          const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
-            idToken,
-            role: intendedRole
-          });
-          const { token: verifiedToken, user: backendUser } = response.data;
-          localStorage.setItem('token', verifiedToken);
-          setUser(backendUser);
-          const showToast = sessionStorage.getItem('showSignInToast');
-          if (showToast === 'true') {
-            toast.success('Signed in successfully!');
-            sessionStorage.removeItem('showSignInToast');
-          }
-        } catch (error: any) {
-          console.error('Backend auth failed', error);
-          if (error.response?.status === 403) {
-            await auth.signOut();
-            localStorage.removeItem('token');
-            setUser(null);
-            toast.error(error.response?.data?.error || 'Invalid credentials');
-          } else {
-            setUser(null);
-          }
-        }
-      } else {
-        const currentToken = localStorage.getItem('token');
-        let currentRole = null;
-        if (currentToken) {
-          try {
-            const parts = currentToken.split('.');
-            if (parts.length === 3) {
-              const payload = JSON.parse(atob(parts[1]));
-              currentRole = payload.role;
-            }
-          } catch (e) {}
-        }
-        
-        if (currentRole !== 'LAWYER') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('intendedRole');
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    });
+    setupFirebaseFlow();
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const sendOtp = async (phone: string) => {
