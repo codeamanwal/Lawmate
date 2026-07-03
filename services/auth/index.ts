@@ -130,7 +130,7 @@ const sendOTPEmail = async (
         body: JSON.stringify({
           sender: {
             name: "LawOnCall",
-            email: process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || "no-reply@lawoncall.com"
+            email: process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || "no-reply@lawoncall.in"
           },
           to: [
             {
@@ -138,7 +138,7 @@ const sendOTPEmail = async (
             }
           ],
           replyTo: {
-            email: process.env.BREVO_REPLY_TO || "no-reply@lawoncall.com",
+            email: process.env.BREVO_REPLY_TO || "no-reply@lawoncall.in",
             name: "No Reply"
           },
           subject: subject,
@@ -175,7 +175,7 @@ const sendOTPEmail = async (
       await transporter.sendMail({
         from: `"LawOnCall" <${process.env.SMTP_USER}>`,
         to: email,
-        replyTo: `"No Reply" <${process.env.BREVO_REPLY_TO || "no-reply@lawoncall.com"}>`,
+        replyTo: `"No Reply" <${process.env.BREVO_REPLY_TO || "no-reply@lawoncall.in"}>`,
         subject: subject,
         text: `Your verification code is ${otp}. It will expire in 10 minutes.`,
         html: `

@@ -21,8 +21,8 @@ export default defineConfig({
       },
       manifest: {
         id: '/',
-        name: 'Lawoncall.com',
-        short_name: 'Lawoncall.com',
+        name: 'Lawoncall.in',
+        short_name: 'Lawoncall.in',
         description: 'Connect with expert lawyers in minutes for reliable legal advice.',
         theme_color: '#863bff',
         background_color: '#ffffff',
