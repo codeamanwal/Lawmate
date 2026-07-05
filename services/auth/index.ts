@@ -635,6 +635,11 @@ fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => 
       where: { id: decoded.id }
     });
 
+    if (!userRecord) {
+      console.error('Update failed: User does not exist in the database');
+      return reply.status(401).send({ error: 'User session has expired. Please sign in again.' });
+    }
+
     const updateData: any = {
       bio,
       languages,

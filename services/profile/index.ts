@@ -75,6 +75,9 @@ fastify.post('/api/profiles/update', async (request: any, reply: any) => {
     return updatedUser;
   } catch (error: any) {
     fastify.log.error(error);
+    if (error.code === 'P2025') {
+      return reply.status(401).send({ error: 'User does not exist. Please sign in again.' });
+    }
     if (error.code === 'P2002') {
       const target = error.meta?.target || [];
       if (target.includes('phone')) {
