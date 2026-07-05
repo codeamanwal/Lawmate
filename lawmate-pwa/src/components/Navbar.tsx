@@ -45,7 +45,10 @@ const Navbar = () => {
                   onMouseEnter={() => setShowDropdown(true)}
                   onMouseLeave={() => setShowDropdown(false)}
                 >
-                  <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-100/50 transition-all">
+                  <div 
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-100/50 transition-all"
+                  >
                     <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center text-[10px] text-white font-black">
                       {user.name?.[0] || user.fullName?.[0] || 'U'}
                     </div>
@@ -68,7 +71,11 @@ const Navbar = () => {
                         <button
                           onClick={() => {
                             setShowDropdown(false);
-                            navigate(user.role === 'LAWYER' ? "/lawyer/dashboard" : "/edit-profile");
+                            if (user.role === 'LAWYER') {
+                              navigate("/lawyer/dashboard", { state: { tab: 'profile' } });
+                            } else {
+                              navigate("/edit-profile");
+                            }
                           }}
                           className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
                         >
@@ -148,7 +155,17 @@ const Navbar = () => {
                   </Link>
                 )}
                 <div className="h-[1px] bg-gray-100 my-2" />
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm w-fit mx-2">
+                <div 
+                  onClick={() => {
+                    setIsOpen(false);
+                    if (user.role === 'LAWYER') {
+                      navigate("/lawyer/dashboard", { state: { tab: 'profile' } });
+                    } else {
+                      navigate("/edit-profile");
+                    }
+                  }}
+                  className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm w-fit mx-2 cursor-pointer hover:bg-gray-100/50 transition-all"
+                >
                   <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center text-[10px] text-white font-black">
                     {user.name?.[0] || user.fullName?.[0] || 'U'}
                   </div>

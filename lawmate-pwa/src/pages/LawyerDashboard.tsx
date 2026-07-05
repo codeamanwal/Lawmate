@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -23,7 +23,14 @@ import toast from 'react-hot-toast';
 const LawyerDashboard = () => {
   const { user, loading, updateUser, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('calls');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'calls');
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
   const [isAvailable, setIsAvailable] = useState(() => {
     return user?.lawyerProfile?.isAvailable !== false;
   });
