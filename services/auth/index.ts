@@ -419,8 +419,52 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
     });
     
     if (existing) {
-      const reason = existing.email === data.email ? 'Email already registered' : 'Mobile number already registered';
-      return reply.status(409).send({ error: reason });
+      if (existing.role === 'LAWYER' && !existing.password) {
+        // Incomplete registration. Update details and generate a new OTP
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            phone: data.phone?.toString(),
+            name: data.fullName,
+            city: data.city,
+            lawyerProfile: {
+              upsert: {
+                create: {
+                  licenseNumber: data.licenseNumber,
+                  experience: data.experience ? parseInt(data.experience.toString()) : 0,
+                  categories: data.practiceAreas || [],
+                  state: data.state,
+                  address: data.address,
+                  verified: false
+                },
+                update: {
+                  licenseNumber: data.licenseNumber,
+                  experience: data.experience ? parseInt(data.experience.toString()) : 0,
+                  categories: data.practiceAreas || [],
+                  state: data.state,
+                  address: data.address
+                }
+              }
+            }
+          }
+        });
+
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        
+        await prisma.otp.upsert({
+          where: { email: data.email },
+          update: { code: otp, expiresAt },
+          create: { email: data.email, code: otp, expiresAt }
+        });
+
+        await sendOTPEmail(data.email, otp, 'Advocate Registration');
+
+        return { success: true, userId: existing.id };
+      } else {
+        const reason = existing.email === data.email ? 'Email already registered' : 'Mobile number already registered';
+        return reply.status(409).send({ error: reason });
+      }
     }
 
     // Create User and LawyerProfile
