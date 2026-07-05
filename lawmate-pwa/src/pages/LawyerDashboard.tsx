@@ -306,7 +306,7 @@ const LawyerDashboard = () => {
 
         {/* Dashboard Tabs for Desktop */}
         <div className="hidden md:flex items-center gap-8 mb-8 border-b border-gray-200">
-          {['calls', 'cases', 'schedule', 'earnings', 'profile'].map(tab => (
+          {['calls', 'cases', 'schedule', 'earnings'].map(tab => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
@@ -690,7 +690,6 @@ const LawyerDashboard = () => {
         <NavItem id="cases" icon={Briefcase} label="Cases" />
         <NavItem id="schedule" icon={Calendar} label="Schedule" />
         <NavItem id="earnings" icon={DollarSign} label="Earnings" />
-        <NavItem id="profile" icon={User} label="Profile" />
       </div>
 
       {/* Resolution Modal */}
