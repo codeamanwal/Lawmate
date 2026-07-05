@@ -419,7 +419,7 @@ const AuthPage = () => {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="0 0 0 0 0 0"
-              className="w-full p-5 pl-[1em] bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all text-center text-3xl font-black tracking-[1em]"
+              className="w-full p-5 pl-[12px] bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all text-center text-3xl font-black tracking-[12px]"
               autoFocus
               required
             />
@@ -516,7 +516,7 @@ const AuthPage = () => {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="0 0 0 0 0 0"
-              className="w-full p-5 pl-[1em] bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all text-center text-3xl font-black tracking-[1em]"
+              className="w-full p-5 pl-[12px] bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all text-center text-3xl font-black tracking-[12px]"
               autoFocus
               required
             />
