@@ -193,16 +193,7 @@ const AuthPage = () => {
     }
   };
 
-  if ((step === 'complete-profile' && !user) || (step === 'complete-profile' && authLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold text-sm">Synchronizing your session...</p>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-4 sm:p-6">
@@ -623,10 +614,10 @@ const AuthPage = () => {
               </div>
             </div>
             <button
-              disabled={loading}
+              disabled={loading || !user}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Complete Profile'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : !user ? 'Synchronizing...' : 'Complete Profile'}
             </button>
           </form>
         )}
