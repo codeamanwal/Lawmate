@@ -458,7 +458,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
           create: { email: data.email, code: otp, expiresAt }
         });
 
-        await sendOTPEmail(data.email, otp, 'Advocate Registration');
+        await sendOTPEmail(data.email, otp, 'Advocate Registration', 'Lawyer Onboarding');
 
         return { success: true, userId: existing.id };
       } else {
