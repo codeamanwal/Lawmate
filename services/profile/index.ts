@@ -73,8 +73,17 @@ fastify.post('/api/profiles/update', async (request: any, reply: any) => {
     });
 
     return updatedUser;
-  } catch (error) {
+  } catch (error: any) {
     fastify.log.error(error);
+    if (error.code === 'P2002') {
+      const target = error.meta?.target || [];
+      if (target.includes('phone')) {
+        return reply.status(409).send({ error: 'Mobile number is already registered by another account' });
+      }
+      if (target.includes('email')) {
+        return reply.status(409).send({ error: 'Email is already registered by another account' });
+      }
+    }
     return reply.status(500).send({ error: 'Update failed' });
   }
 });
