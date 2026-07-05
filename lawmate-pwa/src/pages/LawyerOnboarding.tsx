@@ -23,7 +23,7 @@ import { useAuth } from '../context/AuthContext';
 const languages = ["English", "Hindi", "Marathi", "Bengali", "Gujarati", "Tamil", "Telugu", "Kannada", "Malayalam", "Punjabi"];
 
 const LawyerOnboarding = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -131,7 +131,13 @@ const LawyerOnboarding = () => {
       }
     } catch (error: any) {
       console.error('Full Error Object:', error.response?.data || error.message);
-      toast.error('Failed to save profile details');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please sign in again.');
+        logout();
+        navigate('/auth');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to save profile details');
+      }
     } finally {
       setLoading(false);
     }
