@@ -323,7 +323,7 @@ const LawyerSignup = () => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="0 0 0 0 0 0"
-                  className="w-full text-center text-3xl font-black tracking-[12px] py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-600 outline-none transition-all"
+                  className="w-full text-center text-3xl font-black tracking-[12px] pl-[12px] py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-600 outline-none transition-all"
                 />
               </div>
 
