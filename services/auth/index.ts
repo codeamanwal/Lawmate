@@ -74,8 +74,12 @@ const adapter = new PrismaPg(pool);
 export const prisma = new PrismaClient({ adapter });
 
 fastify.register(cors);
+const rootUploadsDir = path.resolve(__dirname, '../../uploads');
+if (!fs.existsSync(rootUploadsDir)) {
+  fs.mkdirSync(rootUploadsDir, { recursive: true });
+}
 fastify.register(fastifyStatic, {
-  root: path.resolve(__dirname, '../../uploads'),
+  root: rootUploadsDir,
   prefix: '/uploads/',
 });
 fastify.register(jwt, {
