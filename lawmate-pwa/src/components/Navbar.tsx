@@ -72,7 +72,7 @@ const Navbar = () => {
                           onClick={() => {
                             setShowDropdown(false);
                             if (user.role === 'LAWYER') {
-                              navigate("/lawyer/dashboard", { state: { tab: 'profile' } });
+                              navigate("/lawyer/dashboard?tab=profile");
                             } else {
                               navigate("/edit-profile");
                             }
@@ -159,7 +159,7 @@ const Navbar = () => {
                   onClick={() => {
                     setIsOpen(false);
                     if (user.role === 'LAWYER') {
-                      navigate("/lawyer/dashboard", { state: { tab: 'profile' } });
+                      navigate("/lawyer/dashboard?tab=profile");
                     } else {
                       navigate("/edit-profile");
                     }

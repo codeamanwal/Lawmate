@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -23,14 +23,20 @@ import toast from 'react-hot-toast';
 const LawyerDashboard = () => {
   const { user, loading, updateUser, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.tab || 'calls');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || 'calls');
 
   useEffect(() => {
-    if (location.state?.tab) {
-      setActiveTab(location.state.tab);
+    if (tabParam) {
+      setActiveTab(tabParam);
     }
-  }, [location.state]);
+  }, [tabParam]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
   const [isAvailable, setIsAvailable] = useState(() => {
     return user?.lawyerProfile?.isAvailable !== false;
   });
@@ -160,7 +166,7 @@ const LawyerDashboard = () => {
       toast.success('Call request accepted! Exotel is dialing your number to connect the call.');
       
       // Switch tab to cases so they can resolve the call
-      setActiveTab('cases');
+      handleTabChange('cases');
       
       // Refresh the calls list
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leads/lawyer-calls`, {
@@ -242,7 +248,7 @@ const LawyerDashboard = () => {
 
   const NavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
     <button 
-      onClick={() => setActiveTab(id)}
+      onClick={() => handleTabChange(id)}
       className={`flex flex-col items-center gap-1 flex-1 py-2 transition-all ${activeTab === id ? 'text-indigo-600 scale-110' : 'text-gray-400 hover:text-gray-600'}`}
     >
       <Icon className={`w-6 h-6 ${activeTab === id ? 'fill-indigo-50' : ''}`} />
@@ -303,7 +309,7 @@ const LawyerDashboard = () => {
           {['calls', 'cases', 'schedule', 'earnings', 'profile'].map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
             >
               {tab === 'calls' ? 'requests' : tab}
