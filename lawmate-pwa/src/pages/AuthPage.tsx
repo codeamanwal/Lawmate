@@ -22,7 +22,7 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const { signupWithEmail, loginWithEmail, user, updateUser } = useAuth();
+  const { signupWithEmail, loginWithEmail, user, updateUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -192,6 +192,17 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+  if ((step === 'complete-profile' && !user) || (step === 'complete-profile' && authLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 font-semibold text-sm">Synchronizing your session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-4 sm:p-6">
