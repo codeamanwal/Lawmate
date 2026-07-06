@@ -53,6 +53,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd /app/lawmate
+          git remote set-url origin https://github.com/Shugendo-Labs/Lawmate.git
           git fetch origin
           git reset --hard origin/main
           chmod +x deploy.sh
