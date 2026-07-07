@@ -4,6 +4,7 @@ import {
   Clock, 
   Calendar, 
   DollarSign, 
+  User, 
   Settings, 
   TrendingUp,
   Power,
