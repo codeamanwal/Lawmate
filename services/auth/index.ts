@@ -761,7 +761,7 @@ fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: an
           });
 
           for (const lead of activeLeads) {
-            const remainingNotified = lead.notifiedLawyerIds.filter(id => id !== profileId);
+            const remainingNotified = lead.notifiedLawyerIds.filter((id: string) => id !== profileId);
             const updatedDeclined = Array.from(new Set([...lead.declinedLawyerIds, profileId]));
 
             await prisma.lead.update({
@@ -897,8 +897,8 @@ fastify.post('/api/profiles/delete', async (request: any, reply: any) => {
       const bookings = await prisma.booking.findMany({
         where: { lawyerId }
       });
-      const bookingIds = bookings.map(b => b.id);
-      const paymentIds = bookings.map(b => b.paymentId).filter(Boolean) as string[];
+      const bookingIds = bookings.map((b: any) => b.id);
+      const paymentIds = bookings.map((b: any) => b.paymentId).filter(Boolean) as string[];
 
       if (bookingIds.length > 0) {
         await prisma.booking.deleteMany({ where: { id: { in: bookingIds } } });
@@ -929,8 +929,8 @@ fastify.post('/api/profiles/delete', async (request: any, reply: any) => {
       });
 
       for (const lead of allActiveLeads) {
-        const remainingNotified = lead.notifiedLawyerIds.filter(id => id !== lawyerId);
-        const remainingDeclined = lead.declinedLawyerIds.filter(id => id !== lawyerId);
+        const remainingNotified = lead.notifiedLawyerIds.filter((id: string) => id !== lawyerId);
+        const remainingDeclined = lead.declinedLawyerIds.filter((id: string) => id !== lawyerId);
         await prisma.lead.update({
           where: { id: lead.id },
           data: {
@@ -950,8 +950,8 @@ fastify.post('/api/profiles/delete', async (request: any, reply: any) => {
       const bookings = await prisma.booking.findMany({
         where: { clientId: userId }
       });
-      const bookingIds = bookings.map(b => b.id);
-      const paymentIds = bookings.map(b => b.paymentId).filter(Boolean) as string[];
+      const bookingIds = bookings.map((b: any) => b.id);
+      const paymentIds = bookings.map((b: any) => b.paymentId).filter(Boolean) as string[];
 
       if (bookingIds.length > 0) {
         await prisma.booking.deleteMany({ where: { id: { in: bookingIds } } });
