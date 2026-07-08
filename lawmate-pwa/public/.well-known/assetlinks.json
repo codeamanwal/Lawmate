@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.lawoncall.app",
+      "package_name": "in.lawoncall.twa",
       "sha256_cert_fingerprints": [
-        "4D:AF:31:50:5B:FD:95:B9:69:C8:AB:60:EB:EA:C3:FD:16:D1:D6:7E:75:F3:5D:D0:EF:8B:B5:7F:01:1B:E1:81"
+        "E6:AF:46:03:91:E4:E7:87:B1:6E:78:46:AC:17:F4:52:4B:AD:7F:48:3C:13:78:EC:59:53:0A:7E:A1:50:29:C2"
       ]
     }
   }
