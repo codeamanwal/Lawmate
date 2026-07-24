@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { ChevronRight, Loader2, AlertCircle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { PRIVACY_POLICY_DATA, TERMS_AND_CONDITIONS_DATA } from '../constants/legalTexts';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -250,21 +251,19 @@ const IntakeForm = () => {
 
             {/* Content */}
             <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
-              <h3 className="text-lg font-bold text-gray-900">1. Services</h3>
-              <p>LawOnCall provides a platform to connect clients with legal professionals. We do not provide legal advice ourselves.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">2. Payments</h3>
-              <p>Payments are handled via Razorpay. Fees are non-refundable once the consultation has started.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">3. User Conduct</h3>
-              <p>Users must provide accurate information when filling out the intake form.</p>
+              {TERMS_AND_CONDITIONS_DATA.map((item, index) => {
+                if (item.type === 'title') return <h3 key={index} className="text-xl font-extrabold text-gray-900 mb-4">{item.text}</h3>;
+                if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
+                if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                return <p key={index} className="text-gray-600 mb-2">{item.text}</p>;
+              })}
             </div>
 
             {/* Action Button */}
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowTermsModal(false)}
-                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
+                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md"
               >
                 Close
               </button>
@@ -294,23 +293,19 @@ const IntakeForm = () => {
 
             {/* Content */}
             <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
-              <p>This Privacy Policy describes how LawOnCall collects, uses, and shares your personal information.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">1. Data Collection</h3>
-              <p>We collect your mobile number, name, and details about your legal issues to facilitate matching with lawyers.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">2. DPDP Compliance</h3>
-              <p>We comply with India's Digital Personal Data Protection Act. Your data is stored securely and used only for the purposes stated.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">3. Data Retention</h3>
-              <p>We retain your data as long as necessary to provide our services or as required by law.</p>
+              {PRIVACY_POLICY_DATA.map((item, index) => {
+                if (item.type === 'title') return <h3 key={index} className="text-xl font-extrabold text-gray-900 mb-4">{item.text}</h3>;
+                if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
+                if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                return <p key={index} className="text-gray-600 mb-2">{item.text}</p>;
+              })}
             </div>
 
             {/* Action Button */}
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowPrivacyModal(false)}
-                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
+                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md"
               >
                 Close
               </button>
