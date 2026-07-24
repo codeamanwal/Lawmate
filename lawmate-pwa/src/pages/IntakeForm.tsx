@@ -252,9 +252,37 @@ const IntakeForm = () => {
             {/* Content */}
             <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
               {TERMS_AND_CONDITIONS_DATA.map((item, index) => {
-                if (item.type === 'title') return <h3 key={index} className="text-xl font-extrabold text-gray-900 mb-4">{item.text}</h3>;
+                if (item.type === 'title') return <h3 key={index} className="text-lg font-extrabold text-gray-900 mb-4">{item.text}</h3>;
                 if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
                 if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                if (item.type === 'table') {
+                  return (
+                    <div key={index} className="overflow-x-auto my-4 border border-gray-200 rounded-xl">
+                      <table className="min-w-full divide-y divide-gray-200 text-xs">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {item.tableData[0].map((cell, cIdx) => (
+                              <th key={cIdx} className="px-3 py-2 text-left font-bold text-gray-900 border-b border-gray-200">
+                                {cell}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-150">
+                          {item.tableData.slice(1).map((row, rIdx) => (
+                            <tr key={rIdx} className="hover:bg-gray-50">
+                              {row.map((cell, cIdx) => (
+                                <td key={cIdx} className="px-3 py-2 text-gray-600 border-b border-gray-200">
+                                  {cell}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }
                 return <p key={index} className="text-gray-600 mb-2">{item.text}</p>;
               })}
             </div>
@@ -294,9 +322,37 @@ const IntakeForm = () => {
             {/* Content */}
             <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
               {PRIVACY_POLICY_DATA.map((item, index) => {
-                if (item.type === 'title') return <h3 key={index} className="text-xl font-extrabold text-gray-900 mb-4">{item.text}</h3>;
+                if (item.type === 'title') return <h3 key={index} className="text-lg font-extrabold text-gray-900 mb-4">{item.text}</h3>;
                 if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
                 if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                if (item.type === 'table') {
+                  return (
+                    <div key={index} className="overflow-x-auto my-4 border border-gray-200 rounded-xl">
+                      <table className="min-w-full divide-y divide-gray-200 text-xs">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {item.tableData[0].map((cell, cIdx) => (
+                              <th key={cIdx} className="px-3 py-2 text-left font-bold text-gray-900 border-b border-gray-200">
+                                {cell}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-150">
+                          {item.tableData.slice(1).map((row, rIdx) => (
+                            <tr key={rIdx} className="hover:bg-gray-50">
+                              {row.map((cell, cIdx) => (
+                                <td key={cIdx} className="px-3 py-2 text-gray-600 border-b border-gray-200">
+                                  {cell}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }
                 return <p key={index} className="text-gray-600 mb-2">{item.text}</p>;
               })}
             </div>
