@@ -36,6 +36,13 @@ const PrivacyPolicy = () => {
               </h2>
             );
           }
+          if (item.type === 'subheading') {
+            return (
+              <h3 key={index} className="text-base font-semibold text-gray-800 mt-6 mb-2 bg-gray-50/75 py-1 px-3 rounded-lg border-l-2 border-indigo-500 inline-block">
+                {item.text}
+              </h3>
+            );
+          }
           if (item.type === 'table') {
             return (
               <div key={index} className="overflow-x-auto my-6 border border-gray-200 rounded-2xl shadow-sm">

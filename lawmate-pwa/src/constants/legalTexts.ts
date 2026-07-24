@@ -178,7 +178,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We may collect the following categories of Personal Data depending on how you use the Platform."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.1 Information Provided by Users"
   },
   {
@@ -242,7 +242,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Communication preferences."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.2 Advocate and Legal Professional Information"
   },
   {
@@ -318,7 +318,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Any other information required for verification, onboarding, compliance, or payment."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.3 Payment and Transaction Information"
   },
   {
@@ -362,7 +362,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We do not store your complete card number, CVV, UPI PIN, banking password, or other sensitive payment authentication credentials. Payments are processed through authorised third-party payment partners."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.4 Automatically Collected Technical Information"
   },
   {
@@ -434,7 +434,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Network and connectivity information."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.5 Communication, Call, and Chat Data"
   },
   {
@@ -486,7 +486,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Where calls or chats are recorded, we will use them only for lawful and disclosed purposes such as quality assurance, fraud prevention, dispute resolution, compliance, service improvement, safety, and internal training."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.6 Cookies and Tracking Technologies"
   },
   {
@@ -530,7 +530,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Please see Section 13 for our Cookie Policy."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "6.7 Information from Third Parties"
   },
   {
@@ -702,7 +702,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We process Personal Data only where permitted under Applicable Law. Depending on the context, our processing may be based on one or more of the following:"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.1 Consent"
   },
   {
@@ -710,7 +710,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We process Personal Data based on your Consent where you provide clear affirmative agreement for a specified purpose, such as creating an account, booking a consultation, receiving promotional communications, or enabling certain optional features."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.2 Processing for Specified Lawful Purposes"
   },
   {
@@ -718,7 +718,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We process Personal Data for lawful purposes connected with providing the Platform and services requested by you, including consultation booking, communication facilitation, payments, support, and account management."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.3 Legitimate Uses Recognised under Law"
   },
   {
@@ -726,7 +726,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We may process Personal Data for certain legitimate uses permitted under Applicable Law, including fraud prevention, network and information security, compliance with legal obligations, responding to emergencies, enforcing legal claims, mergers or corporate restructuring, or other legally recognised purposes."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.4 Legal Compliance"
   },
   {
@@ -866,7 +866,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We may share Personal Data in the following circumstances."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.1 With Assigned Advocates"
   },
   {
@@ -902,7 +902,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Where possible, contact between users and advocates is facilitated through masked calling or Platform-controlled communication tools. However, where you voluntarily disclose contact details or other information to an advocate, LawOnCall may not be able to control the advocate\u2019s subsequent use of that information."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.2 With Users"
   },
   {
@@ -910,7 +910,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Where you are an advocate, we may display or share parts of your professional profile with users, including your name, practice areas, experience, availability, language preference, consultation fees, ratings, and other professional information relevant to consultation selection."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.3 With Service Providers"
   },
   {
@@ -978,7 +978,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Such Service Providers are required to process Personal Data only for authorised purposes and to implement appropriate confidentiality and security measures."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.4 With Payment Partners"
   },
   {
@@ -986,7 +986,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Payment-related information may be shared with payment gateways, banks, UPI service providers, card networks, payment aggregators, and financial institutions for payment processing, refunds, reconciliation, fraud prevention, and compliance."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.5 With Affiliates and Group Companies"
   },
   {
@@ -998,7 +998,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Promotional use by affiliates will be subject to applicable consent or opt-out requirements."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.6 With Government, Courts, and Regulators"
   },
   {
@@ -1038,7 +1038,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Legal claim or defence."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.7 In Business Transfers"
   },
   {
@@ -1046,7 +1046,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "If LawOnCall undergoes a merger, acquisition, restructuring, investment, financing, insolvency process, sale of assets, transfer of business, or similar transaction, Personal Data may be transferred to relevant parties, advisors, investors, purchasers, or successor entities, subject to appropriate confidentiality and data protection safeguards."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "12.8 To Protect Rights and Safety"
   },
   {
@@ -1062,7 +1062,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "We use cookies and similar technologies to operate, secure, analyse, and improve the Platform."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "13.1 Types of Cookies We Use"
   },
   {
@@ -1086,7 +1086,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Security Cookies: Used to detect fraud, unauthorised access, bot activity, and misuse."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "13.2 Managing Cookies"
   },
   {
@@ -1347,7 +1347,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "Subject to Applicable Law, you may have the following rights in relation to your Personal Data:"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.1 Right to Access Information"
   },
   {
@@ -1355,7 +1355,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "You may request information about the Personal Data we process about you, including a summary of such Personal Data and the identities of Data Fiduciaries with whom such data has been shared, where required by law."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.2 Right to Correction and Updating"
   },
   {
@@ -1363,7 +1363,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "You may request correction, completion, or updating of inaccurate, incomplete, or outdated Personal Data."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.3 Right to Erasure"
   },
   {
@@ -1371,7 +1371,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "You may request deletion of Personal Data where it is no longer necessary for the purpose for which it was processed, subject to legal retention obligations, dispute resolution, fraud prevention, compliance, or legitimate requirements under Applicable Law."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.4 Right to Withdraw Consent"
   },
   {
@@ -1383,7 +1383,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "If withdrawal prevents us from providing a requested service, we may stop providing that service."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.5 Right to Grievance Redressal"
   },
   {
@@ -1391,7 +1391,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "You have the right to raise grievances regarding the processing of your Personal Data. We will respond within the timelines prescribed by Applicable Law or, where no timeline is prescribed, within a reasonable period."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.6 Right to Nominate"
   },
   {
@@ -1399,7 +1399,7 @@ export const PRIVACY_POLICY_DATA = [
     "text": "You may nominate another individual to exercise your rights in the event of your death or incapacity, in accordance with Applicable Law and procedures prescribed by us."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "20.7 How to Exercise Your Rights"
   },
   {
@@ -1698,7 +1698,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "4. Nature of the Platform and Legal-Service Disclaimers"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.1 Technology and facilitation platform"
   },
   {
@@ -1706,7 +1706,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "LawOnCall is a technology-enabled platform operated by Shugendo Labs Pvt. Ltd.; Shugendo Labs is not a law firm, does not practise law, does not appear for Users before courts or tribunals, and does not itself provide legal advice or legal representation. The Company provides technology and administrative support that may help Users identify, communicate with, and pay independent Advocates."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.2 Independent Advocates"
   },
   {
@@ -1714,7 +1714,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Advocates are independent professionals and are not employees, partners, agents, or representatives of Shugendo Labs merely because they are accessible through the Platform. Advocates exercise independent professional judgment and are responsible for their own advice, conduct, licensing, conflicts checks, professional duties, and compliance with applicable Bar Council requirements."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.3 Verification is limited"
   },
   {
@@ -1722,7 +1722,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "We may request and review basic professional or registration information supplied by Advocates. Any verification badge or profile information indicates only that specified information was reviewed at a particular time; it is not a guarantee of continuing enrolment status, competence, specialisation, availability, professional conduct, or the outcome of any matter. Users should independently evaluate whether an Advocate is suitable for their needs."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.4 When an advocate-client relationship begins"
   },
   {
@@ -1730,7 +1730,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Using the Platform, viewing an Advocate profile, submitting an enquiry, or making payment to the Platform does not by itself create an advocate-client relationship with Shugendo Labs. Any advocate-client relationship is solely between you and the Advocate and begins only when the Advocate accepts the engagement, completes any required conflict check, and agrees to advise or act for you. An Advocate may decline or discontinue an engagement where permitted or required by professional rules or law."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.5 No guarantee and no substitute for urgent action"
   },
   {
@@ -1742,7 +1742,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "The Platform is not an emergency service. Do not rely on a pending booking or unanswered request to protect a limitation period, filing deadline, hearing date, arrest-related right, or other urgent legal interest. Seek immediate local legal assistance or contact the appropriate authority when a matter is urgent."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "4.6 Bar Council compliance"
   },
   {
@@ -1826,7 +1826,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "7. Consultations and Service Scope"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "7.1 Booking and availability"
   },
   {
@@ -1842,7 +1842,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "A booking is confirmed only after successful payment and confirmation through the Platform, and remains subject to Advocate acceptance, availability, conflict checks, technical connectivity, and applicable professional obligations."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "7.2 Masked communications"
   },
   {
@@ -1850,7 +1850,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "We may use third-party telephony or communication providers to mask personal contact details. Masking reduces direct disclosure but does not guarantee complete anonymity or uninterrupted service. Calls and messages may generate technical metadata and service logs as described in the Privacy Policy."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "7.3 Duration and scope"
   },
   {
@@ -1858,7 +1858,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Each Consultation or fixed-price service is limited to the duration, deliverables, assumptions, exclusions, and jurisdiction shown at checkout or otherwise confirmed by the Advocate. Additional work, revisions, appearances, filings, disbursements, government fees, stamp duty, notarisation, translations, courier charges, or third-party costs are not included unless expressly stated."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "7.4 Conflicts and incomplete information"
   },
   {
@@ -1866,7 +1866,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "An Advocate may need additional information to conduct a conflict check or provide meaningful advice. You are responsible for providing complete and timely instructions. The Advocate may pause, limit, or decline the engagement where information is insufficient, a conflict exists, the matter falls outside the agreed scope, or professional rules require it."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "7.5 Document and filing services"
   },
   {
@@ -1878,7 +1878,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "8. Fees, Taxes, and Payments"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "8.1 Prices"
   },
   {
@@ -1886,7 +1886,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Prices, service descriptions, included quantities, validity periods, and applicable taxes will be displayed before purchase. Prices may differ by service, Advocate, duration, urgency, jurisdiction, or complexity. We may change future prices at any time, but a change will not affect an already confirmed purchase unless you agree to an expanded scope."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "8.2 Payment processing"
   },
   {
@@ -1894,7 +1894,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Payments may be processed by third-party payment providers. You authorise the Company and its payment providers to process the transaction information required to complete your purchase, detect fraud, issue refunds, and maintain financial records. You must use a payment method that you are authorized to use."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "8.3 Advocate and platform components"
   },
   {
@@ -1902,7 +1902,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "The amount paid may include amounts attributable to the Advocate's professional time and amounts attributable to Platform technology, administration, payment processing, communication infrastructure, and support. The Company may collect payment as a disclosed collection and settlement facilitator, subject to applicable professional, tax, and payment laws. Nothing in these Terms is intended to permit prohibited fee-sharing or compromise an Advocate's professional independence."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "8.4 No unauthorized off-platform payments"
   },
   {
@@ -1914,7 +1914,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "9. Cancellations, Rescheduling, and Refunds"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.1 Displayed policy controls"
   },
   {
@@ -1922,7 +1922,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "The cancellation and refund terms displayed at checkout for a particular service form part of these Terms. Where no service-specific rule is displayed, the following default rules apply."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.2 User cancellation"
   },
   {
@@ -1938,7 +1938,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Late cancellation or no-show: where an Advocate reserved the slot and was available, the fee may be non-refundable, except where required by law or where the Platform states otherwise."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.3 Advocate unavailability or verified technical failure"
   },
   {
@@ -1946,7 +1946,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "If a paid Consultation cannot take place because the assigned Advocate is unavailable, declines the engagement, identifies a conflict before substantive work begins, or a verified Platform failure prevents delivery, you may choose a reasonable reschedule, replacement Advocate where appropriate, or refund of the affected amount."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.4 Completed or substantially performed services"
   },
   {
@@ -1954,7 +1954,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "A completed Consultation or substantially performed fixed-price service is generally non-refundable merely because you disagree with the advice or do not obtain the desired outcome. This does not limit any mandatory consumer right or remedy for deficiency in service, misrepresentation, fraud, or other liability that cannot lawfully be excluded."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.5 Refund requests and timing"
   },
   {
@@ -1962,7 +1962,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Send eligible refund requests to admin@shugendolabs.com with your registered contact details, order number, transaction reference, and a brief explanation. Approved refunds will be initiated to the original payment method. Bank or payment-provider settlement time is outside our control and may vary; the Platform will communicate the expected processing period applicable to the transaction."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "9.6 Duplicate or incorrect charges"
   },
   {
@@ -1974,7 +1974,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "10. User Content, Confidentiality, and Privacy"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "10.1 Your responsibility"
   },
   {
@@ -1982,7 +1982,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "You retain ownership of your User Content. You are responsible for its accuracy, legality, relevance, and for keeping your own copies. Do not upload original documents where a legible copy is sufficient, and do not disclose third-party personal or confidential information unless you are authorised to do so and the disclosure is reasonably necessary."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "10.2 Limited licence"
   },
   {
@@ -1990,7 +1990,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "You grant the Company a limited, non-exclusive, worldwide, royalty-free licence to host, store, reproduce, format, transmit, and otherwise process User Content only as reasonably necessary to operate, secure, support, and improve the Services, facilitate the requested engagement, comply with law, and enforce these Terms. This licence ends when the purpose ends, subject to legal retention, backups, dispute records, and the Privacy Policy."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "10.3 Confidentiality and privilege"
   },
   {
@@ -1998,7 +1998,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "We apply reasonable safeguards to protect User Content in accordance with our Privacy Policy. Advocate-client confidentiality and legal professional privilege, where applicable, arise from the relationship between you and the Advocate and are governed by law. Because the Company provides communication, storage, billing, and support infrastructure, authorised Company personnel and service providers may process limited information necessary to deliver and secure the Platform. Do not assume that every communication with the Company itself is legally privileged."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "10.4 Privacy Policy"
   },
   {
@@ -2106,7 +2106,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "19. Governing Law and Dispute Resolution"
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "19.1 Good-faith resolution"
   },
   {
@@ -2114,7 +2114,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Before commencing formal proceedings, the parties should attempt in good faith to resolve the dispute by written notice and discussion for at least 30 days, unless urgent interim relief is required or a mandatory statutory process applies."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "19.2 Arbitration"
   },
   {
@@ -2122,7 +2122,7 @@ export const TERMS_AND_CONDITIONS_DATA = [
     "text": "Subject to mandatory consumer and other non-waivable rights, a dispute arising out of or relating to these Terms or the Platform that is not resolved amicably may be referred to arbitration under the Arbitration and Conciliation Act, 1996. The tribunal will consist of a sole arbitrator appointed by mutual agreement. If the parties do not agree, appointment will be made in accordance with the Act. The seat and venue of arbitration will be Noida, Gautam Buddha Nagar, India, the language will be English, and remote hearings may be used where appropriate."
   },
   {
-    "type": "p",
+    "type": "subheading",
     "text": "19.3 Courts and interim relief"
   },
   {

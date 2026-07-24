@@ -255,6 +255,7 @@ const IntakeForm = () => {
                 if (item.type === 'title') return <h3 key={index} className="text-lg font-extrabold text-gray-900 mb-4">{item.text}</h3>;
                 if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
                 if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                if (item.type === 'subheading') return <h5 key={index} className="text-sm font-semibold text-gray-800 mt-4 mb-2 bg-gray-50/75 py-0.5 px-2 rounded border-l-2 border-indigo-500 inline-block">{item.text}</h5>;
                 if (item.type === 'table') {
                   return (
                     <div key={index} className="overflow-x-auto my-4 border border-gray-200 rounded-xl">
@@ -325,6 +326,7 @@ const IntakeForm = () => {
                 if (item.type === 'title') return <h3 key={index} className="text-lg font-extrabold text-gray-900 mb-4">{item.text}</h3>;
                 if (item.type === 'meta') return <p key={index} className="text-xs text-gray-400 italic mb-4">{item.text}</p>;
                 if (item.type === 'heading') return <h4 key={index} className="text-base font-bold text-gray-900 mt-6 mb-2">{item.text}</h4>;
+                if (item.type === 'subheading') return <h5 key={index} className="text-sm font-semibold text-gray-800 mt-4 mb-2 bg-gray-50/75 py-0.5 px-2 rounded border-l-2 border-indigo-500 inline-block">{item.text}</h5>;
                 if (item.type === 'table') {
                   return (
                     <div key={index} className="overflow-x-auto my-4 border border-gray-200 rounded-xl">
