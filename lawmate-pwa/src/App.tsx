@@ -11,6 +11,7 @@ import EditProfile from './pages/EditProfile';
 import AuthPage from './pages/AuthPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import RefundPolicy from './pages/RefundPolicy';
 import HowItWorks from './pages/HowItWorks';
 import BookingPage from './pages/BookingPage';
 import MyBookings from './pages/MyBookings';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/refunds" element={<RefundPolicy />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/booking" element={<BookingPage />} />
               <Route path="/my-bookings" element={<MyBookings />} />
