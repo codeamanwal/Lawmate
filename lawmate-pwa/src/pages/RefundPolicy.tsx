@@ -7,12 +7,12 @@ const RefundPolicy = () => {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <button 
         onClick={() => navigate(-1)} 
-        className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold mb-8 transition-colors"
+        className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold mb-8 cursor-pointer transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
       
-      <div className="prose prose-indigo max-w-none text-gray-600 space-y-5 text-left">
+      <div className="prose prose-indigo max-w-none text-gray-600 space-y-5 text-left mb-12">
         <h1 className="text-3xl sm:text-4xl font-extrabold mb-4 text-gray-900 leading-tight">
           Refund and Cancellations Policy
         </h1>
@@ -86,6 +86,15 @@ const RefundPolicy = () => {
           <p>Phone: +91-7292002026</p>
           <p className="text-gray-400 mt-2">LawOnCall is operated by Shugendo Labs Private Limited.</p>
         </div>
+      </div>
+
+      <div className="pt-6 border-t border-gray-100 flex justify-start">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
       </div>
     </div>
   );
