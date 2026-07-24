@@ -17,13 +17,6 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const verifyPayment = async () => {
-      const urlStatus = searchParams.get('status');
-      if (urlStatus && urlStatus !== 'success') {
-        setStatus('FAILED');
-        setVerifying(false);
-        return;
-      }
-
       if (!leadId) {
         setVerifying(false);
         return;

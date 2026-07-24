@@ -269,6 +269,7 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
 
 // PayU Redirect Callback POST Handler
 fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => {
+  fastify.log.info({ body: request.body, headers: request.headers }, 'PayU Callback Payload received');
   const {
     key,
     txnid,
@@ -437,26 +438,114 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
       };
     }
 
-    // Automatically capture payment and confirm booking in local dev sandbox to enable instant checkout
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: 'captured' }
-    });
+    // Query PayU's verify_payment web service API if it is still in created state
+    if (payment.status === 'created') {
+      const txnid = payment.phonePeMerchantTransactionId;
+      const command = 'verify_payment';
+      const hashStr = `${PAYU_KEY}|${command}|${txnid}|${PAYU_SALT}`;
+      const hash = crypto.createHash('sha512').update(hashStr).digest('hex');
+      const payuApiUrl = PAYU_ENV === 'PRODUCTION'
+        ? 'https://info.payu.in/merchant/postservice?form=2'
+        : 'https://test.payu.in/merchant/postservice?form=2';
 
-    if (bookingRecord) {
-      await prisma.booking.update({
-        where: { id: bookingRecord.id },
-        data: { status: 'CONFIRMED' }
-      });
-      
-      // Trigger SLA matching in Lead Service
-      fetch(`http://127.0.0.1:3002/api/leads/${leadId}/match`, { method: 'POST' })
-        .catch(err => console.error('Failed to trigger matching:', err));
+      try {
+        const payuResponse = await fetch(payuApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            key: PAYU_KEY,
+            command,
+            var1: txnid!,
+            hash
+          })
+        });
+
+        const data: any = await payuResponse.json();
+        fastify.log.info({ payuVerifyResponse: data }, 'PayU API verification response');
+
+        if (data && data.transaction_details) {
+          const details = data.transaction_details[txnid!];
+          if (details) {
+            const payuStatus = details.status.toLowerCase();
+            if (payuStatus === 'success') {
+              payment = await prisma.payment.update({
+                where: { id: payment.id },
+                data: { 
+                  status: 'captured',
+                  phonePeTransactionId: details.mihpayid
+                }
+              });
+              if (bookingRecord) {
+                await prisma.booking.update({
+                  where: { id: bookingRecord.id },
+                  data: { status: 'CONFIRMED' }
+                });
+                // Trigger SLA matching in Lead Service
+                fetch(`http://127.0.0.1:3002/api/leads/${leadId}/match`, { method: 'POST' })
+                  .catch(err => console.error('Failed to trigger matching in verify API:', err));
+              }
+              
+              let flow = 'Flow 3';
+              const lead = bookingRecord?.lead;
+              if (lead) {
+                const time = lead.preferredTime.toLowerCase();
+                if (time.includes('callback')) {
+                  flow = 'Flow 1';
+                } else if (time.includes('emergency')) {
+                  flow = 'Flow 4';
+                } else if (time.includes('asap')) {
+                  flow = 'Flow 2';
+                }
+              }
+
+              return {
+                status: 'SUCCESS',
+                message: 'Payment verified successfully via PayU API',
+                preferredTime: bookingRecord?.lead?.preferredTime,
+                flow,
+                token,
+                user: userResponse
+              };
+            } else if (payuStatus === 'failed' || payuStatus === 'failure') {
+              payment = await prisma.payment.update({
+                where: { id: payment.id },
+                data: { status: 'failed' }
+              });
+              
+              let flow = 'Flow 3';
+              const lead = bookingRecord?.lead;
+              if (lead) {
+                const time = lead.preferredTime.toLowerCase();
+                if (time.includes('callback')) {
+                  flow = 'Flow 1';
+                } else if (time.includes('emergency')) {
+                  flow = 'Flow 4';
+                } else if (time.includes('asap')) {
+                  flow = 'Flow 2';
+                }
+              }
+
+              return {
+                status: 'FAILED',
+                message: 'Payment transaction failed via PayU API',
+                preferredTime: bookingRecord?.lead?.preferredTime,
+                flow,
+                token,
+                user: userResponse
+              };
+            }
+          }
+        }
+      } catch (err: any) {
+        fastify.log.error('Failed to query PayU verify API:', err.message);
+      }
     }
 
-    const lead = bookingRecord?.lead || await prisma.lead.findUnique({ where: { id: leadId } });
-
+    // Default response if transaction is still pending/created
     let flow = 'Flow 3';
+    const lead = bookingRecord?.lead || await prisma.lead.findUnique({ where: { id: leadId } });
     if (lead) {
       const time = lead.preferredTime.toLowerCase();
       if (time.includes('callback')) {
@@ -469,8 +558,8 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     }
 
     return { 
-      status: 'SUCCESS', 
-      message: 'Payment verified successfully', 
+      status: 'PENDING', 
+      message: 'Payment verification pending', 
       preferredTime: lead?.preferredTime,
       flow,
       token,
