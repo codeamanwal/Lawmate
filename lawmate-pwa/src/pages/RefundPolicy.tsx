@@ -82,7 +82,7 @@ const RefundPolicy = () => {
         <div className="mt-12 pt-6 border-t border-gray-200 text-sm text-gray-500 space-y-1">
           <p><strong>Contact details:</strong></p>
           <p>Website: <a href="https://www.lawoncall.in" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">www.lawoncall.in</a></p>
-          <p>Email: <a href="mailto:support@lawoncall.in" className="text-indigo-600 hover:underline">support@lawoncall.in</a> / <a href="mailto:admin@shugendolabs.com" className="text-indigo-600 hover:underline">admin@shugendolabs.com</a></p>
+          <p>Email: <a href="mailto:admin@shugendolabs.com" className="text-indigo-600 hover:underline">admin@shugendolabs.com</a></p>
           <p>Phone: +91-7292002026</p>
           <p className="text-gray-400 mt-2">LawOnCall is operated by Shugendo Labs Private Limited.</p>
         </div>
