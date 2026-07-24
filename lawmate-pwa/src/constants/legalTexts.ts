@@ -1612,7 +1612,7 @@ export const PRIVACY_POLICY_DATA = [
   },
   {
     "type": "p",
-    "text": "Company: Shugendo Labs Private LimitedBrand: LawOnCallEmail: support@lawoncall.inRegistered Address: 156D EXPRESS VIEW, APARTMENT SECTOR 93, Maharishi Nagar, Noida, Gautam Buddha Nagar- 201304, Uttar Pradesh"
+    "text": "Company: Shugendo Labs Private LimitedBrand: LawOnCallEmail: admin@shugendolabs.comRegistered Address: 156D EXPRESS VIEW, APARTMENT SECTOR 93, Maharishi Nagar, Noida, Gautam Buddha Nagar- 201304, Uttar Pradesh"
   },
   {
     "type": "p",
