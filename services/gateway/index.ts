@@ -99,8 +99,16 @@ fastify.post('/api/leads/:id/complete', async (request, reply) => {
   return reply.from(`${LEAD_SERVICE}${request.url}`, proxyOptions(request, userHeaders));
 });
 
-// Public Payment Webhook & Verification (PhonePe)
+// Public Payment Webhook & Verification (PhonePe & PayU)
 fastify.post('/api/payments/webhook', (request, reply) => {
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
+});
+
+fastify.post('/api/payments/payu-callback', (request, reply) => {
+  return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
+});
+
+fastify.get('/api/payments/payu-submit', (request, reply) => {
   return reply.from(`${PAYMENT_SERVICE}${request.url}`, proxyOptions(request));
 });
 

@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
-  const leadId = searchParams.get('leadId');
+  const leadId = searchParams.get('leadId') || localStorage.getItem('pendingLeadId');
   const [verifying, setVerifying] = useState(true);
   const [status, setStatus] = useState<'SUCCESS' | 'PENDING' | 'FAILED'>('PENDING');
   const [preferredTime, setPreferredTime] = useState<string | null>(null);
@@ -17,6 +17,13 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const verifyPayment = async () => {
+      const urlStatus = searchParams.get('status');
+      if (urlStatus && urlStatus !== 'success') {
+        setStatus('FAILED');
+        setVerifying(false);
+        return;
+      }
+
       if (!leadId) {
         setVerifying(false);
         return;
@@ -109,12 +116,12 @@ const PaymentSuccess = () => {
         </h1>
         <p className="text-gray-500 font-medium mb-8">
           {verifying 
-            ? 'Please wait while we confirm your transaction with PhonePe.' 
+            ? 'Please wait while we confirm your transaction with PayU.' 
             : status === 'SUCCESS' 
               ? (preferredTime === 'LATER' 
                   ? 'Your consultation has been confirmed. A verified legal expert will connect with you within 24 hours.'
                   : 'Your consultation has been confirmed. A verified legal expert will connect with you within 60 minutes.')
-              : 'We are waiting for PhonePe to confirm your payment. You can check your booking status in a few minutes.'}
+              : 'We are waiting for PayU to confirm your payment. You can check your booking status in a few minutes.'}
         </p>
 
         <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-4">

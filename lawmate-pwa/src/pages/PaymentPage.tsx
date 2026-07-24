@@ -28,7 +28,7 @@ const PaymentPage = () => {
     setLoading(false);
   }, [leadId, navigate, user, authLoading]);
 
-  const handlePhonePePayment = async () => {
+  const handlePayUPayment = async () => {
     setLoading(true);
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, 
@@ -42,13 +42,13 @@ const PaymentPage = () => {
       );
       
       if (response.data.redirect_url) {
-        // Redirect to PhonePe Standard Checkout page
+        // Redirect to PayU checkout page
         window.location.href = response.data.redirect_url;
       } else {
         throw new Error('Failed to get redirect URL');
       }
     } catch (err) {
-      console.error('Failed to initiate PhonePe payment', err);
+      console.error('Failed to initiate PayU payment', err);
       toast.error('Failed to initiate payment. Please try again.');
       setLoading(false);
     }
@@ -76,9 +76,9 @@ const PaymentPage = () => {
         </div>
  
         <button 
-          onClick={handlePhonePePayment}
+          onClick={handlePayUPayment}
           disabled={loading && !authLoading}
-          className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
+          className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50 cursor-pointer"
         >
           {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Confirm & Pay ₹999'}
         </button>

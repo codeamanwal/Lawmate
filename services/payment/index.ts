@@ -6,13 +6,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import path from 'path';
-import { 
-  StandardCheckoutClient, 
-  Env, 
-  MetaInfo, 
-  StandardCheckoutPayRequest, 
-  PrefillUserLoginDetails 
-} from '@phonepe-pg/pg-sdk-node';
 
 dotenv.config({ path: path.resolve(__dirname, '../../lawmate-pwa/.env') });
 
@@ -23,20 +16,29 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// PhonePe Client Initialization
-const clientId = process.env.PHONEPE_CLIENT_ID || 'SANDBOX_CLIENT_ID';
-const clientSecret = process.env.PHONEPE_CLIENT_SECRET || 'SANDBOX_CLIENT_SECRET';
-const clientVersion = parseInt(process.env.PHONEPE_CLIENT_VERSION || '1');
-const phonePeEnv = process.env.PHONEPE_ENV === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
-
-const phonePeClient = StandardCheckoutClient.getInstance(
-  clientId,
-  clientSecret,
-  clientVersion,
-  phonePeEnv
-);
+// PayU Credentials
+const PAYU_KEY = process.env.PAYU_KEY || 'PwVHQz';
+const PAYU_SALT = process.env.PAYU_SALT || 'giGZakyrDyoVCsFOmxA9B1KPHVrDAPzJ';
+const PAYU_ENV = process.env.PAYU_ENV || 'SANDBOX';
+const PAYU_ACTION_URL = PAYU_ENV === 'PRODUCTION' 
+  ? 'https://secure.payu.in/_payment' 
+  : 'https://test.payu.in/_payment';
 
 fastify.register(cors);
+
+// Register a native, zero-dependency parser for application/x-www-form-urlencoded
+fastify.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (req, body, done) => {
+  try {
+    const params = new URLSearchParams(body);
+    const parsed: Record<string, string> = {};
+    for (const [key, value] of params.entries()) {
+      parsed[key] = value;
+    }
+    done(null, parsed);
+  } catch (err: any) {
+    done(err, undefined);
+  }
+});
 
 function base64url(source: Buffer | string): string {
   let encoded = typeof source === 'string' 
@@ -61,6 +63,7 @@ function signJwt(payload: any, secret: string): string {
   return `${signatureInput}.${signatureStr}`;
 }
 
+// Generate link endpoint - returns redirection endpoint to helper submit page
 fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
   const { leadId } = request.body as { leadId: string };
   
@@ -82,19 +85,19 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       });
     }
 
-    const merchantTransactionId = `MT-${crypto.randomBytes(8).toString('hex')}`;
+    const merchantTransactionId = `TXN-${crypto.randomBytes(8).toString('hex')}`;
 
     if (!payment) {
       // Create Payment record in DB with merchantTransactionId
       payment = await prisma.payment.create({
         data: {
           amount: 99900, // ₹999 in paise
-          phonePeMerchantTransactionId: merchantTransactionId,
+          phonePeMerchantTransactionId: merchantTransactionId, // Reuse existing column for PayU txnid
           status: 'created',
         }
       });
     } else if (!payment.phonePeMerchantTransactionId) {
-       // Update existing payment with PhonePe ID if it was created for Razorpay
+       // Update existing payment with PayU txn ID
        payment = await prisma.payment.update({
          where: { id: payment.id },
          data: { phonePeMerchantTransactionId: merchantTransactionId }
@@ -169,48 +172,182 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       });
     }
 
-    // PhonePe Initiate Payment
-    const prefillUserLoginDetails = PrefillUserLoginDetails.builder()
-      .phoneNumber(lead.phone)
-      .build();
-
-    const metaInfo = MetaInfo.builder()
-      .udf1(lead.id)
-      .build();
-
-    // Dynamic redirect URL based on origin to fix "site not reach"
-    const origin = request.headers['origin'] || process.env.FRONTEND_URL || 'http://localhost:5173';
+    // Dynamic redirect URL based on origin to resolve submission properly
+    const gatewayUrl = process.env.VITE_API_URL || 'http://localhost:8000';
     
-    const orderRequest = StandardCheckoutPayRequest.builder()
-      .merchantOrderId(payment.phonePeMerchantTransactionId!)
-      .amount(payment.amount)
-      .prefillUserLoginDetails(prefillUserLoginDetails)
-      .metaInfo(metaInfo)
-      .redirectUrl(`${origin}/payment-success?leadId=${lead.id}`)
-      .expireAfter(1200) // 20 minutes
-      .message(`Legal Consultation for ${lead.category}`)
-      .build();
-
-    const phonePeResponse = await phonePeClient.pay(orderRequest);
+    // We return our custom submit endpoint that handles generating the form
+    const redirectUrl = `${gatewayUrl}/api/payments/payu-submit?leadId=${lead.id}`;
 
     return {
-      short_url: phonePeResponse.redirectUrl, 
-      redirect_url: phonePeResponse.redirectUrl,
-      order_id: phonePeResponse.orderId,
-      merchantTransactionId: payment.phonePeMerchantTransactionId
+      short_url: redirectUrl, 
+      redirect_url: redirectUrl,
+      order_id: merchantTransactionId,
+      merchantTransactionId: merchantTransactionId
     };
   } catch (error) {
     fastify.log.error(error);
-    return reply.status(500).send({ error: 'Failed to create PhonePe payment link' });
+    return reply.status(500).send({ error: 'Failed to create PayU payment checkout link' });
   }
 });
 
-// Manual status verification endpoint
+// PayU Form submission helper endpoint (Renders auto-submitting POST form)
+fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
+  const { leadId } = request.query as { leadId: string };
+
+  try {
+    const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+    if (!lead) return reply.status(404).send('Lead not found');
+
+    const booking = await prisma.booking.findUnique({
+      where: { leadId },
+      include: { payment: true, client: true }
+    });
+
+    const payment = booking?.payment;
+    if (!payment || !payment.phonePeMerchantTransactionId) {
+      return reply.status(404).send('Payment transaction not initialized');
+    }
+
+    const user = booking?.client;
+    const email = user?.email || 'client@lawoncall.in';
+    const firstname = user?.name || 'LawOnCall Client';
+    const phone = lead.phone || '9999999999';
+    const amount = (payment.amount / 100).toFixed(2); // Convert paise to Rupees string (e.g. 999.00)
+    const productinfo = `Legal Consultation for ${lead.category}`;
+    const txnid = payment.phonePeMerchantTransactionId;
+
+    // Hash Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10|SALT)
+    const udf1 = lead.id;
+    const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}||||||||||${PAYU_SALT}`;
+    const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+
+    const gatewayUrl = process.env.VITE_API_URL || 'http://localhost:8000';
+    const callbackUrl = `${gatewayUrl}/api/payments/payu-callback`;
+
+    // Render HTML containing auto-submitting form
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Redirecting to PayU Secure Checkout...</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f9fafb; color: #374151; }
+            .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            h2 { font-weight: 800; font-size: 1.5rem; margin: 0 0 10px 0; color: #111827; }
+            p { font-weight: 500; font-size: 0.875rem; color: #6b7280; margin: 0; }
+          </style>
+        </head>
+        <body onload="document.forms[0].submit()">
+          <div class="loader"></div>
+          <h2>Connecting to secure checkout</h2>
+          <p>Please do not refresh this page or click back.</p>
+          
+          <form method="POST" action="${PAYU_ACTION_URL}">
+            <input type="hidden" name="key" value="${PAYU_KEY}" />
+            <input type="hidden" name="txnid" value="${txnid}" />
+            <input type="hidden" name="amount" value="${amount}" />
+            <input type="hidden" name="productinfo" value="${productinfo}" />
+            <input type="hidden" name="firstname" value="${firstname}" />
+            <input type="hidden" name="email" value="${email}" />
+            <input type="hidden" name="phone" value="${phone}" />
+            <input type="hidden" name="surl" value="${callbackUrl}" />
+            <input type="hidden" name="furl" value="${callbackUrl}" />
+            <input type="hidden" name="hash" value="${hash}" />
+            <input type="hidden" name="udf1" value="${udf1}" />
+          </form>
+        </body>
+      </html>
+    `;
+
+    reply.type('text/html').send(html);
+  } catch (err: any) {
+    fastify.log.error(err);
+    reply.status(500).send('Error rendering submit form');
+  }
+});
+
+// PayU Redirect Callback POST Handler
+fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => {
+  const {
+    key,
+    txnid,
+    amount,
+    productinfo,
+    firstname,
+    email,
+    udf1,
+    status,
+    mihpayid,
+    hash,
+    additionalCharges
+  } = request.body || {};
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  try {
+    if (!txnid || !hash || !status) {
+      fastify.log.error('PayU callback missing essential transaction parameters');
+      return reply.redirect(`${frontendUrl}/payment-success?status=error`);
+    }
+
+    // Verify Hash Signature
+    // Reverse Hash Formula: sha512(SALT|status||||||||||udf1|email|firstname|productinfo|amount|txnid|key)
+    // If additionalCharges are present: sha512(additionalCharges|SALT|status||||||||||udf1|email|firstname|productinfo|amount|txnid|key)
+    let hashString = '';
+    if (additionalCharges) {
+      hashString = `${additionalCharges}|${PAYU_SALT}|${status}||||||||||${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+    } else {
+      hashString = `${PAYU_SALT}|${status}||||||||||${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+    }
+
+    const computedHash = crypto.createHash('sha512').update(hashString).digest('hex');
+
+    if (computedHash.toLowerCase() !== hash.toLowerCase()) {
+      fastify.log.error('PayU response signature hash validation failed');
+      return reply.redirect(`${frontendUrl}/payment-success?leadId=${udf1}&status=hash_mismatch`);
+    }
+
+    if (status === 'success') {
+      const updatedPayment = await prisma.payment.update({
+        where: { phonePeMerchantTransactionId: txnid },
+        data: { 
+          status: 'captured',
+          phonePeTransactionId: mihpayid, // Store PayU mihpayid reference inside transaction ID column
+        },
+        include: { booking: true }
+      });
+
+      if (updatedPayment.booking) {
+        await prisma.booking.update({
+          where: { id: updatedPayment.booking.id },
+          data: { status: 'CONFIRMED' }
+        });
+
+        // Trigger SLA matching in Lead Service
+        fetch(`http://127.0.0.1:3002/api/leads/${udf1}/match`, { method: 'POST' })
+          .catch(err => console.error('Failed to trigger matching in callback:', err));
+      }
+
+      return reply.redirect(`${frontendUrl}/payment-success?leadId=${udf1}`);
+    } else {
+      await prisma.payment.update({
+        where: { phonePeMerchantTransactionId: txnid },
+        data: { status: 'failed' }
+      });
+      return reply.redirect(`${frontendUrl}/payment-success?leadId=${udf1}&status=failed`);
+    }
+  } catch (error: any) {
+    fastify.log.error('PayU Callback processing failed:', error.message);
+    return reply.redirect(`${frontendUrl}/payment-success?status=error`);
+  }
+});
+
+// Manual status verification endpoint (Queries DB, simulates success in sandbox/local dev)
 fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => {
   const { leadId } = request.params;
 
   try {
-    // First, find the booking
     const booking = await prisma.booking.findUnique({
       where: { leadId: leadId },
       include: { payment: true, lead: true, client: true }
@@ -218,7 +355,6 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
 
     let payment = booking?.payment;
 
-    // Fallback: query payment directly if booking is not found or payment is not loaded
     if (!payment) {
       payment = await prisma.payment.findFirst({
         where: { booking: { leadId: leadId } },
@@ -231,7 +367,6 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
     }
 
     const bookingRecord = booking || payment.booking;
-
     const clientUser = bookingRecord?.client;
     let token = null;
     let userResponse = null;
@@ -278,6 +413,30 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
       };
     }
 
+    if (payment.status === 'failed') {
+      let flow = 'Flow 3';
+      const lead = bookingRecord?.lead;
+      if (lead) {
+        const time = lead.preferredTime.toLowerCase();
+        if (time.includes('callback')) {
+          flow = 'Flow 1';
+        } else if (time.includes('emergency')) {
+          flow = 'Flow 4';
+        } else if (time.includes('asap')) {
+          flow = 'Flow 2';
+        }
+      }
+
+      return {
+        status: 'FAILED',
+        message: 'Payment transaction failed',
+        preferredTime: bookingRecord?.lead?.preferredTime,
+        flow,
+        token,
+        user: userResponse
+      };
+    }
+
     // Automatically capture payment and confirm booking in local dev sandbox to enable instant checkout
     await prisma.payment.update({
       where: { id: payment.id },
@@ -295,7 +454,6 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
         .catch(err => console.error('Failed to trigger matching:', err));
     }
 
-    // Refetch the lead info to return preferredTime
     const lead = bookingRecord?.lead || await prisma.lead.findUnique({ where: { id: leadId } });
 
     let flow = 'Flow 3';
@@ -324,48 +482,8 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
   }
 });
 
-// Webhook for PhonePe
+// Legacy PhonePe Webhook handler stub (remains active for verification/routing consistency)
 fastify.post('/api/payments/webhook', async (request: any, reply: any) => {
-  const authHeader = request.headers['authorization'] as string;
-  const webhookUsername = process.env.PHONEPE_WEBHOOK_USERNAME || 'admin';
-  const webhookPassword = process.env.PHONEPE_WEBHOOK_PASSWORD || 'password123';
-
-  try {
-    const callbackResponse = phonePeClient.validateCallback(
-      webhookUsername,
-      webhookPassword,
-      authHeader,
-      JSON.stringify(request.body)
-    );
-
-    const { payload } = callbackResponse;
-
-    if (payload.state === 'COMPLETED' && payload.merchantOrderId) {
-      const merchantOrderId = payload.merchantOrderId;
-      
-      const updatedPayment = await prisma.payment.update({
-        where: { phonePeMerchantTransactionId: merchantOrderId },
-        data: { 
-          status: 'captured',
-          phonePeTransactionId: payload.orderId,
-        },
-        include: { booking: true }
-      });
-      
-      if (updatedPayment.booking) {
-        await prisma.booking.update({
-          where: { id: updatedPayment.booking.id },
-          data: { status: 'CONFIRMED' }
-        });
-        
-        // Lead status stays NEW so it shows up in Lawyer Dashboard as "Booked"
-      }
-    }
-  } catch (error: any) {
-    fastify.log.error('Webhook validation failed:', error.message);
-    // Even if validation fails, we might want to return 200 to PhonePe to stop retries, 
-    // but log the error for investigation.
-  }
   return { success: true };
 });
 
@@ -402,7 +520,7 @@ fastify.post('/api/payments/simulate-success/:leadId', async (request: any, repl
 const start = async () => {
   try {
     await fastify.listen({ port: 3003, host: '0.0.0.0' });
-    console.log('PhonePe Payment service running on port 3003');
+    console.log('PayU Payment service running on port 3003');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
