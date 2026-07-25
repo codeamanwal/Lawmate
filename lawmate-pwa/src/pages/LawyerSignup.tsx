@@ -55,14 +55,7 @@ const verhoeffP = [
 const validateAadhaar = (aadhaar: string): boolean => {
   if (!aadhaar) return false;
   const clean = aadhaar.replace(/\s+/g, '');
-  if (!/^[2-9]\d{11}$/.test(clean)) return false;
-
-  let c = 0;
-  const invertedArray = clean.split('').map(Number).reverse();
-  for (let i = 0; i < invertedArray.length; i++) {
-    c = verhoeffD[c][verhoeffP[i % 8][invertedArray[i]]];
-  }
-  return c === 0;
+  return /^[2-9]\d{11}$/.test(clean);
 };
 
 const states = [
