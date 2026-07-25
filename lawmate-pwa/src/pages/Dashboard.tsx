@@ -439,7 +439,7 @@ const Dashboard = () => {
               {/* Payment notice */}
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹999 is required to activate the 60-min SLA and connect you with an expert lawyer.</p>
+                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹500 is required to activate the 60-min SLA and connect you with an expert lawyer.</p>
               </div>
 
               <button
@@ -447,7 +447,7 @@ const Dashboard = () => {
                 disabled={emergencyLoading}
                 className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:opacity-70 text-white rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-100"
               >
-                {emergencyLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Zap className="w-5 h-5" /> Create Case & Pay ₹999</>}
+                {emergencyLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Zap className="w-5 h-5" /> Create Case & Pay ₹500</>}
               </button>
             </form>
           </div>

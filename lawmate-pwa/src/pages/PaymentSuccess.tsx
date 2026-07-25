@@ -131,7 +131,7 @@ const PaymentSuccess = () => {
             <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white font-bold">₹</div>
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fee Paid</p>
-              <p className="text-sm font-bold text-gray-900">₹999 (Inclusive of all taxes)</p>
+              <p className="text-sm font-bold text-gray-900">₹500 (Inclusive of all taxes)</p>
             </div>
           </div>
         </div>

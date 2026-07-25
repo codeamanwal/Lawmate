@@ -92,7 +92,7 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       // Create Payment record in DB with merchantTransactionId
       payment = await prisma.payment.create({
         data: {
-          amount: 99900, // ₹999 in paise
+          amount: 50000, // ₹500 in paise
           phonePeMerchantTransactionId: merchantTransactionId, // Reuse existing column for PayU txnid
           status: 'created',
         }
@@ -226,7 +226,7 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
     const email = user?.email || 'client@lawoncall.in';
     const firstname = user?.name || 'LawOnCall Client';
     const phone = lead.phone || '9999999999';
-    const amount = (payment.amount / 100).toFixed(2); // Convert paise to Rupees string (e.g. 999.00)
+    const amount = (payment.amount / 100).toFixed(2); // Convert paise to Rupees string (e.g. 500.00)
     const productinfo = `Legal Consultation for ${lead.category}`;
     const txnid = payment.phonePeMerchantTransactionId;
 

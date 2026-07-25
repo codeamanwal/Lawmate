@@ -109,7 +109,7 @@ const MatchingPage = () => {
           <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-500 font-semibold">Consultation Fee</span>
-              <span className="text-2xl font-black text-gray-900">₹999</span>
+              <span className="text-2xl font-black text-gray-900">₹500</span>
             </div>
             <p className="text-sm text-gray-500 text-right">Flat fee. No hidden charges.</p>
           </div>
