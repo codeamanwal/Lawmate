@@ -147,38 +147,37 @@ const LawyerOnboarding = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        {/* Stepper */}
+        {/* Stepper (2 Steps) */}
         <div className="flex items-center justify-between mb-8 sm:mb-12 bg-white p-4 sm:p-6 rounded-[24px] shadow-sm border border-gray-100 overflow-x-auto">
-          {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center gap-2 sm:gap-3 flex-1 last:flex-none shrink-0">
+          {[1, 2].map((s) => (
+            <div key={s} className="flex items-center gap-2 sm:gap-4 flex-1 last:flex-none shrink-0">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-xs sm:text-base ${step === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 ring-4 ring-indigo-50' : step > s ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
                 {step > s ? <CheckCircle2 className="w-6 h-6" /> : s}
               </div>
-              <div className="hidden md:block">
+              <div>
                 <p className={`text-[10px] font-black uppercase tracking-widest ${step === s ? 'text-indigo-600' : 'text-gray-400'}`}>
                   Step 0{s}
                 </p>
                 <p className={`text-sm font-bold ${step === s ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {s === 1 && 'Professional Info'}
-                  {s === 2 && 'Availability'}
-                  {s === 3 && 'KYC Documents'}
-                  {s === 4 && 'Final Review'}
+                  {s === 1 && 'Profile & Availability'}
+                  {s === 2 && 'KYC & Final Review'}
                 </p>
               </div>
-              {s < 4 && <div className="flex-1 h-[2px] bg-gray-100 mx-4 hidden md:block" />}
+              {s < 2 && <div className="flex-1 h-[2px] bg-gray-100 mx-4 hidden md:block" />}
             </div>
           ))}
         </div>
 
         <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-          {/* Step 1: Professional Info */}
+          {/* Step 1: Professional Profile & Availability */}
           {step === 1 && (
-            <div className="p-6 sm:p-8 md:p-12">
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-gray-900 mb-2">Professional Profile</h2>
-                <p className="text-gray-500 font-medium text-sm">Tell us more about your practice and expertise.</p>
+            <div className="p-6 sm:p-8 md:p-12 space-y-10">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 mb-2">Professional Profile & Availability</h2>
+                <p className="text-gray-500 font-medium text-sm">Tell us about your practice expertise and set your working schedule.</p>
               </div>
 
+              {/* Bio & Details Section */}
               <div className="space-y-8">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
@@ -207,6 +206,7 @@ const LawyerOnboarding = () => {
                     {practiceAreas.map(area => (
                       <button
                         key={area}
+                        type="button"
                         onClick={() => {
                           if (selectedPracticeAreas.includes(area)) {
                             setSelectedPracticeAreas(selectedPracticeAreas.filter(a => a !== area));
@@ -220,6 +220,7 @@ const LawyerOnboarding = () => {
                       </button>
                     ))}
                     <button 
+                      type="button"
                       onClick={() => {
                         const newArea = prompt('Enter Practice Area:');
                         if (newArea) setPracticeAreas([...practiceAreas, newArea]);
@@ -239,6 +240,7 @@ const LawyerOnboarding = () => {
                     {languages.map(lang => (
                       <button
                         key={lang}
+                        type="button"
                         onClick={() => {
                           if (selectedLanguages.includes(lang)) {
                             setSelectedLanguages(selectedLanguages.filter(l => l !== lang));
@@ -267,56 +269,56 @@ const LawyerOnboarding = () => {
                   />
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Step 2: Availability */}
-          {step === 2 && (
-            <div className="p-6 sm:p-8 md:p-12">
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-gray-900 mb-2">Availability Settings</h2>
-                <p className="text-gray-500 font-medium text-sm">When can we send you consultation requests?</p>
-              </div>
+              {/* Availability Settings Section */}
+              <div className="pt-6 border-t border-gray-100">
+                <h3 className="text-xl font-black text-gray-900 mb-2 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-indigo-600" /> Availability Settings
+                </h3>
+                <p className="text-gray-500 font-medium text-sm mb-6">Select the active days when clients can consult with you.</p>
 
-              <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 mb-8 flex items-start gap-4">
-                <div className="bg-white p-2 rounded-xl shadow-sm">
-                  <Clock className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h4 className="font-black text-gray-900 mb-1 text-sm">Standard Business Hours</h4>
-                  <p className="text-xs text-gray-500 font-bold leading-relaxed">By default, your profile will be active Monday-Friday, 10 AM - 6 PM. You can toggle specific days below.</p>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                {Object.entries(availability).map(([day, active]) => (
-                  <div key={day} className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all ${active ? 'bg-white border-indigo-600 shadow-lg shadow-indigo-50' : 'bg-gray-50 border-transparent opacity-60'}`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black uppercase text-xs ${active ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                        {day.slice(0, 3)}
-                      </div>
-                      <span className="font-black text-gray-900 capitalize">{day}</span>
-                    </div>
-                    <button
-                      onClick={() => setAvailability({...availability, [day]: !active})}
-                      className={`w-14 h-8 rounded-full relative transition-all ${active ? 'bg-indigo-600' : 'bg-gray-300'}`}
-                    >
-                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${active ? 'left-7' : 'left-1'}`} />
-                    </button>
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 mb-6 flex items-start gap-4">
+                  <div className="bg-white p-2 rounded-xl shadow-sm">
+                    <Clock className="w-5 h-5 text-indigo-600" />
                   </div>
-                ))}
+                  <div>
+                    <h4 className="font-black text-gray-900 mb-1 text-sm">Standard Business Hours</h4>
+                    <p className="text-xs text-gray-500 font-bold leading-relaxed">Active slots are standard Monday-Friday, 10 AM - 6 PM. Toggle your preferred availability days below.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  {Object.entries(availability).map(([day, active]) => (
+                    <div key={day} className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${active ? 'bg-white border-indigo-600 shadow-sm' : 'bg-gray-50 border-transparent opacity-60'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black uppercase text-[10px] ${active ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                          {day.slice(0, 3)}
+                        </div>
+                        <span className="font-bold text-sm text-gray-900 capitalize">{day}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAvailability({...availability, [day]: !active})}
+                        className={`w-12 h-7 rounded-full relative transition-all ${active ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                      >
+                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${active ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: KYC Documents */}
-          {step === 3 && (
-            <div className="p-6 sm:p-8 md:p-12">
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-gray-900 mb-2">KYC Documents</h2>
-                <p className="text-gray-500 font-medium text-sm">Please upload high-quality scans of your professional documents.</p>
+          {/* Step 2: KYC Documents & Final Review */}
+          {step === 2 && (
+            <div className="p-6 sm:p-8 md:p-12 space-y-10">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 mb-2">KYC Documents & Verification</h2>
+                <p className="text-gray-500 font-medium text-sm">Upload your professional documents and submit your profile for admin verification.</p>
               </div>
 
+              {/* Document Uploads */}
               <div className="grid md:grid-cols-2 gap-6">
                 {[
                   { label: 'Enrollment Certificate', icon: FileCheck, hint: 'State Bar Council Certificate (PDF/JPG)' },
@@ -347,31 +349,24 @@ const LawyerOnboarding = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* Step 4: Final Review */}
-          {step === 4 && (
-            <div className="p-6 sm:p-8 md:p-12 text-center">
-              <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 ring-8 ring-emerald-50/50">
-                <FileCheck className="w-12 h-12 text-emerald-600" />
-              </div>
-              <h2 className="text-3xl font-black text-gray-900 mb-4">Ready for Review?</h2>
-              <p className="text-gray-500 font-medium mb-10 max-w-md mx-auto leading-relaxed">
-                By submitting, you confirm that all information provided is accurate. Our team will verify your documents within 24-48 hours.
-              </p>
-
-              <div className="bg-gray-50 rounded-[24px] p-8 text-left space-y-4 mb-10 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Profile Status</span>
+              {/* Review Summary Card */}
+              <div className="bg-gray-50 rounded-[24px] p-6 sm:p-8 text-left space-y-4 border border-gray-100">
+                <h4 className="text-base font-black text-gray-900 mb-2 flex items-center gap-2">
+                  <FileCheck className="w-5 h-5 text-emerald-600" /> Verification Summary
+                </h4>
+                <div className="flex items-center justify-between border-t border-gray-200/60 pt-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Profile Status</span>
                   <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">Pending Submission</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Documents Uploaded</span>
-                  <span className="text-gray-900 font-black">4 of 4</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Documents Uploaded</span>
+                  <span className="text-gray-900 font-black">
+                    {Object.values(files).filter(Boolean).length} of 4 Attached
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Consultation Fee</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Consultation Fee</span>
                   <span className="text-indigo-600 font-black">Fixed at ₹{CONSULTATION_FEE}</span>
                 </div>
               </div>
@@ -388,7 +383,7 @@ const LawyerOnboarding = () => {
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
             
-            {step < 4 ? (
+            {step < 2 ? (
               <button
                 onClick={nextStep}
                 className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 group"
