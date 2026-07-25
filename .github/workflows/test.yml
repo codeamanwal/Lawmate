@@ -39,25 +39,3 @@ jobs:
         EXOTEL_API_TOKEN: "dummy"
         EXOTEL_ACCOUNT_SID: "dummy"
         EXOTEL_EXOPHONE: "dummy"
-
-  deploy:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy to EC2 via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      env:
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        envs: TOKEN
-        script: |
-          cd /app/lawmate
-          git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git
-          git fetch origin
-          git reset --hard origin/main
-          chmod +x deploy.sh
-          ./deploy.sh
