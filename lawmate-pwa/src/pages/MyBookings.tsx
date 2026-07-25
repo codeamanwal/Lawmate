@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Clock, MapPin, CheckCircle2, Star, Loader2, Award, ShieldCheck, CreditCard, AlertCircle, User, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
+import { CONSULTATION_FEE } from '../config/constants';
 
 const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -199,7 +200,7 @@ const MyBookings = () => {
                     return isPaid ? (
                       <div className="text-left sm:text-right shrink-0">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fee Paid</p>
-                        <p className="text-2xl font-black text-indigo-600">₹500</p>
+                        <p className="text-2xl font-black text-indigo-600">₹{CONSULTATION_FEE}</p>
                       </div>
                     ) : (
                       <div className="text-left sm:text-right shrink-0">
@@ -210,7 +211,7 @@ const MyBookings = () => {
                           }}
                           className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-xs cursor-pointer"
                         >
-                          <CreditCard className="w-4 h-4" /> Pay ₹500
+                          <CreditCard className="w-4 h-4" /> Pay ₹{CONSULTATION_FEE}
                         </button>
                       </div>
                     );
@@ -283,7 +284,7 @@ const MyBookings = () => {
                               <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Payment Required</span>
                             </div>
                             <p className="text-sm font-bold text-gray-800">Consultation Unconfirmed</p>
-                            <p className="text-xs text-gray-500 font-medium">Please complete your payment of ₹500 to start the SLA matching engine and assign an advocate.</p>
+                            <p className="text-xs text-gray-500 font-medium">Please complete your payment of ₹{CONSULTATION_FEE} to start the SLA matching engine and assign an advocate.</p>
                           </div>
                         );
                       }

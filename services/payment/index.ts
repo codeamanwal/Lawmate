@@ -16,6 +16,10 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+// Payment Fee Parameters
+const CONSULTATION_FEE = Number(process.env.CONSULTATION_FEE) || 500;
+const CONSULTATION_FEE_PAISE = CONSULTATION_FEE * 100;
+
 // PayU Credentials
 const PAYU_KEY = process.env.PAYU_KEY || 'PwVHQz';
 const PAYU_SALT = process.env.PAYU_SALT || 'giGZakyrDyoVCsFOmxA9B1KPHVrDAPzJ';
@@ -92,7 +96,7 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       // Create Payment record in DB with merchantTransactionId
       payment = await prisma.payment.create({
         data: {
-          amount: 50000, // ₹500 in paise
+          amount: CONSULTATION_FEE_PAISE, // Dynamic fee in paise
           phonePeMerchantTransactionId: merchantTransactionId, // Reuse existing column for PayU txnid
           status: 'created',
         }

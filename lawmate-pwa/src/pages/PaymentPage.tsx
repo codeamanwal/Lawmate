@@ -4,6 +4,7 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { CONSULTATION_FEE } from '../config/constants';
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -66,16 +67,16 @@ const PaymentPage = () => {
         </div>
         
         <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Secure Checkout</h2>
-        <p className="text-gray-500 mb-8 font-medium">Complete your ₹500 payment to lock in your expert legal consultation.</p>
+        <p className="text-gray-500 mb-8 font-medium">Complete your ₹{CONSULTATION_FEE} payment to lock in your expert legal consultation.</p>
 
         <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-4">
           <div className="flex justify-between items-center pb-4 border-b border-gray-200">
             <span className="text-gray-500 font-medium">Consultation Fee</span>
-            <span className="text-gray-900 font-bold">₹500</span>
+            <span className="text-gray-900 font-bold">₹{CONSULTATION_FEE}</span>
           </div>
           <div className="flex justify-between items-center text-lg">
             <span className="text-gray-900 font-black">Total to Pay</span>
-            <span className="text-indigo-600 font-black">₹500</span>
+            <span className="text-indigo-600 font-black">₹{CONSULTATION_FEE}</span>
           </div>
         </div>
 
@@ -84,7 +85,7 @@ const PaymentPage = () => {
           disabled={loading && !authLoading}
           className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50 cursor-pointer"
         >
-          {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Confirm & Pay ₹500'}
+          {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `Confirm & Pay ₹${CONSULTATION_FEE}`}
         </button>
  
         <p className="mt-6 text-xs text-gray-400 font-medium flex items-center justify-center gap-2">

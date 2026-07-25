@@ -4,6 +4,7 @@ import { CheckCircle2, Calendar, ArrowRight, Home, Loader2, AlertCircle } from '
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { CONSULTATION_FEE } from '../config/constants';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -131,7 +132,7 @@ const PaymentSuccess = () => {
             <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white font-bold">₹</div>
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fee Paid</p>
-              <p className="text-sm font-bold text-gray-900">₹500 (Inclusive of all taxes)</p>
+              <p className="text-sm font-bold text-gray-900">₹{CONSULTATION_FEE} (Inclusive of all taxes)</p>
             </div>
           </div>
         </div>

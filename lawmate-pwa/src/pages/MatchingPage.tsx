@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2, Star, ShieldCheck, MapPin, Briefcase, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { CONSULTATION_FEE } from '../config/constants';
 
 const MatchingPage = () => {
   const location = useLocation();
@@ -109,7 +110,7 @@ const MatchingPage = () => {
           <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-500 font-semibold">Consultation Fee</span>
-              <span className="text-2xl font-black text-gray-900">₹500</span>
+              <span className="text-2xl font-black text-gray-900">₹{CONSULTATION_FEE}</span>
             </div>
             <p className="text-sm text-gray-500 text-right">Flat fee. No hidden charges.</p>
           </div>

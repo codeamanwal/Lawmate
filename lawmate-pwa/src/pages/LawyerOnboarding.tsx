@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CONSULTATION_FEE } from '../config/constants';
 import { 
   User, 
   Briefcase, 
@@ -371,7 +372,7 @@ const LawyerOnboarding = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Consultation Fee</span>
-                  <span className="text-indigo-600 font-black">Fixed at ₹500</span>
+                  <span className="text-indigo-600 font-black">Fixed at ₹{CONSULTATION_FEE}</span>
                 </div>
               </div>
             </div>
