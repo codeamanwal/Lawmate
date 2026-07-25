@@ -87,14 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (error: any) {
             console.error('Backend auth failed', error);
-            if (error.response?.status === 403) {
-              await auth.signOut();
-              localStorage.removeItem('token');
-              setUser(null);
-              toast.error(error.response?.data?.error || 'Invalid credentials');
-            } else {
-              setUser(null);
-            }
+            await auth.signOut();
+            localStorage.removeItem('token');
+            setUser(null);
+            toast.error(error.response?.data?.error || 'Authentication synchronization failed. Please try again.');
           }
         } else {
           const currentToken = localStorage.getItem('token');
