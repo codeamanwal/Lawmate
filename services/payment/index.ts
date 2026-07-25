@@ -173,7 +173,7 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     }
 
     // Dynamic redirect URL based on host headers to resolve submission properly
-    const host = request.headers.host || 'localhost:8000';
+    const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:8000';
     const protocol = request.headers['x-forwarded-proto'] || 'http';
     const gatewayUrl = `${protocol}://${host}`;
     
@@ -235,7 +235,7 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
     const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}|${udf2}|||||||||${PAYU_SALT}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-    const host = request.headers.host || 'localhost:8000';
+    const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:8000';
     const protocol = request.headers['x-forwarded-proto'] || 'http';
     const gatewayUrl = `${protocol}://${host}`;
     const callbackUrl = `${gatewayUrl}/api/payments/payu-callback`;

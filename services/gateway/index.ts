@@ -40,8 +40,16 @@ const proxyOptions = (request: any, extraHeaders: any = {}) => {
   // Strip expect and host headers
   const { host, expect, ...rest } = headers as Record<string, string>;
   
+  const forwardedHost = headers['x-forwarded-host'] || host || '';
+  const forwardedProto = headers['x-forwarded-proto'] || 'http';
+  
   return {
-    rewriteRequestHeaders: () => ({ ...rest, ...extraHeaders })
+    rewriteRequestHeaders: () => ({ 
+      ...rest, 
+      'x-forwarded-host': forwardedHost,
+      'x-forwarded-proto': forwardedProto,
+      ...extraHeaders 
+    })
   };
 };
 
