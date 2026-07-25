@@ -13,6 +13,7 @@ const PaymentSuccess = () => {
   const [status, setStatus] = useState<'SUCCESS' | 'PENDING' | 'FAILED'>('PENDING');
   const [preferredTime, setPreferredTime] = useState<string | null>(null);
   const [flow, setFlow] = useState<string | null>(null);
+  const [paidAmount, setPaidAmount] = useState<number>(CONSULTATION_FEE);
   const { loginWithToken } = useAuth();
   const navigate = useNavigate();
 
@@ -30,6 +31,9 @@ const PaymentSuccess = () => {
         
         const check = async () => {
           const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/payments/verify/${leadId}`);
+          if (response.data.amount) {
+            setPaidAmount(response.data.amount);
+          }
           if (response.data.status === 'SUCCESS') {
             setStatus('SUCCESS');
             setPreferredTime(response.data.preferredTime);
@@ -132,7 +136,7 @@ const PaymentSuccess = () => {
             <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white font-bold">₹</div>
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fee Paid</p>
-              <p className="text-sm font-bold text-gray-900">₹{CONSULTATION_FEE} (Inclusive of all taxes)</p>
+              <p className="text-sm font-bold text-gray-900">₹{paidAmount} (Inclusive of all taxes)</p>
             </div>
           </div>
         </div>

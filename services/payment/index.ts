@@ -430,6 +430,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
         status: 'SUCCESS', 
         message: 'Payment verified successfully', 
         preferredTime: bookingRecord?.lead?.preferredTime,
+        amount: payment.amount / 100,
         flow,
         token,
         user: userResponse
@@ -526,6 +527,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
                 status: 'SUCCESS',
                 message: 'Payment verified successfully via PayU API',
                 preferredTime: bookingRecord?.lead?.preferredTime,
+                amount: payment.amount / 100,
                 flow,
                 token,
                 user: userResponse
@@ -583,6 +585,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
       status: 'PENDING', 
       message: 'Payment verification pending', 
       preferredTime: lead?.preferredTime,
+      amount: payment ? payment.amount / 100 : CONSULTATION_FEE,
       flow,
       token,
       user: userResponse
