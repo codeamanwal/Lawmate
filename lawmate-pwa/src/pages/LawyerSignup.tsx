@@ -290,7 +290,7 @@ const LawyerSignup = () => {
                   <input
                     {...register('aadhaarNumber')}
                     maxLength={14}
-                    placeholder="xxxx xxxx xxxx"
+                    placeholder="1234 5678 9012"
                     onChange={(e) => {
                       // Auto format input into 4-digit blocks: 1234 5678 9012
                       const val = e.target.value.replace(/\D/g, '').slice(0, 12);
