@@ -65,7 +65,8 @@ function signJwt(payload: any, secret: string): string {
 
 // Generate link endpoint - returns redirection endpoint to helper submit page
 fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
-  const { leadId } = request.body as { leadId: string };
+  fastify.log.info({ headers: request.headers }, 'create-link request headers received');
+  const { leadId, frontendUrl: bodyFrontendUrl, gatewayUrl: bodyGatewayUrl } = request.body as { leadId: string, frontendUrl?: string, gatewayUrl?: string };
   
   try {
     const lead = await prisma.lead.findUnique({ where: { id: leadId } });
@@ -175,12 +176,12 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     // Dynamic redirect URL based on host headers to resolve submission properly
     const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:8000';
     const protocol = request.headers['x-forwarded-proto'] || 'http';
-    const gatewayUrl = `${protocol}://${host}`;
+    const gatewayUrl = bodyGatewayUrl || `${protocol}://${host}`;
     
     // Extract frontendUrl from Referer or Origin headers to dynamically handle deployed domains
     const referer = request.headers.referer || request.headers.origin;
-    let frontendUrl = 'http://localhost:5173';
-    if (referer) {
+    let frontendUrl = bodyFrontendUrl || 'http://localhost:5173';
+    if (!bodyFrontendUrl && referer) {
       try {
         const refUrl = new URL(referer);
         frontendUrl = refUrl.origin;

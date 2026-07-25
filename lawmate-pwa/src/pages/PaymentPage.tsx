@@ -32,7 +32,11 @@ const PaymentPage = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/payments/create-link`, 
-        { leadId }, 
+        { 
+          leadId,
+          frontendUrl: window.location.origin,
+          gatewayUrl: import.meta.env.VITE_API_URL || window.location.origin
+        }, 
         {
           headers: { 
             Authorization: `Bearer ${localStorage.getItem('token')}`,
