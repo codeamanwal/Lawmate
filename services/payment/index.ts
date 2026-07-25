@@ -172,8 +172,10 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
       });
     }
 
-    // Dynamic redirect URL based on origin to resolve submission properly
-    const gatewayUrl = process.env.VITE_API_URL || 'http://localhost:8000';
+    // Dynamic redirect URL based on host headers to resolve submission properly
+    const host = request.headers.host || 'localhost:8000';
+    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    const gatewayUrl = `${protocol}://${host}`;
     
     // We return our custom submit endpoint that handles generating the form
     const redirectUrl = `${gatewayUrl}/api/payments/payu-submit?leadId=${lead.id}`;
@@ -221,7 +223,9 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
     const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}||||||||||${PAYU_SALT}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-    const gatewayUrl = process.env.VITE_API_URL || 'http://localhost:8000';
+    const host = request.headers.host || 'localhost:8000';
+    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    const gatewayUrl = `${protocol}://${host}`;
     const callbackUrl = `${gatewayUrl}/api/payments/payu-callback`;
 
     // Render HTML containing auto-submitting form
