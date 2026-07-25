@@ -37,6 +37,7 @@ model LawyerProfile {
   availability        Json?
   address             String?
   licenseNumber       String?
+  aadhaarNumber       String?
   state               String?
   languages           String[]
   onboardingCompleted Boolean   @default(false)

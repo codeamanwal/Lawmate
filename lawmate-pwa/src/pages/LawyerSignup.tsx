@@ -20,11 +20,50 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  X
+  X,
+  Fingerprint
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+
+// Verhoeff algorithm implementation for Indian Aadhaar validation
+const verhoeffD = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+  [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+  [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+  [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+  [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+  [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+  [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+  [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+];
+
+const verhoeffP = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 5, 7, 6, 2, 8, 3, 4, 9, 0],
+  [2, 6, 8, 9, 7, 0, 4, 5, 1, 3],
+  [3, 7, 9, 5, 8, 1, 0, 6, 2, 4],
+  [4, 8, 0, 1, 9, 2, 5, 7, 3, 6],
+  [5, 9, 1, 2, 0, 3, 6, 8, 4, 7],
+  [6, 0, 2, 3, 1, 4, 7, 9, 5, 8],
+  [7, 1, 3, 4, 2, 5, 8, 0, 6, 9]
+];
+
+const validateAadhaar = (aadhaar: string): boolean => {
+  if (!aadhaar) return false;
+  const clean = aadhaar.replace(/\s+/g, '');
+  if (!/^[2-9]\d{11}$/.test(clean)) return false;
+
+  let c = 0;
+  const invertedArray = clean.split('').map(Number).reverse();
+  for (let i = 0; i < invertedArray.length; i++) {
+    c = verhoeffD[c][verhoeffP[i % 8][invertedArray[i]]];
+  }
+  return c === 0;
+};
 
 const states = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
@@ -43,6 +82,11 @@ const formSchema = z.object({
   state: z.string().min(1, 'Select your state'),
   city: z.string().min(1, 'City is required'),
   licenseNumber: z.string().regex(/^[A-Z]{2,3}\/\d+\/\d{4}$/, 'Enter valid enrollment number.'),
+  aadhaarNumber: z.string()
+    .min(1, 'Aadhaar number is required')
+    .refine(val => validateAadhaar(val), {
+      message: 'Enter a valid 12-digit Indian Aadhaar number.'
+    }),
   experience: z.number().min(0, 'Invalid number.').max(50, 'Invalid number.'),
   practiceAreas: z.array(z.string()).min(1, 'Select at least one area.'),
   address: z.string().min(5, 'Required.').max(200, 'Max 200 characters'),
@@ -241,6 +285,25 @@ const LawyerSignup = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    <Fingerprint className="w-4 h-4 text-gray-400" /> Aadhaar Number*
+                  </label>
+                  <input
+                    {...register('aadhaarNumber')}
+                    maxLength={14}
+                    placeholder="xxxx xxxx xxxx"
+                    onChange={(e) => {
+                      // Auto format input into 4-digit blocks: 1234 5678 9012
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                      const formatted = val.replace(/(\d{4})(?=\d)/g, '$1 ');
+                      e.target.value = formatted;
+                      register('aadhaarNumber').onChange(e);
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl border ${errors.aadhaarNumber ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all font-medium text-sm`}
+                  />
+                  {errors.aadhaarNumber && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.aadhaarNumber.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-gray-400" /> Years of Experience*
                   </label>
                   <input
@@ -251,25 +314,26 @@ const LawyerSignup = () => {
                   />
                   {errors.experience && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.experience.message}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                    <Gavel className="w-4 h-4 text-gray-400" /> Area(s) of Practice*
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {categories.map(cat => (
-                      <label key={cat} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100 cursor-pointer hover:border-indigo-200 transition-all">
-                        <input
-                          type="checkbox"
-                          value={cat}
-                          {...register('practiceAreas')}
-                          className="w-4 h-4 text-indigo-600 rounded border-gray-300"
-                        />
-                        <span className="text-xs font-bold text-gray-600">{cat}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.practiceAreas && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.practiceAreas.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                  <Gavel className="w-4 h-4 text-gray-400" /> Area(s) of Practice*
+                </label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {categories.map(cat => (
+                    <label key={cat} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100 cursor-pointer hover:border-indigo-200 transition-all">
+                      <input
+                        type="checkbox"
+                        value={cat}
+                        {...register('practiceAreas')}
+                        className="w-4 h-4 text-indigo-600 rounded border-gray-300"
+                      />
+                      <span className="text-xs font-bold text-gray-600">{cat}</span>
+                    </label>
+                  ))}
                 </div>
+                {errors.practiceAreas && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.practiceAreas.message}</p>}
               </div>
 
               <div>

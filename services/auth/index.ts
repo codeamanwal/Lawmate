@@ -431,6 +431,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
               upsert: {
                 create: {
                   licenseNumber: data.licenseNumber,
+                  aadhaarNumber: data.aadhaarNumber,
                   experience: data.experience ? parseInt(data.experience.toString()) : 0,
                   categories: data.practiceAreas || [],
                   state: data.state,
@@ -439,6 +440,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
                 },
                 update: {
                   licenseNumber: data.licenseNumber,
+                  aadhaarNumber: data.aadhaarNumber,
                   experience: data.experience ? parseInt(data.experience.toString()) : 0,
                   categories: data.practiceAreas || [],
                   state: data.state,
@@ -478,6 +480,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
         lawyerProfile: {
           create: {
             licenseNumber: data.licenseNumber,
+            aadhaarNumber: data.aadhaarNumber,
             experience: data.experience ? parseInt(data.experience.toString()) : 0,
             categories: data.practiceAreas || [],
             state: data.state,
