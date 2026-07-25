@@ -177,8 +177,18 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     const protocol = request.headers['x-forwarded-proto'] || 'http';
     const gatewayUrl = `${protocol}://${host}`;
     
+    // Extract frontendUrl from Referer or Origin headers to dynamically handle deployed domains
+    const referer = request.headers.referer || request.headers.origin;
+    let frontendUrl = 'http://localhost:5173';
+    if (referer) {
+      try {
+        const refUrl = new URL(referer);
+        frontendUrl = refUrl.origin;
+      } catch (e) {}
+    }
+
     // We return our custom submit endpoint that handles generating the form
-    const redirectUrl = `${gatewayUrl}/api/payments/payu-submit?leadId=${lead.id}`;
+    const redirectUrl = `${gatewayUrl}/api/payments/payu-submit?leadId=${lead.id}&frontendUrl=${encodeURIComponent(frontendUrl)}`;
 
     return {
       short_url: redirectUrl, 
@@ -194,7 +204,8 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
 
 // PayU Form submission helper endpoint (Renders auto-submitting POST form)
 fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
-  const { leadId } = request.query as { leadId: string };
+  const { leadId, frontendUrl: queryFrontendUrl } = request.query as { leadId: string, frontendUrl?: string };
+  const frontendUrl = queryFrontendUrl || 'http://localhost:5173';
 
   try {
     const lead = await prisma.lead.findUnique({ where: { id: leadId } });
@@ -220,7 +231,8 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
 
     // Hash Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10|SALT)
     const udf1 = lead.id;
-    const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}||||||||||${PAYU_SALT}`;
+    const udf2 = frontendUrl;
+    const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${udf1}|${udf2}|||||||||${PAYU_SALT}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
     const host = request.headers.host || 'localhost:8000';
@@ -259,6 +271,7 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
             <input type="hidden" name="furl" value="${callbackUrl}" />
             <input type="hidden" name="hash" value="${hash}" />
             <input type="hidden" name="udf1" value="${udf1}" />
+            <input type="hidden" name="udf2" value="${udf2}" />
           </form>
         </body>
       </html>
@@ -282,13 +295,14 @@ fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => 
     firstname,
     email,
     udf1,
+    udf2,
     status,
     mihpayid,
     hash,
     additionalCharges
   } = request.body || {};
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = udf2 || process.env.FRONTEND_URL || 'http://localhost:5173';
 
   try {
     if (!txnid || !hash || !status) {
@@ -297,13 +311,12 @@ fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => 
     }
 
     // Verify Hash Signature
-    // Reverse Hash Formula: sha512(SALT|status||||||||||udf1|email|firstname|productinfo|amount|txnid|key)
-    // If additionalCharges are present: sha512(additionalCharges|SALT|status||||||||||udf1|email|firstname|productinfo|amount|txnid|key)
+    // Reverse Hash Formula: sha512(SALT|status|||||||||udf2|udf1|email|firstname|productinfo|amount|txnid|key)
     let hashString = '';
     if (additionalCharges) {
-      hashString = `${additionalCharges}|${PAYU_SALT}|${status}||||||||||${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+      hashString = `${additionalCharges}|${PAYU_SALT}|${status}|||||||||${udf2}|${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
     } else {
-      hashString = `${PAYU_SALT}|${status}||||||||||${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+      hashString = `${PAYU_SALT}|${status}|||||||||${udf2}|${udf1}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
     }
 
     const computedHash = crypto.createHash('sha512').update(hashString).digest('hex');
