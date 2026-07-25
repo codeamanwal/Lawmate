@@ -20,7 +20,7 @@ const prisma = new PrismaClient({ adapter });
 const PAYU_KEY = process.env.PAYU_KEY || 'PwVHQz';
 const PAYU_SALT = process.env.PAYU_SALT || 'giGZakyrDyoVCsFOmxA9B1KPHVrDAPzJ';
 const PAYU_ENV = process.env.PAYU_ENV || 'SANDBOX';
-const PAYU_ACTION_URL = PAYU_ENV === 'PRODUCTION' 
+const PAYU_ACTION_URL = (PAYU_ENV === 'PRODUCTION' && PAYU_KEY !== 'PwVHQz') 
   ? 'https://secure.payu.in/_payment' 
   : 'https://test.payu.in/_payment';
 
@@ -462,7 +462,7 @@ fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => 
       const command = 'verify_payment';
       const hashStr = `${PAYU_KEY}|${command}|${txnid}|${PAYU_SALT}`;
       const hash = crypto.createHash('sha512').update(hashStr).digest('hex');
-      const payuApiUrl = PAYU_ENV === 'PRODUCTION'
+      const payuApiUrl = (PAYU_ENV === 'PRODUCTION' && PAYU_KEY !== 'PwVHQz')
         ? 'https://info.payu.in/merchant/postservice?form=2'
         : 'https://test.payu.in/merchant/postservice?form=2';
 
