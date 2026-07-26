@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+
+export NODE_OPTIONS="--max-old-space-size=512"
+export COMPOSE_PARALLEL_LIMIT=1
+
 echo "=== 📥 1. Pulling latest code ==="
 cd /app/lawmate
 git fetch origin
@@ -7,8 +11,7 @@ git reset --hard origin/main
 
 echo "=== 📦 2. Building frontend ==="
 cd /app/lawmate/lawmate-pwa
-npm install
-export NODE_OPTIONS="--max-old-space-size=512"
+npm install --no-audit --no-fund
 npm run build
 
 echo "=== ☁️ 3. Syncing S3 ==="
@@ -23,6 +26,6 @@ npm run db:generate
 npm run db:push
 
 echo "=== 🐳 6. Restarting Docker Compose ==="
-sudo docker compose down
-sudo docker compose up -d --build
+sudo docker compose down || true
+COMPOSE_PARALLEL_LIMIT=1 sudo -E docker compose up -d --build
 echo "=== 🎉 Deployment Completed Successfully! ==="
