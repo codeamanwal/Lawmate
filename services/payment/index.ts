@@ -179,7 +179,10 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
 
     // Dynamic redirect URL based on host headers to resolve submission properly
     const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:8000';
-    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    let protocol = (request.headers['x-forwarded-proto'] as string) || 'http';
+    if (typeof host === 'string' && (host.includes('lawoncall.in') || host.includes('vercel.app') || (!host.includes('localhost') && !host.includes('127.0.0.1')))) {
+      protocol = 'https';
+    }
     const gatewayUrl = bodyGatewayUrl || `${protocol}://${host}`;
     
     // Extract frontendUrl from Referer or Origin headers to dynamically handle deployed domains
@@ -241,7 +244,10 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
     const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:8000';
-    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    let protocol = (request.headers['x-forwarded-proto'] as string) || 'http';
+    if (typeof host === 'string' && (host.includes('lawoncall.in') || host.includes('vercel.app') || (!host.includes('localhost') && !host.includes('127.0.0.1')))) {
+      protocol = 'https';
+    }
     const gatewayUrl = `${protocol}://${host}`;
     const callbackUrl = `${gatewayUrl}/api/payments/payu-callback`;
 
@@ -289,9 +295,10 @@ fastify.get('/api/payments/payu-submit', async (request: any, reply: any) => {
   }
 });
 
-// PayU Redirect Callback POST Handler
-fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => {
-  fastify.log.info({ body: request.body, headers: request.headers }, 'PayU Callback Payload received');
+// PayU Redirect Callback Handler (Supports GET and POST methods)
+const handlePayUCallback = async (request: any, reply: any) => {
+  const payload = request.method === 'POST' ? (request.body || {}) : (request.query || {});
+  fastify.log.info({ payload, headers: request.headers, method: request.method }, 'PayU Callback Payload received');
   const {
     key,
     txnid,
@@ -305,9 +312,9 @@ fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => 
     mihpayid,
     hash,
     additionalCharges
-  } = request.body || {};
+  } = payload;
 
-  const cleanFrontendUrl = (udf2 || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  const cleanFrontendUrl = (udf2 || process.env.FRONTEND_URL || 'https://lawoncall.in').replace(/\/+$/, '');
   const leadIdQuery = udf1 ? `leadId=${encodeURIComponent(udf1)}` : '';
   const makeRedirect = (queryParams: string) => {
     const combinedQuery = leadIdQuery ? `${leadIdQuery}&${queryParams}` : queryParams;
@@ -387,7 +394,10 @@ fastify.post('/api/payments/payu-callback', async (request: any, reply: any) => 
     fastify.log.error('PayU Callback processing failed:', error.message);
     return reply.redirect(makeRedirect('status=error'));
   }
-});
+};
+
+fastify.post('/api/payments/payu-callback', handlePayUCallback);
+fastify.get('/api/payments/payu-callback', handlePayUCallback);
 
 // Manual status verification endpoint (Queries DB, simulates success in sandbox/local dev)
 fastify.get('/api/payments/verify/:leadId', async (request: any, reply: any) => {
