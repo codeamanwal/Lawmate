@@ -11,12 +11,15 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { PRIVACY_POLICY_DATA, TERMS_AND_CONDITIONS_DATA } from '../constants/legalTexts';
 
+import { CONSULTATION_PLANS } from '../config/constants';
+
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit phone number'),
   city: z.string().min(1, 'Please select a city'),
   category: z.string().min(1, 'Please select a category'),
   description: z.string().min(10, 'Please provide a bit more detail about your issue'),
+  consultationPlan: z.enum(['QUICK', 'STANDARD', 'DETAILED']).default('STANDARD'),
   preferredTime: z.enum(['ASAP', 'LATER']),
   agreed: z.boolean().refine(val => val === true, 'You must agree to Terms & Conditions and Privacy Policy.'),
 });
@@ -33,6 +36,7 @@ const IntakeForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      consultationPlan: 'STANDARD',
       preferredTime: 'ASAP',
       agreed: false
     }
@@ -188,6 +192,34 @@ const IntakeForm = () => {
               className={`w-full px-4 py-3 rounded-xl border ${errors.description ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all resize-none`}
             />
             {errors.description && <p className="mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.description.message}</p>}
+          </div>
+
+          {/* Select Consultation Plan */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Select Consultation Plan</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {Object.values(CONSULTATION_PLANS).map((plan) => {
+                const isSelected = watch('consultationPlan') === plan.id;
+                return (
+                  <label
+                    key={plan.id}
+                    className={`relative flex flex-col justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      isSelected ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-md shadow-indigo-100/50' : 'border-gray-100 hover:border-gray-200 bg-white text-gray-700'
+                    }`}
+                  >
+                    <input type="radio" value={plan.id} {...register('consultationPlan')} className="hidden" />
+                    <div>
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full inline-block mb-1.5">{plan.duration}</span>
+                      <span className="font-bold text-sm block text-gray-900 leading-snug">{plan.name}</span>
+                    </div>
+                    <div className="mt-3 flex items-baseline justify-between border-t border-gray-100 pt-2">
+                      <span className="text-xl font-black text-indigo-700">₹{plan.price}</span>
+                      {isSelected && <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
           </div>
 
           {/* Preferred Time */}

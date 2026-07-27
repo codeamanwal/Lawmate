@@ -62,6 +62,8 @@ model Lead {
   city          String
   description   String
   preferredTime String
+  consultationPlan String?    @default("STANDARD")
+  consultationFee  Int?       @default(400)
   status               LeadStatus     @default(NEW)
   lawyerId             String?
   assignedAt           DateTime?

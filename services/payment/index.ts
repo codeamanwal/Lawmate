@@ -91,22 +91,27 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     }
 
     const merchantTransactionId = `TXN-${crypto.randomBytes(8).toString('hex')}`;
+    const feeInINR = lead.consultationFee || (lead.consultationPlan === 'QUICK' ? 200 : lead.consultationPlan === 'DETAILED' ? 800 : 400);
+    const amountInPaise = feeInINR * 100;
 
     if (!payment) {
       // Create Payment record in DB with merchantTransactionId
       payment = await prisma.payment.create({
         data: {
-          amount: CONSULTATION_FEE_PAISE, // Dynamic fee in paise
+          amount: amountInPaise, // Dynamic fee in paise based on lead plan
           phonePeMerchantTransactionId: merchantTransactionId, // Reuse existing column for PayU txnid
           status: 'created',
         }
       });
-    } else if (!payment.phonePeMerchantTransactionId) {
-       // Update existing payment with PayU txn ID
-       payment = await prisma.payment.update({
-         where: { id: payment.id },
-         data: { phonePeMerchantTransactionId: merchantTransactionId }
-       });
+    } else {
+      // Update existing payment with updated dynamic fee and PayU txn ID
+      payment = await prisma.payment.update({
+        where: { id: payment.id },
+        data: { 
+          amount: amountInPaise,
+          phonePeMerchantTransactionId: merchantTransactionId || payment.phonePeMerchantTransactionId 
+        }
+      });
     }
 
     // Ensure a valid User exists for this lead

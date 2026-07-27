@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldCheck, Clock } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { CONSULTATION_FEE } from '../config/constants';
+import { CONSULTATION_PLANS, DEFAULT_CONSULTATION_FEE } from '../config/constants';
 
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [leadDetails, setLeadDetails] = useState<any>(null);
   const leadId = location.state?.leadId || localStorage.getItem('pendingLeadId');
 
   useEffect(() => {
@@ -26,8 +27,23 @@ const PaymentPage = () => {
       return;
     }
 
-    setLoading(false);
+    // Fetch lead details to get dynamic consultation plan & fee
+    axios.get(`${import.meta.env.VITE_API_URL}/api/leads/${leadId}`)
+      .then(res => {
+        setLeadDetails(res.data);
+      })
+      .catch(err => {
+        console.error('Failed to fetch lead details:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [leadId, navigate, user, authLoading]);
+
+  // Determine plan details and fee dynamically
+  const planKey = (leadDetails?.consultationPlan || 'STANDARD').toUpperCase();
+  const planInfo = CONSULTATION_PLANS[planKey] || CONSULTATION_PLANS.STANDARD;
+  const consultationFee = leadDetails?.consultationFee || planInfo.price || DEFAULT_CONSULTATION_FEE;
 
   const handlePayUPayment = async () => {
     setLoading(true);
@@ -67,16 +83,23 @@ const PaymentPage = () => {
         </div>
         
         <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Secure Checkout</h2>
-        <p className="text-gray-500 mb-8 font-medium">Complete your ₹{CONSULTATION_FEE} payment to lock in your expert legal consultation.</p>
+        <p className="text-gray-500 mb-8 font-medium">Complete your ₹{consultationFee} payment to lock in your expert legal consultation.</p>
 
         <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-4">
-          <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-            <span className="text-gray-500 font-medium">Consultation Fee</span>
-            <span className="text-gray-900 font-bold">₹{CONSULTATION_FEE}</span>
+          <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+            <span className="text-gray-500 font-medium">Selected Plan</span>
+            <span className="text-gray-900 font-bold flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-indigo-600" />
+              {planInfo.name} ({planInfo.duration})
+            </span>
           </div>
-          <div className="flex justify-between items-center text-lg">
+          <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+            <span className="text-gray-500 font-medium">Consultation Fee</span>
+            <span className="text-gray-900 font-bold">₹{consultationFee}</span>
+          </div>
+          <div className="flex justify-between items-center text-lg pt-1">
             <span className="text-gray-900 font-black">Total to Pay</span>
-            <span className="text-indigo-600 font-black">₹{CONSULTATION_FEE}</span>
+            <span className="text-indigo-600 font-black">₹{consultationFee}</span>
           </div>
         </div>
 
@@ -85,7 +108,7 @@ const PaymentPage = () => {
           disabled={loading && !authLoading}
           className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50 cursor-pointer"
         >
-          {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `Confirm & Pay ₹${CONSULTATION_FEE}`}
+          {loading && !authLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `Confirm & Pay ₹${consultationFee}`}
         </button>
  
         <p className="mt-6 text-xs text-gray-400 font-medium flex items-center justify-center gap-2">

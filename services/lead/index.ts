@@ -115,6 +115,12 @@ async function triggerExotelCall(lawyerPhone: string, clientPhone: string, leadI
   return data;
 }
 
+const PLAN_PRICE_MAP: Record<string, number> = {
+  QUICK: 200,
+  STANDARD: 400,
+  DETAILED: 800
+};
+
 const leadSchema = z.object({
   fullName: z.string(),
   phone: z.string(),
@@ -122,6 +128,8 @@ const leadSchema = z.object({
   category: z.string().optional().default('General'),
   description: z.string().optional().default(''),
   preferredTime: z.string(),
+  consultationPlan: z.string().optional().default('STANDARD'),
+  consultationFee: z.number().optional(),
   userId: z.string().optional()
 }).passthrough();
 
@@ -129,24 +137,10 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
   try {
     const data = leadSchema.parse(request.body);
     const authUserId = request.headers['x-user-id'] as string;
-    
-    // Check for duplicates (disabled in local dev environment for seamless iterative testing)
-    /*
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const existingLead = await prisma.lead.findFirst({
-      where: {
-        phone: data.phone,
-        category: data.category,
-        createdAt: { gte: oneHourAgo }
-      }
-    });
-
-    if (existingLead) {
-      return existingLead; // Return existing if duplicate
-    }
-    */
 
     const isCallback = data.preferredTime.toLowerCase().includes('callback');
+    const planKey = (data.consultationPlan || 'STANDARD').toUpperCase();
+    const fee = data.consultationFee || PLAN_PRICE_MAP[planKey] || 400;
 
     const lead = await prisma.lead.create({
       data: {
@@ -156,6 +150,8 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
         category: data.category || 'General',
         description: data.description || '',
         preferredTime: data.preferredTime,
+        consultationPlan: planKey,
+        consultationFee: fee,
         userId: authUserId || data.userId || null,
         status: 'NEW',
         slaStatus: isCallback ? 'CALLBACK_PENDING' : undefined
@@ -166,6 +162,25 @@ fastify.post('/api/leads', async (request: any, reply: any) => {
   } catch (error: any) {
     fastify.log.error(error);
     return reply.status(400).send({ error: 'Invalid data', message: error.message });
+  }
+});
+
+fastify.get('/api/leads/:id', async (request: any, reply: any) => {
+  const { id } = request.params;
+  try {
+    const lead = await prisma.lead.findUnique({
+      where: { id },
+      include: {
+        lawyer: { include: { user: true } },
+        booking: { include: { payment: true } }
+      }
+    });
+
+    if (!lead) return reply.status(404).send({ error: 'Lead not found' });
+    return lead;
+  } catch (err: any) {
+    fastify.log.error(err);
+    return reply.status(500).send({ error: 'Failed to fetch lead details' });
   }
 });
 
