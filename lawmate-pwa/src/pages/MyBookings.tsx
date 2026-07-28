@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Clock, MapPin, CheckCircle2, Star, Loader2, Award, ShieldCheck, CreditCard, AlertCircle, User, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
-import { CONSULTATION_FEE } from '../config/constants';
+import { CONSULTATION_PLANS, CONSULTATION_FEE } from '../config/constants';
 
 const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -197,10 +197,16 @@ const MyBookings = () => {
                   </div>
                   {(() => {
                     const isPaid = booking.booking?.payment?.status === 'captured' || booking.booking?.status === 'CONFIRMED' || booking.status === 'ASSIGNED' || booking.status === 'COMPLETED';
+                    const planKey = (booking.consultationPlan || 'STANDARD').toUpperCase();
+                    const planInfo = CONSULTATION_PLANS[planKey] || CONSULTATION_PLANS.STANDARD;
+                    const paidAmount = booking.booking?.payment?.amount 
+                      ? Math.round(booking.booking.payment.amount / 100) 
+                      : (booking.consultationFee || planInfo.price || 400);
+
                     return isPaid ? (
                       <div className="text-left sm:text-right shrink-0">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fee Paid</p>
-                        <p className="text-2xl font-black text-indigo-600">₹{CONSULTATION_FEE}</p>
+                        <p className="text-2xl font-black text-indigo-600">₹{paidAmount}</p>
                       </div>
                     ) : (
                       <div className="text-left sm:text-right shrink-0">
@@ -211,7 +217,7 @@ const MyBookings = () => {
                           }}
                           className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-xs cursor-pointer"
                         >
-                          <CreditCard className="w-4 h-4" /> Pay ₹{CONSULTATION_FEE}
+                          <CreditCard className="w-4 h-4" /> Pay ₹{paidAmount}
                         </button>
                       </div>
                     );
@@ -235,7 +241,13 @@ const MyBookings = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Duration</p>
-                        <p className="text-sm font-black text-gray-900">60 Min Session</p>
+                        <p className="text-sm font-black text-gray-900">
+                          {(() => {
+                            const planKey = (booking.consultationPlan || 'STANDARD').toUpperCase();
+                            const planInfo = CONSULTATION_PLANS[planKey] || CONSULTATION_PLANS.STANDARD;
+                            return `${planInfo.name} (${planInfo.duration})`;
+                          })()}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 text-gray-600">
