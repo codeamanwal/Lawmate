@@ -30,6 +30,52 @@ const PAYU_ACTION_URL = (PAYU_ENV === 'PRODUCTION' && PAYU_KEY !== 'PwVHQz')
 
 fastify.register(cors);
 
+// Dynamic Consultation Prices Helper
+export async function getConsultationPrices() {
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'CONSULTATION_PRICES' }
+    });
+    if (setting && setting.value && typeof setting.value === 'object') {
+      const val = setting.value as Record<string, number>;
+      return {
+        QUICK: Number(val.QUICK) || 200,
+        STANDARD: Number(val.STANDARD) || 400,
+        DETAILED: Number(val.DETAILED) || 800
+      };
+    }
+  } catch (err) {
+    console.error('Failed to read consultation prices setting:', err);
+  }
+  return { QUICK: 200, STANDARD: 400, DETAILED: 800 };
+}
+
+// Get active consultation prices endpoint
+fastify.get('/api/payments/prices', async (request: any, reply: any) => {
+  const prices = await getConsultationPrices();
+  return prices;
+});
+
+// Admin update consultation prices endpoint
+fastify.post('/api/admin/payments/prices', async (request: any, reply: any) => {
+  const { QUICK, STANDARD, DETAILED } = (request.body || {}) as { QUICK?: number, STANDARD?: number, DETAILED?: number };
+
+  const current = await getConsultationPrices();
+  const updatedPrices = {
+    QUICK: Number(QUICK) > 0 ? Number(QUICK) : current.QUICK,
+    STANDARD: Number(STANDARD) > 0 ? Number(STANDARD) : current.STANDARD,
+    DETAILED: Number(DETAILED) > 0 ? Number(DETAILED) : current.DETAILED
+  };
+
+  await prisma.systemSetting.upsert({
+    where: { key: 'CONSULTATION_PRICES' },
+    update: { value: updatedPrices },
+    create: { key: 'CONSULTATION_PRICES', value: updatedPrices }
+  });
+
+  return { success: true, prices: updatedPrices };
+});
+
 // Register a native, zero-dependency parser for application/x-www-form-urlencoded
 fastify.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (req, body, done) => {
   try {
@@ -91,7 +137,9 @@ fastify.post('/api/payments/create-link', async (request: any, reply: any) => {
     }
 
     const merchantTransactionId = `TXN-${crypto.randomBytes(8).toString('hex')}`;
-    const feeInINR = lead.consultationFee || (lead.consultationPlan === 'QUICK' ? 200 : lead.consultationPlan === 'DETAILED' ? 800 : 400);
+    const activePrices = await getConsultationPrices();
+    const planKey = (lead.consultationPlan || 'STANDARD').toUpperCase();
+    const feeInINR = lead.consultationFee || activePrices[planKey] || 400;
     const amountInPaise = feeInINR * 100;
 
     if (!payment) {

@@ -8,6 +8,7 @@ import {
   User, Shield, PhoneCall, Volume2, Award, CheckSquare, Eye
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 interface Lead {
   id: string;
@@ -192,11 +193,46 @@ const AdminDashboard = () => {
   });
   const [crudLoading, setCrudLoading] = useState(false);
 
+  // Dynamic Consultation Pricing Settings
+  const [pricingSettings, setPricingSettings] = useState({
+    QUICK: 200,
+    STANDARD: 400,
+    DETAILED: 800
+  });
+  const [savingPrices, setSavingPrices] = useState(false);
+
+  const fetchPricingSettings = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/payments/prices`);
+      if (res.data && typeof res.data === 'object') {
+        setPricingSettings(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load consultation pricing settings:', err);
+    }
+  };
+
+  const handleSavePricing = async () => {
+    setSavingPrices(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/payments/prices`, pricingSettings);
+      if (res.data && res.data.success) {
+        setPricingSettings(res.data.prices);
+        toast.success('Consultation plan prices updated successfully!');
+      }
+    } catch (err) {
+      toast.error('Failed to update consultation prices.');
+    } finally {
+      setSavingPrices(false);
+    }
+  };
+
   useEffect(() => {
     const sessionAuth = localStorage.getItem('isAdminLoggedIn');
     if (sessionAuth === 'true') {
       setIsLoggedIn(true);
       fetchLeads();
+      fetchPricingSettings();
     } else {
       setLoading(false);
     }
@@ -771,7 +807,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Leads</p>
             <h3 className="text-3xl font-black text-gray-900">{stats.total}</h3>
@@ -791,6 +827,85 @@ const AdminDashboard = () => {
           <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-red-500">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 4 (Emergency)</p>
             <h3 className="text-3xl font-black text-red-600">{stats.flow4}</h3>
+          </div>
+        </div>
+
+        {/* Consultation Plan Pricing Manager */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 mb-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+            <div>
+              <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-indigo-600" />
+                Consultation Plan Pricing Management
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">Set active prices (₹) for client consultation plans. Changes reflect instantly across intake forms & checkout.</p>
+            </div>
+            <button
+              onClick={handleSavePricing}
+              disabled={savingPrices}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {savingPrices ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Pricing Settings'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Quick Consultation */}
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">15 min</span>
+                <span className="text-xs font-semibold text-gray-400">Quick Plan</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm mb-3">Quick Consultation</h4>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                <input
+                  type="number"
+                  value={pricingSettings.QUICK}
+                  onChange={(e) => setPricingSettings({ ...pricingSettings, QUICK: Number(e.target.value) })}
+                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
+                  placeholder="200"
+                />
+              </div>
+            </div>
+
+            {/* Standard Consultation */}
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">30 min</span>
+                <span className="text-xs font-semibold text-gray-400">Standard Plan</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm mb-3">Standard Consultation</h4>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                <input
+                  type="number"
+                  value={pricingSettings.STANDARD}
+                  onChange={(e) => setPricingSettings({ ...pricingSettings, STANDARD: Number(e.target.value) })}
+                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
+                  placeholder="400"
+                />
+              </div>
+            </div>
+
+            {/* Detailed Consultation */}
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">60 min</span>
+                <span className="text-xs font-semibold text-gray-400">Detailed Plan</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm mb-3">Detailed Consultation</h4>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                <input
+                  type="number"
+                  value={pricingSettings.DETAILED}
+                  onChange={(e) => setPricingSettings({ ...pricingSettings, DETAILED: Number(e.target.value) })}
+                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
+                  placeholder="800"
+                />
+              </div>
+            </div>
           </div>
         </div>
 

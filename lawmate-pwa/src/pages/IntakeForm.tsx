@@ -43,6 +43,20 @@ const IntakeForm = () => {
   });
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [planPrices, setPlanPrices] = useState<Record<string, number>>({ QUICK: 200, STANDARD: 400, DETAILED: 800 });
+
+  // Fetch active admin consultation prices
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/payments/prices`)
+      .then(res => {
+        if (res.data && typeof res.data === 'object') {
+          setPlanPrices(res.data);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch consultation prices:', err);
+      });
+  }, []);
 
   // Use a user-scoped draft key so different users never share drafts
   const draftKey = user ? `intake_draft_${user.id}` : 'intake_draft_guest';
@@ -90,7 +104,11 @@ const IntakeForm = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/leads`, data);
+      const fee = planPrices[data.consultationPlan] || 400;
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/leads`, {
+        ...data,
+        consultationFee: fee
+      });
       localStorage.setItem('pendingLeadId', response.data.id);
       localStorage.removeItem(draftKey); // Clear draft on success
       toast.success('Lead submitted successfully!');
@@ -213,7 +231,7 @@ const IntakeForm = () => {
                       <span className="font-bold text-sm block text-gray-900 leading-snug">{plan.name}</span>
                     </div>
                     <div className="mt-3 flex items-baseline justify-between border-t border-gray-100 pt-2">
-                      <span className="text-xl font-black text-indigo-700">₹{plan.price}</span>
+                      <span className="text-xl font-black text-indigo-700">₹{planPrices[plan.id] || plan.price}</span>
                       {isSelected && <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>}
                     </div>
                   </label>
