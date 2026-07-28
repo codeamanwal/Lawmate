@@ -22,6 +22,7 @@ import LawyerDashboard from './pages/LawyerDashboard';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AdminDashboard from './pages/AdminDashboard';
+import PricingPage from './pages/PricingPage';
 import DisclaimerModal from './components/DisclaimerModal';
 import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
@@ -41,6 +42,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/get-started" element={<IntakeForm />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/success" element={<SuccessPage />} />

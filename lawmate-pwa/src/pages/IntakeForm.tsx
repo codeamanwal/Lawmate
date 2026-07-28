@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 import { ChevronRight, Loader2, AlertCircle, X } from 'lucide-react';
@@ -31,12 +31,15 @@ const IntakeForm = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   
+  const preselectedPlan = location.state?.preselectedPlan as 'QUICK' | 'STANDARD' | 'DETAILED' | undefined;
+
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      consultationPlan: 'STANDARD',
+      consultationPlan: preselectedPlan || 'STANDARD',
       preferredTime: 'ASAP',
       agreed: false
     }
