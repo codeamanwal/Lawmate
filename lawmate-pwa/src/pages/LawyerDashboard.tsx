@@ -633,9 +633,9 @@ const LawyerDashboard = () => {
 
             <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-gray-100 shadow-sm text-left">
               <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-                <h3 className="font-black text-gray-900 uppercase tracking-widest text-xs">Contact & Location</h3>
+                <h3 className="font-black text-gray-900 uppercase tracking-widest text-xs">Personal Details</h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Phone Number</p>
                   <p className="text-sm font-black text-gray-900">{user?.phone || 'Not Provided'}</p>
@@ -647,6 +647,17 @@ const LawyerDashboard = () => {
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">City</p>
                   <p className="text-sm font-black text-gray-900">{user?.city || 'Not Provided'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Aadhaar Number</p>
+                  <p className="text-sm font-black text-gray-900">
+                    {(() => {
+                      const rawAadhaar = (user?.lawyerProfile?.aadhaarNumber || '').replace(/\D/g, '');
+                      return rawAadhaar.length >= 4 
+                        ? `XXXX-XXXX-${rawAadhaar.slice(-4)}`
+                        : 'Not Provided';
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
