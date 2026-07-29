@@ -481,6 +481,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
           create: {
             licenseNumber: data.licenseNumber,
             aadhaarNumber: data.aadhaarNumber,
+            firmName: data.firmName || 'Independent',
             experience: data.experience ? parseInt(data.experience.toString()) : 0,
             categories: data.practiceAreas || [],
             state: data.state,
@@ -611,7 +612,7 @@ fastify.post('/api/auth/login', async (request: any, reply: any) => {
 // 7. Update Lawyer Profile (Onboarding)
 fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => {
   console.log('RECEIVED LAWYER UPDATE REQUEST:', request.body);
-  const { bio, languages, categories, availability, onboardingCompleted, enrollmentCert, panCard, degreeCert, photo } = request.body;
+  const { bio, languages, categories, availability, onboardingCompleted, enrollmentCert, panCard, degreeCert, photo, firmName } = request.body;
   const authHeader = request.headers.authorization;
   
   if (!authHeader) return reply.status(401).send({ error: 'Unauthorized' });
@@ -656,6 +657,10 @@ fastify.post('/api/profiles/lawyer/update', async (request: any, reply: any) => 
       email: userRecord?.email,
       phone: userRecord?.phone
     };
+
+    if (firmName) {
+      updateData.firmName = firmName;
+    }
 
     if (onboardingCompleted !== undefined) {
       updateData.onboardingCompleted = onboardingCompleted;

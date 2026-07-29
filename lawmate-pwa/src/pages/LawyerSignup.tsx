@@ -72,6 +72,7 @@ const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   email: z.string().email('Invalid email format'),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit phone number'),
+  firmName: z.string().min(1, 'Firm Name is required (or Independent).'),
   state: z.string().min(1, 'Select your state'),
   city: z.string().min(1, 'City is required'),
   licenseNumber: z.string().regex(/^[A-Z]{2,3}\/\d+\/\d{4}$/, 'Enter valid enrollment number.'),
@@ -232,6 +233,20 @@ const LawyerSignup = () => {
                   />
                   {errors.phone && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-gray-400" /> Firm Name* <span className="text-[11px] font-normal text-gray-400">(If independent, type Independent)</span>
+                  </label>
+                  <input
+                    {...register('firmName')}
+                    placeholder="Independent or Firm Name"
+                    className={`w-full px-4 py-3 rounded-xl border ${errors.firmName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} outline-none transition-all font-medium text-sm`}
+                  />
+                  {errors.firmName && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.firmName.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-gray-400" /> State*

@@ -38,6 +38,7 @@ model LawyerProfile {
   address             String?
   licenseNumber       String?
   aadhaarNumber       String?
+  firmName            String?
   state               String?
   languages           String[]
   onboardingCompleted Boolean   @default(false)

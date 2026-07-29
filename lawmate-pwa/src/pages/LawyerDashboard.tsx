@@ -679,7 +679,11 @@ const LawyerDashboard = () => {
                     "{user?.lawyerProfile?.bio || 'No bio provided.'}"
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Firm Name</p>
+                    <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.firmName || 'Independent'}</p>
+                  </div>
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Languages</p>
                     <p className="text-sm font-black text-gray-900">{user?.lawyerProfile?.languages?.join(', ') || 'Not Provided'}</p>

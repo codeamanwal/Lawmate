@@ -1865,6 +1865,10 @@ const AdminDashboard = () => {
                           <span className="col-span-2 text-gray-800 font-semibold">{selectedLead.lawyer.name || 'Onboarding Pending'}</span>
                         </div>
                         <div className="grid grid-cols-3">
+                          <span className="text-gray-400 font-medium">Firm Name:</span>
+                          <span className="col-span-2 text-gray-800 font-semibold">{(selectedLead.lawyer as any).firmName || 'Independent'}</span>
+                        </div>
+                        <div className="grid grid-cols-3">
                           <span className="text-gray-400 font-medium">Email Address:</span>
                           <span className="col-span-2 text-gray-800 font-semibold">{selectedLead.lawyer.email || selectedLead.lawyer.user?.email || 'N/A'}</span>
                         </div>
