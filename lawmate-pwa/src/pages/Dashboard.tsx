@@ -275,7 +275,7 @@ const Dashboard = () => {
                                 )}
                               </div>
                               <div>
-                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-0.5">Lawyer Assigned</p>
+                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-0.5">Advocate Assigned</p>
                                 <p className="font-bold text-gray-900">{lead.lawyer.user?.name}</p>
                                 <p className="text-xs text-gray-500 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {lead.lawyer.rating && lead.lawyer.rating > 0 ? lead.lawyer.rating.toFixed(1) : 'No Ratings'} • {lead.lawyer.experience} Years Exp</p>
                               </div>
@@ -297,7 +297,7 @@ const Dashboard = () => {
                                 })()})
                               </p>
                             ) : (
-                              <p className="text-sm text-gray-500 italic font-medium">Finding the best lawyer for you...</p>
+                              <p className="text-sm text-gray-500 italic font-medium">Finding the best Advocate for you...</p>
                             )
                           ) : (
                             <p className="text-sm text-gray-500 italic font-medium">Payment is required to start matching...</p>
@@ -358,7 +358,7 @@ const Dashboard = () => {
                   <p className="text-xs text-red-600 font-bold">Emergency Legal Helpline · 60-Min SLA</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 font-medium">Get connected with a verified lawyer within 60 minutes for urgent legal matters.</p>
+              <p className="text-sm text-gray-500 font-medium">Get connected with a verified Advocate within 60 minutes for urgent legal matters.</p>
             </div>
 
             <form onSubmit={handleEmergencyCaseSubmit} className="space-y-4">
@@ -417,7 +417,7 @@ const Dashboard = () => {
                   <option value="Domestic Violence">Domestic Violence</option>
                   <option value="Property & Registry">Property & Registry</option>
                   <option value="Criminal & Police">Criminal & Police</option>
-                  <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                  <option value="Supreme Court Lawyer">Supreme Court Advocate</option>
                   <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
                   <option value="Employment & HR">Employment & HR</option>
                   <option value="Consumer Complaints">Consumer Complaints</option>
@@ -440,7 +440,7 @@ const Dashboard = () => {
               {/* Payment notice */}
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹{CONSULTATION_FEE} is required to activate the 60-min SLA and connect you with an expert lawyer.</p>
+                <p className="text-xs font-semibold text-amber-700">A consultation fee of ₹{CONSULTATION_FEE} is required to activate the 60-min SLA and connect you with an expert Advocate.</p>
               </div>
 
               <button

@@ -43,7 +43,7 @@ const MatchingPage = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Finding your legal expert...</h2>
           <p className="text-gray-500 mb-4">
-            Our smart engine is scanning our network of verified lawyers to find the perfect match for your specific case.
+            Our smart engine is scanning our network of verified Advocates to find the perfect match for your specific case.
           </p>
         </div>
       </div>

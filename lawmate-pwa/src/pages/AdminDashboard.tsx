@@ -527,7 +527,7 @@ const AdminDashboard = () => {
       'Domestic Violence',
       'Property & Registry',
       'Criminal & Police',
-      'Supreme Court Lawyer',
+      'Supreme Court Advocate',
       'Cyber & Digital Fraud',
       'Employment & HR',
       'Consumer Complaints',
@@ -1095,7 +1095,7 @@ const AdminDashboard = () => {
             <div className="border-t border-gray-105 pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
               {/* Filter by Lawyer Assignment */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lawyer Assignment</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Advocate Assignment</span>
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2">
                   <User className="w-4 h-4 text-gray-400" />
                   <select 
@@ -1104,7 +1104,7 @@ const AdminDashboard = () => {
                     className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer w-full"
                   >
                     <option value="All">All Leads</option>
-                    <option value="Assigned">Assigned to Lawyer</option>
+                    <option value="Assigned">Assigned to Advocate</option>
                     <option value="Unassigned">Unassigned / Awaiting</option>
                   </select>
                 </div>
@@ -1180,7 +1180,7 @@ const AdminDashboard = () => {
                     <option value="All">All SLA Alerts</option>
                     <option value="PENDING_ACCEPTANCE">Pending Acceptance</option>
                     <option value="NOT_ATTENDED">SLA Breached (Not Attended)</option>
-                    <option value="REASSIGNING">Reassigning Lawyer</option>
+                    <option value="REASSIGNING">Reassigning Advocate</option>
                   </select>
                 </div>
               </div>
@@ -1454,7 +1454,7 @@ const AdminDashboard = () => {
                       <option value="Domestic Violence">Domestic Violence</option>
                       <option value="Property & Registry">Property & Registry</option>
                       <option value="Criminal & Police">Criminal & Police</option>
-                      <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                      <option value="Supreme Court Advocate">Supreme Court Advocate</option>
                       <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
                       <option value="Employment & HR">Employment & HR</option>
                       <option value="Consumer Complaints">Consumer Complaints</option>
@@ -1592,7 +1592,7 @@ const AdminDashboard = () => {
                       <option value="Domestic Violence">Domestic Violence</option>
                       <option value="Property & Registry">Property & Registry</option>
                       <option value="Criminal & Police">Criminal & Police</option>
-                      <option value="Supreme Court Lawyer">Supreme Court Lawyer</option>
+                      <option value="Supreme Court Advocate">Supreme Court Advocate</option>
                       <option value="Cyber & Digital Fraud">Cyber & Digital Fraud</option>
                       <option value="Employment & HR">Employment & HR</option>
                       <option value="Consumer Complaints">Consumer Complaints</option>
@@ -1769,7 +1769,7 @@ const AdminDashboard = () => {
                           {selectedLead.retryCount ?? 0} / 3
                           {(selectedLead.retryCount ?? 0) >= 3 && (
                             <span className="text-xs text-rose-600 block mt-1 font-sans font-normal leading-normal">
-                              ⚠️ Manual Handling: Somebody from our team will assign a lawyer manually.
+                              ⚠️ Manual Handling: Somebody from our team will assign an Advocate manually.
                             </span>
                           )}
                         </span>
@@ -1841,7 +1841,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Assigned Lawyer */}
+                  {/* Assigned Advocate */}
                   <div className="p-5 bg-gray-50/70 border border-gray-100 rounded-2xl">
                     <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
                       <Award className="w-4 h-4 text-indigo-600" /> Assigned Advocate Details

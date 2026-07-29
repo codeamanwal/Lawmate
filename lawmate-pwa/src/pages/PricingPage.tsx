@@ -175,7 +175,7 @@ const PricingPage = () => {
             </span>
             <h2 className="text-2xl sm:text-3xl font-black mb-4">Guaranteed Expert Guidance with Total Privacy</h2>
             <p className="text-indigo-200 text-sm leading-relaxed font-medium mb-6">
-              All communications are protected under client-attorney confidentiality. If our matching engine fails to assign an advocate, you receive an immediate hassle-free refund.
+              All communications are protected under client-advocate confidentiality. If our matching engine fails to assign an advocate, you receive an immediate hassle-free refund.
             </p>
             <div className="flex flex-wrap gap-6 text-xs font-bold text-indigo-100">
               <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-400" /> 256-bit SSL Security</span>
@@ -193,7 +193,7 @@ const PricingPage = () => {
           
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-              <h3 className="font-bold text-gray-900 text-base mb-2">How long after payment will a lawyer call me?</h3>
+              <h3 className="font-bold text-gray-900 text-base mb-2">How long after payment will an Advocate call me?</h3>
               <p className="text-gray-500 text-sm font-medium leading-relaxed">
                 For ASAP requests, our SLA matching engine notifies available Advocates immediately. An advocate accepts and initiates the call within 60 minutes.
               </p>

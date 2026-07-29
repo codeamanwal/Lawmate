@@ -30,7 +30,7 @@ const LawyerOnboarding = () => {
   const navigate = useNavigate();
 
   // Form State
-  const [practiceAreas, setPracticeAreas] = useState<string[]>(["Family & Marriage", "Domestic Violence", "Property & Registry", "Criminal & Police", "Supreme Court Lawyer", "Cyber & Digital Fraud", "Employment & HR", "Consumer Complaints", "Other"]);
+  const [practiceAreas, setPracticeAreas] = useState<string[]>(["Family & Marriage", "Domestic Violence", "Property & Registry", "Criminal & Police", "Supreme Court Advocate", "Cyber & Digital Fraud", "Employment & HR", "Consumer Complaints", "Other"]);
   const [selectedPracticeAreas, setSelectedPracticeAreas] = useState<string[]>(user?.lawyerProfile?.categories || []);
   const [bio, setBio] = useState(user?.lawyerProfile?.bio || '');
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(user?.lawyerProfile?.languages || []);

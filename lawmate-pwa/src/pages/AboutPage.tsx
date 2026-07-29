@@ -14,7 +14,7 @@ const AboutPage = () => {
     {
       id: '01',
       title: 'Speed without compromise',
-      desc: 'A verified lawyer, matched to your issue, within 60 minutes. Legal help that moves at the pace of your life.',
+      desc: 'A verified Advocate, matched to your issue, within 60 minutes. Legal help that moves at the pace of your life.',
       icon: Clock,
     },
     {
