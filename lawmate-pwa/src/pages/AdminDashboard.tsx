@@ -206,7 +206,11 @@ const AdminDashboard = () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/payments/prices`);
       if (res.data && typeof res.data === 'object') {
-        setPricingSettings(res.data);
+        setPricingSettings({
+          QUICK: Number(res.data.QUICK) || 200,
+          STANDARD: Number(res.data.STANDARD) || 400,
+          DETAILED: Number(res.data.DETAILED) || 800
+        });
       }
     } catch (err) {
       console.error('Failed to load consultation pricing settings:', err);
@@ -218,7 +222,11 @@ const AdminDashboard = () => {
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/payments/prices`, pricingSettings);
       if (res.data && res.data.success) {
-        setPricingSettings(res.data.prices);
+        setPricingSettings({
+          QUICK: Number(res.data.prices.QUICK) || 200,
+          STANDARD: Number(res.data.prices.STANDARD) || 400,
+          DETAILED: Number(res.data.prices.DETAILED) || 800
+        });
         toast.success('Consultation plan prices updated successfully!');
       }
     } catch (err) {
@@ -253,6 +261,7 @@ const AdminDashboard = () => {
         toast.success('Logged in successfully as Admin.');
         setAuthLoading(false);
         fetchLeads();
+        fetchPricingSettings();
       }, 800);
     } else {
       setTimeout(() => {
@@ -825,7 +834,10 @@ const AdminDashboard = () => {
             Console Control
           </button>
           <button
-            onClick={() => setActiveAdminTab('pricing')}
+            onClick={() => {
+              setActiveAdminTab('pricing');
+              fetchPricingSettings();
+            }}
             className={`px-6 py-3 rounded-xl font-extrabold text-sm transition-all flex items-center gap-2 cursor-pointer ${
               activeAdminTab === 'pricing'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
