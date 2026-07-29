@@ -37,9 +37,7 @@ const LawyerOnboarding = () => {
   const [website, setWebsite] = useState('');
   const [files, setFiles] = useState<Record<string, string>>({
     'Enrollment Certificate': user?.lawyerProfile?.enrollmentCert || '',
-    'PAN Card': user?.lawyerProfile?.panCard || '',
-    'Degree Certificate': user?.lawyerProfile?.degreeCert || '',
-    'Headshot Photo': user?.lawyerProfile?.photo || ''
+    'Cancelled Cheque or Passbook': user?.lawyerProfile?.degreeCert || ''
   });
   const [availability, setAvailability] = useState({
     monday: true, tuesday: true, wednesday: true, thursday: true, friday: true,
@@ -82,9 +80,7 @@ const LawyerOnboarding = () => {
       }
       setFiles({
         'Enrollment Certificate': user.lawyerProfile.enrollmentCert || '',
-        'PAN Card': user.lawyerProfile.panCard || '',
-        'Degree Certificate': user.lawyerProfile.degreeCert || '',
-        'Headshot Photo': user.lawyerProfile.photo || ''
+        'Cancelled Cheque or Passbook': user.lawyerProfile.degreeCert || ''
       });
       isInitializedRef.current = true;
     }
@@ -118,9 +114,7 @@ const LawyerOnboarding = () => {
         },
         onboardingCompleted: true,
         enrollmentCert: files['Enrollment Certificate'],
-        panCard: files['PAN Card'],
-        degreeCert: files['Degree Certificate'],
-        photo: files['Headshot Photo']
+        degreeCert: files['Cancelled Cheque or Passbook']
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -322,9 +316,7 @@ const LawyerOnboarding = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 {[
                   { label: 'Enrollment Certificate', icon: FileCheck, hint: 'State Bar Council Certificate (PDF/JPG)' },
-                  { label: 'PAN Card', icon: User, hint: 'Government ID (JPG/PDF)' },
-                  { label: 'Degree Certificate', icon: Award, hint: 'Law Degree (JPG/PDF)' },
-                  { label: 'Headshot Photo', icon: ImageIcon, hint: 'Clear passport-style photo (JPG)' }
+                  { label: 'Cancelled Cheque or Passbook', icon: FileCheck, hint: 'Cancelled Cheque or Photo of passbook’s first page (PDF/JPG)' }
                 ].map((doc) => (
                   <div key={doc.label} className="group">
                     <label className="block text-sm font-bold text-gray-700 mb-3">{doc.label}</label>
@@ -362,12 +354,12 @@ const LawyerOnboarding = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Documents Uploaded</span>
                   <span className="text-gray-900 font-black">
-                    {Object.values(files).filter(Boolean).length} of 4 Attached
+                    {Object.values(files).filter(Boolean).length} of 2 Attached
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Consultation Fee</span>
-                  <span className="text-indigo-600 font-black">Fixed at ₹{CONSULTATION_FEE}</span>
+                  <span className="text-indigo-600 font-black">As per your agreement with LawOnCall</span>
                 </div>
               </div>
             </div>
