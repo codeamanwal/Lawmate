@@ -234,8 +234,9 @@ const LawyerSignup = () => {
                   {errors.phone && <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-gray-400" /> Firm Name* <span className="text-[11px] font-normal text-gray-400">(If independent, type Independent)</span>
+                  <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1.5 whitespace-nowrap">
+                    <Briefcase className="w-4 h-4 text-gray-400 shrink-0" />
+                    <span>Firm Name* <span className="text-[11px] font-normal text-gray-400">(If independent, type Independent)</span></span>
                   </label>
                   <input
                     {...register('firmName')}
