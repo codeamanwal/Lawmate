@@ -162,6 +162,7 @@ const AdminDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDateRange, setSelectedDateRange] = useState('All');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [activeAdminTab, setActiveAdminTab] = useState<'console' | 'pricing'>('console');
 
   // Advanced Granular Filter States
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -781,133 +782,166 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-6">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tight leading-none">
-              Console Control
+              {activeAdminTab === 'console' ? 'Console Control' : 'Price Management'}
             </h1>
-            <p className="text-gray-500 mt-2">Manage consultation callback flows and database configurations.</p>
+            <p className="text-gray-500 mt-2">
+              {activeAdminTab === 'console' 
+                ? 'Manage consultation callback flows and database configurations.' 
+                : 'Set active prices (₹) for client consultation plans. Changes reflect instantly across intake forms & checkout.'}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={fetchLeads}
               disabled={loading}
-              className="p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-gray-700 hover:text-gray-950 transition-colors shadow-sm flex items-center justify-center"
+              className="p-3 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 text-gray-700 hover:text-gray-950 transition-colors shadow-sm flex items-center justify-center cursor-pointer"
               title="Refresh Data"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={handleLogout}
-              className="px-5 py-3 bg-red-50 border border-red-200 hover:bg-red-100/80 text-red-700 font-bold rounded-xl transition-all flex items-center gap-2 text-sm"
+              className="px-5 py-3 bg-red-50 border border-red-200 hover:bg-red-100/80 text-red-700 font-bold rounded-xl transition-all flex items-center gap-2 text-sm cursor-pointer"
             >
               <LogOut className="w-4 h-4" /> End Session
             </button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Leads</p>
-            <h3 className="text-3xl font-black text-gray-900">{stats.total}</h3>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-amber-500">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 1 (Sheet)</p>
-            <h3 className="text-3xl font-black text-amber-600">{stats.flow1}</h3>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-blue-500">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 2 (60 Min)</p>
-            <h3 className="text-3xl font-black text-blue-600">{stats.flow2}</h3>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-green-500">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 3 (Same Day)</p>
-            <h3 className="text-3xl font-black text-green-600">{stats.flow3}</h3>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-red-500">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 4 (Emergency)</p>
-            <h3 className="text-3xl font-black text-red-600">{stats.flow4}</h3>
-          </div>
+        {/* Mode Selector Tabs */}
+        <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm w-fit mb-8">
+          <button
+            onClick={() => setActiveAdminTab('console')}
+            className={`px-6 py-3 rounded-xl font-extrabold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              activeAdminTab === 'console'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            Console Control
+          </button>
+          <button
+            onClick={() => setActiveAdminTab('pricing')}
+            className={`px-6 py-3 rounded-xl font-extrabold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              activeAdminTab === 'pricing'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            Price Management
+          </button>
         </div>
 
-        {/* Consultation Plan Pricing Manager */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-6 mb-8 shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-indigo-600" />
-                Consultation Plan Pricing Management
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">Set active prices (₹) for client consultation plans. Changes reflect instantly across intake forms & checkout.</p>
+        {activeAdminTab === 'pricing' ? (
+          /* Consultation Plan Pricing Manager Tab */
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+              <div>
+                <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-indigo-600" />
+                  Consultation Plan Pricing Management
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">Set active prices (₹) for client consultation plans. Changes reflect instantly across intake forms & checkout.</p>
+              </div>
+              <button
+                onClick={handleSavePricing}
+                disabled={savingPrices}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {savingPrices ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Pricing Settings'}
+              </button>
             </div>
-            <button
-              onClick={handleSavePricing}
-              disabled={savingPrices}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-            >
-              {savingPrices ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Pricing Settings'}
-            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {/* Quick Consultation */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2.5 py-0.5 rounded-full">15 min</span>
+                  <span className="text-xs font-semibold text-gray-400">Quick Plan</span>
+                </div>
+                <h4 className="font-bold text-gray-900 text-sm mb-3">Quick Consultation</h4>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={pricingSettings.QUICK}
+                    onChange={(e) => setPricingSettings({ ...pricingSettings, QUICK: Number(e.target.value) })}
+                    className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500 text-base"
+                    placeholder="200"
+                  />
+                </div>
+              </div>
+
+              {/* Standard Consultation */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2.5 py-0.5 rounded-full">30 min</span>
+                  <span className="text-xs font-semibold text-gray-400">Standard Plan</span>
+                </div>
+                <h4 className="font-bold text-gray-900 text-sm mb-3">Standard Consultation</h4>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={pricingSettings.STANDARD}
+                    onChange={(e) => setPricingSettings({ ...pricingSettings, STANDARD: Number(e.target.value) })}
+                    className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500 text-base"
+                    placeholder="400"
+                  />
+                </div>
+              </div>
+
+              {/* Detailed Consultation */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2.5 py-0.5 rounded-full">60 min</span>
+                  <span className="text-xs font-semibold text-gray-400">Detailed Plan</span>
+                </div>
+                <h4 className="font-bold text-gray-900 text-sm mb-3">Detailed Consultation</h4>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={pricingSettings.DETAILED}
+                    onChange={(e) => setPricingSettings({ ...pricingSettings, DETAILED: Number(e.target.value) })}
+                    className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500 text-base"
+                    placeholder="800"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {/* Quick Consultation */}
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">15 min</span>
-                <span className="text-xs font-semibold text-gray-400">Quick Plan</span>
+        ) : (
+          /* Console Control Tab */
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+              <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Leads</p>
+                <h3 className="text-3xl font-black text-gray-900">{stats.total}</h3>
               </div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Quick Consultation</h4>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
-                <input
-                  type="number"
-                  value={pricingSettings.QUICK}
-                  onChange={(e) => setPricingSettings({ ...pricingSettings, QUICK: Number(e.target.value) })}
-                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
-                  placeholder="200"
-                />
+              <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-amber-500">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 1 (Sheet)</p>
+                <h3 className="text-3xl font-black text-amber-600">{stats.flow1}</h3>
               </div>
-            </div>
-
-            {/* Standard Consultation */}
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">30 min</span>
-                <span className="text-xs font-semibold text-gray-400">Standard Plan</span>
+              <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-blue-500">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 2 (60 Min)</p>
+                <h3 className="text-3xl font-black text-blue-600">{stats.flow2}</h3>
               </div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Standard Consultation</h4>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
-                <input
-                  type="number"
-                  value={pricingSettings.STANDARD}
-                  onChange={(e) => setPricingSettings({ ...pricingSettings, STANDARD: Number(e.target.value) })}
-                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
-                  placeholder="400"
-                />
+              <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-green-500">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 3 (Same Day)</p>
+                <h3 className="text-3xl font-black text-green-600">{stats.flow3}</h3>
+              </div>
+              <div className="p-6 bg-white border border-gray-200 rounded-3xl shadow-sm border-l-4 border-l-red-500">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Flow 4 (Emergency)</p>
+                <h3 className="text-3xl font-black text-red-600">{stats.flow4}</h3>
               </div>
             </div>
-
-            {/* Detailed Consultation */}
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">60 min</span>
-                <span className="text-xs font-semibold text-gray-400">Detailed Plan</span>
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Detailed Consultation</h4>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
-                <input
-                  type="number"
-                  value={pricingSettings.DETAILED}
-                  onChange={(e) => setPricingSettings({ ...pricingSettings, DETAILED: Number(e.target.value) })}
-                  className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 focus:outline-none focus:border-indigo-500"
-                  placeholder="800"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Filters and Actions */}
         <div className="bg-white border border-gray-200 rounded-[28px] p-6 mb-8 shadow-sm space-y-4">
@@ -1345,6 +1379,8 @@ const AdminDashboard = () => {
             </div>
           )}
         </div>
+      </>
+    )}
 
       </div>
 
