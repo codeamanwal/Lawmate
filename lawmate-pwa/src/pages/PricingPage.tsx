@@ -101,7 +101,7 @@ const PricingPage = () => {
             Expert Legal Counsel for Every Budget
           </h1>
           <p className="text-gray-500 font-medium text-base sm:text-lg">
-            Choose a duration plan tailored to your case and talk directly with verified legal experts.
+            No hidden costs or hourly retainers.
           </p>
         </div>
 
