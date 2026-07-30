@@ -10,9 +10,15 @@ const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [leadDetails, setLeadDetails] = useState<any>(null);
+
   const leadId = location.state?.leadId || localStorage.getItem('pendingLeadId');
+  const stateFee = location.state?.consultationFee;
+  const statePlan = location.state?.consultationPlan;
+
+  const [loading, setLoading] = useState(!stateFee);
+  const [leadDetails, setLeadDetails] = useState<any>(
+    stateFee !== undefined ? { consultationFee: stateFee, consultationPlan: statePlan } : null
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -40,10 +46,21 @@ const PaymentPage = () => {
       });
   }, [leadId, navigate, user, authLoading]);
 
+  if ((loading || authLoading) && !leadDetails && stateFee === undefined) {
+    return (
+      <div className="min-h-[calc(100vh-76px)] bg-gray-50 flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+          <p className="text-sm font-bold text-gray-500">Loading checkout details...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Determine plan details and fee dynamically
-  const planKey = (leadDetails?.consultationPlan || 'STANDARD').toUpperCase();
+  const planKey = (leadDetails?.consultationPlan || statePlan || 'STANDARD').toUpperCase();
   const planInfo = CONSULTATION_PLANS[planKey] || CONSULTATION_PLANS.STANDARD;
-  const consultationFee = leadDetails?.consultationFee || planInfo.price || DEFAULT_CONSULTATION_FEE;
+  const consultationFee = leadDetails?.consultationFee ?? stateFee ?? planInfo.price ?? DEFAULT_CONSULTATION_FEE;
 
   const handlePayUPayment = async () => {
     setLoading(true);

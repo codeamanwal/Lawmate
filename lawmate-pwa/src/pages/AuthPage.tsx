@@ -43,7 +43,13 @@ const AuthPage = () => {
         if (fromLocation) {
           navigate(fromLocation.pathname, { state: fromLocation.state });
         } else if (fromIntake && pendingLeadId) {
-          navigate('/payment', { state: { leadId: pendingLeadId } });
+          navigate('/payment', { 
+            state: { 
+              leadId: pendingLeadId,
+              consultationFee: location.state?.consultationFee,
+              consultationPlan: location.state?.consultationPlan
+            } 
+          });
         } else if (user.role === 'LAWYER') {
           if (user.lawyerProfile?.onboardingCompleted) {
             navigate('/lawyer/dashboard');
@@ -182,7 +188,13 @@ const AuthPage = () => {
       if (fromLocation) {
         navigate(fromLocation.pathname, { state: fromLocation.state });
       } else if (fromIntake && pendingLeadId) {
-        navigate('/payment', { state: { leadId: pendingLeadId } });
+        navigate('/payment', { 
+          state: { 
+            leadId: pendingLeadId,
+            consultationFee: location.state?.consultationFee,
+            consultationPlan: location.state?.consultationPlan
+          } 
+        });
       } else {
         navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
       }

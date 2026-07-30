@@ -117,9 +117,22 @@ const IntakeForm = () => {
       toast.success('Lead submitted successfully!');
       
       if (user) {
-        navigate('/payment', { state: { leadId: response.data.id } });
+        navigate('/payment', { 
+          state: { 
+            leadId: response.data.id, 
+            consultationFee: fee, 
+            consultationPlan: data.consultationPlan 
+          } 
+        });
       } else {
-        navigate('/auth', { state: { fromIntake: true } }); // Redirect to auth for OTP verification
+        navigate('/auth', { 
+          state: { 
+            fromIntake: true, 
+            pendingLeadId: response.data.id,
+            consultationFee: fee, 
+            consultationPlan: data.consultationPlan 
+          } 
+        }); // Redirect to auth for OTP verification
       }
     } catch (error) {
       toast.error('Failed to submit form. Please try again.');
