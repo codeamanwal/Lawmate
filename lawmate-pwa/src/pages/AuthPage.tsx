@@ -127,9 +127,11 @@ const AuthPage = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return toast.error('Enter a valid email address');
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email: cleanEmail });
       toast.success('Reset code sent to your email!');
       setStep('forgot-password-otp');
     } catch (error: any) {
@@ -141,8 +143,21 @@ const AuthPage = () => {
 
   const handleVerifyResetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length !== 6) return toast.error('Enter 6-digit code');
-    setStep('forgot-password-new');
+    const cleanOtp = otp.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    if (cleanOtp.length !== 6) return toast.error('Enter 6-digit code');
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-reset-otp`, {
+        email: cleanEmail,
+        code: cleanOtp
+      });
+      setStep('forgot-password-new');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Invalid or expired code');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -150,11 +165,14 @@ const AuthPage = () => {
     if (password.length < 8) return toast.error('Password must be 8+ characters');
     if (password !== confirmPassword) return toast.error('Passwords do not match');
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
     setLoading(true);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, {
-        email,
-        code: otp,
+        email: cleanEmail,
+        code: cleanOtp,
         newPassword: password
       });
       toast.success('Password updated! Please sign in.');

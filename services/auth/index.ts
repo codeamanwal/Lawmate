@@ -815,23 +815,26 @@ fastify.post('/api/profiles/lawyer/availability', async (request: any, reply: an
 // 7. Forgot Password (Send OTP)
 fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
   const { email } = request.body;
+  const cleanEmail = email ? email.trim().toLowerCase() : '';
   
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return reply.status(404).send({ error: 'User not found' });
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+    });
+    if (!user) return reply.status(404).send({ error: 'No account found with this email address' });
 
     // Generate OTP
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await prisma.otp.upsert({
-      where: { email },
+      where: { email: user.email },
       update: { code: otp, expiresAt },
-      create: { email, code: otp, expiresAt }
+      create: { email: user.email, code: otp, expiresAt }
     });
 
     // Dispatch email transmission in background to avoid blocking API gateway
-    sendOTPEmail(email, otp, 'Your LawOnCall Reset Password Code', 'Password Reset').catch(err => {
+    sendOTPEmail(user.email, otp, 'Your LawOnCall Reset Password Code', 'Password Reset').catch(err => {
       console.error('Background sendOTPEmail failed:', err);
     });
 
@@ -845,27 +848,61 @@ fastify.post('/api/auth/forgot-password', async (request: any, reply: any) => {
   }
 });
 
+// 7b. Verify Reset OTP
+fastify.post('/api/auth/verify-reset-otp', async (request: any, reply: any) => {
+  const { email, code } = request.body;
+  const cleanEmail = email ? email.trim().toLowerCase() : '';
+  const cleanCode = code ? String(code).trim() : '';
+  
+  try {
+    const record = await prisma.otp.findFirst({
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+    });
+
+    if (!record || record.code.trim() !== cleanCode || new Date() > record.expiresAt) {
+      return reply.status(400).send({ error: 'Invalid or expired code' });
+    }
+
+    return { success: true };
+  } catch (error) {
+    return reply.status(500).send({ error: 'Verification failed' });
+  }
+});
+
 // 8. Reset Password
 fastify.post('/api/auth/reset-password', async (request: any, reply: any) => {
   const { email, code, newPassword } = request.body;
+  const cleanEmail = email ? email.trim().toLowerCase() : '';
+  const cleanCode = code ? String(code).trim() : '';
   
   try {
-    // 1. Verify OTP
-    const record = await prisma.otp.findUnique({ where: { email } });
-    if (!record || record.code !== code || new Date() > record.expiresAt) {
+    // 1. Verify OTP insensitively
+    const record = await prisma.otp.findFirst({
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+    });
+
+    if (!record || record.code.trim() !== cleanCode || new Date() > record.expiresAt) {
       return reply.status(400).send({ error: 'Invalid or expired code' });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+    });
+
+    if (!user) {
+      return reply.status(404).send({ error: 'User account not found' });
     }
 
     // 2. Hash and Update Password in PostgreSQL
     const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
     await prisma.user.update({
-      where: { email },
+      where: { id: user.id },
       data: { password: hashedPassword }
     });
 
     // 3. Sync to Firebase Authentication
     try {
-      const fbUser = await admin.auth().getUserByEmail(email);
+      const fbUser = await admin.auth().getUserByEmail(user.email);
       if (fbUser) {
         await admin.auth().updateUser(fbUser.uid, {
           password: newPassword
@@ -876,7 +913,9 @@ fastify.post('/api/auth/reset-password', async (request: any, reply: any) => {
     }
 
     // 4. Clear OTP
-    await prisma.otp.delete({ where: { email } });
+    await prisma.otp.deleteMany({
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+    });
 
     return { success: true };
   } catch (error) {
