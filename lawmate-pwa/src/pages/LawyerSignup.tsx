@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -100,14 +100,65 @@ const LawyerSignup = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const { loginWithEmail } = useAuth();
   const navigate = useNavigate();
+  const isMounted = useRef(false);
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  // Helper to load saved form draft from sessionStorage
+  const getInitialValues = (): Partial<FormData> => {
+    try {
+      const saved = sessionStorage.getItem('lawyer_signup_draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {}
+    return {
+      fullName: '',
+      email: '',
+      phone: '',
+      firmName: '',
+      state: '',
+      city: '',
+      licenseNumber: '',
+      aadhaarNumber: '',
       practiceAreas: [],
+      address: '',
       agreed: false
-    }
+    };
+  };
+
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: getInitialValues()
   });
+
+  const formValues = watch();
+
+  // Load draft on mount explicitly to guarantee field restoration
+  useEffect(() => {
+    const savedDraft = getInitialValues();
+    if (savedDraft && Object.keys(savedDraft).length > 0) {
+      reset(savedDraft);
+    }
+  }, [reset]);
+
+  // Save draft when user types, ignoring initial unpopulated render
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    try {
+      const hasData = Object.values(formValues).some(val => 
+        (Array.isArray(val) && val.length > 0) || 
+        (typeof val === 'string' && val.trim().length > 0) || 
+        (typeof val === 'number' && !isNaN(val)) ||
+        val === true
+      );
+      if (hasData) {
+        sessionStorage.setItem('lawyer_signup_draft', JSON.stringify(formValues));
+      }
+    } catch (e) {}
+  }, [JSON.stringify(formValues)]);
 
   const onSubmitForm = async (data: FormData) => {
     setLoading(true);
@@ -156,9 +207,11 @@ const LawyerSignup = () => {
         password: passwords.password
       });
       
+      // On success, clear draft storage
+      sessionStorage.removeItem('lawyer_signup_draft');
       await loginWithEmail(watch('email'), passwords.password, 'LAWYER');
       
-      toast.success('Account created successfully!');
+      toast.success('Registration completed! Welcome.');
       navigate('/lawyer/onboarding'); // Land on Onboarding Wizard
     } catch (error) {
       toast.error('Failed to set password or login');
@@ -366,7 +419,7 @@ const LawyerSignup = () => {
                   className="mt-1 w-5 h-5 text-indigo-600 rounded-lg border-gray-300 focus:ring-indigo-500 shadow-sm"
                 />
                 <label htmlFor="agreed" className="text-xs font-bold text-gray-500 leading-tight">
-                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-indigo-600 hover:underline">Terms of Use</a>.
+                  I confirm I am enrolled as an Advocate under the Advocates Act, 1961 and agree to the <Link to="/terms" className="text-indigo-600 hover:underline">Terms & Conditions</Link>.
                 </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs font-bold text-red-500">{errors.agreed.message}</p>}
@@ -476,51 +529,6 @@ const LawyerSignup = () => {
           Already have an account? <Link to="/auth" className="text-indigo-600 hover:underline">Log in</Link>
         </p>
       </div>
-
-      {showTermsModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl relative border border-gray-100 p-8 flex flex-col my-4">
-            
-            {/* Close Button */}
-            <button 
-              onClick={() => setShowTermsModal(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 absolute right-6 top-6"
-              aria-label="Close Terms of Use"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Title */}
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Terms of Use
-            </h2>
-
-            {/* Content */}
-            <div className="space-y-4 text-sm text-gray-700 leading-relaxed text-left max-h-[60vh] overflow-y-auto pr-2">
-              <h3 className="text-lg font-bold text-gray-900">1. Services</h3>
-              <p>LawOnCall provides a platform to connect clients with legal professionals. We do not provide legal advice ourselves.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">2. Payments</h3>
-              <p>Payments are handled via Razorpay. Fees are non-refundable once the consultation has started.</p>
-              
-              <h3 className="text-lg font-bold text-gray-900">3. User Conduct</h3>
-              <p>Users must provide accurate information when filling out the registration and onboarding forms.</p>
-            </div>
-
-            {/* Action Button */}
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="px-6 py-2 bg-[#9b7c53] hover:bg-[#86683d] text-white rounded-xl font-medium text-sm transition-colors shadow-md animate-pulse"
-              >
-                Close
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

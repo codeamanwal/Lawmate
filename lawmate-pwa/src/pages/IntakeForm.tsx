@@ -280,7 +280,7 @@ const IntakeForm = () => {
               className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
             />
             <label htmlFor="agreed" className="text-sm text-gray-600 leading-tight">
-              I agree to <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</a> and <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacyModal(true); }} className="text-indigo-600 font-semibold hover:underline">Privacy Policy</a>
+              I agree to <Link to="/terms" className="text-indigo-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>
             </label>
 
           </div>
