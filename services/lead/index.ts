@@ -279,82 +279,39 @@ async function assignLeadToLawyer(leadId: string) {
       return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(currentDay);
     };
 
-    // Find available matching lawyers
-    let availableLawyers = await prisma.lawyerProfile.findMany({
+    // Find ALL available matching lawyers (no limit)
+    const availableLawyers = await prisma.lawyerProfile.findMany({
       where: {
         isAvailable: true,
         id: { notIn: lead.declinedLawyerIds }
       }
     });
 
-    let matchingLawyers = availableLawyers.filter((lawyer: any) => 
+    const matchingLawyers = availableLawyers.filter((lawyer: any) => 
       lawyer.categories.some((cat: string) => cat.toLowerCase() === lead!.category.toLowerCase()) &&
       isLawyerAvailableToday(lawyer)
-    ).slice(0, 5);
-
-    // If we exhausted all matching lawyers in the database, reset declined list and retry (up to 3 times)
-    if (matchingLawyers.length === 0) {
-      const nextRetryCount = lead.retryCount + 1;
-      if (nextRetryCount >= 3) {
-        console.log(`[SLA Matcher] Lead ${leadId} exhausted all matching lawyers and reached max retries (3). Moving to manual handling.`);
-        await prisma.lead.update({
-          where: { id: leadId },
-          data: {
-            slaStatus: 'NOT_ATTENDED',
-            lawyerId: null,
-            notifiedLawyerIds: [],
-            assignedAt: null,
-            retryCount: 3
-          }
-        });
-        return;
-      }
-
-      console.log(`[SLA Matcher] Lead ${leadId} exhausted matching lawyers. Resetting declined list for Attempt ${nextRetryCount + 1}...`);
-      
-      // Update DB to clear declined list and increment retryCount
-      lead = await prisma.lead.update({
-        where: { id: leadId },
-        data: {
-          declinedLawyerIds: [],
-          retryCount: nextRetryCount
-        }
-      });
-
-      // Refetch available matching lawyers with cleared declined list
-      availableLawyers = await prisma.lawyerProfile.findMany({
-        where: { isAvailable: true }
-      });
-      matchingLawyers = availableLawyers.filter((lawyer: any) => 
-        lawyer.categories.some((cat: string) => cat.toLowerCase() === lead!.category.toLowerCase()) &&
-        isLawyerAvailableToday(lawyer)
-      ).slice(0, 5);
-    }
+    );
 
     if (matchingLawyers.length > 0) {
-      const nextRetryCount = lead.retryCount === 0 ? 1 : lead.retryCount;
-
       await prisma.lead.update({
         where: { id: leadId },
         data: {
           notifiedLawyerIds: matchingLawyers.map((l: any) => l.id),
           lawyerId: null,
           assignedAt: new Date(),
-          slaStatus: lead.slaStatus === 'NOT_ATTENDED' ? 'NOT_ATTENDED' : 'PENDING_ACCEPTANCE',
-          retryCount: nextRetryCount
+          slaStatus: lead.slaStatus === 'NOT_ATTENDED' ? 'NOT_ATTENDED' : 'PENDING_ACCEPTANCE'
         }
       });
-      console.log(`[SLA Matcher] Successfully matched Lead ${leadId} to Lawyers in bulk: ${matchingLawyers.map((l: any) => l.id).join(', ')} (Attempt ${nextRetryCount}/3)`);
+      console.log(`[SLA Matcher] Successfully notified ALL ${matchingLawyers.length} matching lawyers for Lead ${leadId}: ${matchingLawyers.map((l: any) => l.id).join(', ')}`);
     } else {
-      console.log(`[SLA Matcher] No matching lawyers exist in DB for Lead ${leadId}. System awaiting manual assignment.`);
+      console.log(`[SLA Matcher] No matching lawyers exist in DB for Lead ${leadId}. Moving directly to manual handling.`);
       await prisma.lead.update({
         where: { id: leadId },
         data: {
           slaStatus: 'NOT_ATTENDED',
           lawyerId: null,
           notifiedLawyerIds: [],
-          assignedAt: null,
-          retryCount: 3
+          assignedAt: null
         }
       });
     }
@@ -395,50 +352,20 @@ setInterval(async () => {
         ? 60 * 60 * 1000
         : 24 * 60 * 60 * 1000;
 
-      // Case B: DECLINE / TIMEOUT during Acceptance (5m ASAP / 10m 24HRS)
+      // Case B: ACCEPTANCE TIMEOUT (5m ASAP / 10m 24HRS) -> Move to manual handling if unaccepted
       if (lead.status === 'NEW' && (lead.lawyerId || (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0)) && lead.assignedAt) {
         const assignedTime = new Date(lead.assignedAt).getTime();
         if (now.getTime() - assignedTime > acceptanceTimeoutMs) {
-          console.log(`[SLA Timeout] Lead ${lead.id} acceptance window exceeded.`);
-
-          const nextRetryCount = lead.retryCount + 1;
-          if (nextRetryCount >= 3) {
-            console.log(`[SLA Timeout] Lead ${lead.id} has reached max attempts (3). Moving to manual handling.`);
-            await prisma.lead.update({
-              where: { id: lead.id },
-              data: {
-                slaStatus: 'NOT_ATTENDED',
-                lawyerId: null,
-                notifiedLawyerIds: [],
-                assignedAt: null,
-                retryCount: 3
-              }
-            });
-          } else {
-            console.log(`[SLA Timeout] Reassigning Lead ${lead.id} (Attempt ${nextRetryCount + 1})...`);
-            const newlyDeclined = [...lead.declinedLawyerIds];
-            if (lead.lawyerId) {
-              newlyDeclined.push(lead.lawyerId);
+          console.log(`[SLA Timeout] Lead ${lead.id} acceptance window (${isAsapSla ? '5m' : '10m'}) exceeded without acceptance. Moving directly to manual handling.`);
+          await prisma.lead.update({
+            where: { id: lead.id },
+            data: {
+              slaStatus: 'NOT_ATTENDED',
+              lawyerId: null,
+              notifiedLawyerIds: [],
+              assignedAt: null
             }
-            if (lead.notifiedLawyerIds && lead.notifiedLawyerIds.length > 0) {
-              newlyDeclined.push(...lead.notifiedLawyerIds);
-            }
-            const updatedDeclined = Array.from(new Set(newlyDeclined));
-
-            await prisma.lead.update({
-              where: { id: lead.id },
-              data: {
-                declinedLawyerIds: updatedDeclined,
-                lawyerId: null,
-                notifiedLawyerIds: [],
-                assignedAt: null,
-                slaStatus: 'REASSIGNING',
-                retryCount: nextRetryCount
-              }
-            });
-
-            await assignLeadToLawyer(lead.id);
-          }
+          });
         }
       }
 
