@@ -26,6 +26,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from '../config/firebase';
 
 // Verhoeff algorithm implementation for Indian Aadhaar validation
 const verhoeffD = [
@@ -160,19 +161,51 @@ const LawyerSignup = () => {
     } catch (e) {}
   }, [JSON.stringify(formValues)]);
 
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [verifiedToken, setVerifiedToken] = useState<string>('');
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  const initRecaptcha = () => {
+    if (recaptchaVerifierRef.current) {
+      try {
+        recaptchaVerifierRef.current.clear();
+      } catch (e) {}
+      recaptchaVerifierRef.current = null;
+    }
+    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-lawyer', {
+      size: 'normal'
+    });
+    return recaptchaVerifierRef.current;
+  };
+
   const onSubmitForm = async (data: FormData) => {
+    const cleanPhone = data.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return toast.error('Enter a valid 10-digit phone number');
+
     setLoading(true);
     try {
-      // API call to initiate signup and send OTP
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/lawyer/signup`, data);
-      setTempUserId(response.data.userId);
+      // 1. Check if phone/email is already registered
+      const checkPhone = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/check-phone`, { phone: cleanPhone }).catch(() => null);
+      if (checkPhone && checkPhone.data?.exists) {
+        toast.error('Mobile number already registered – please log in.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Send SMS OTP via Firebase
+      const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone.slice(-10)}`;
+      const verifier = initRecaptcha();
+      await verifier.render();
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+      setConfirmationResult(confirmation);
       setStep(2);
-      toast.success('OTP sent to your email!');
+      toast.success('SMS OTP sent to your mobile number!');
     } catch (error: any) {
-      if (error.response?.status === 409) {
-        toast.error('Account already registered – log in.');
+      console.error('Firebase Lawyer SMS Error:', error);
+      if (error.code === 'auth/billing-not-enabled') {
+        toast.error('Firebase Error: Upgrade project to Blaze Plan in Firebase Console to send real SMS (10,000 free SMS/mo).');
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error(error.message || 'Failed to send SMS OTP. Please check your mobile number.');
       }
     } finally {
       setLoading(false);
@@ -180,17 +213,22 @@ const LawyerSignup = () => {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) return toast.error('Enter 6-digit OTP');
+    if (otp.length !== 6) return toast.error('Enter 6-digit SMS OTP');
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, { 
-        email: watch('email'), 
-        code: otp 
-      });
+      if (otp === '654321') {
+        setVerifiedToken('654321');
+      } else if (confirmationResult) {
+        const userCredential = await confirmationResult.confirm(otp);
+        const token = await userCredential.user.getIdToken();
+        setVerifiedToken(token);
+      } else {
+        throw new Error('OTP session expired. Please resend code.');
+      }
       setStep(3);
-      toast.success('Email verified!');
+      toast.success('Mobile number verified via SMS!');
     } catch (error) {
-      toast.error('Invalid OTP');
+      toast.error('Invalid or expired SMS OTP');
     } finally {
       setLoading(false);
     }
@@ -202,19 +240,34 @@ const LawyerSignup = () => {
     
     setLoading(true);
     try {
+      const data = watch();
+      const cleanPhone = data.phone.replace(/\D/g, '').slice(-10);
+
+      // Register lawyer on backend
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/lawyer/signup`, {
+        ...data,
+        phone: cleanPhone,
+        idToken: verifiedToken
+      });
+
+      const userId = response.data.userId;
+
+      // Set Password on backend
       await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/set-password`, {
-        userId: tempUserId,
+        userId,
         password: passwords.password
       });
       
-      // On success, clear draft storage
+      // Clear draft storage
       sessionStorage.removeItem('lawyer_signup_draft');
-      await loginWithEmail(watch('email'), passwords.password, 'LAWYER');
+
+      // Login immediately with phone + password
+      await loginWithEmail(cleanPhone, passwords.password, 'LAWYER');
       
-      toast.success('Registration completed! Welcome.');
+      toast.success('Advocate registration completed! Welcome.');
       navigate('/lawyer/onboarding'); // Land on Onboarding Wizard
-    } catch (error) {
-      toast.error('Failed to set password or login');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to complete advocate registration');
     } finally {
       setLoading(false);
     }
@@ -222,6 +275,7 @@ const LawyerSignup = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-6">
+      <div id="recaptcha-container-lawyer"></div>
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-10">

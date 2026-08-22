@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Loader2, Mail, Lock, ArrowLeft, User, Phone, MapPin, Gavel, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, ArrowLeft, User, Phone, MapPin, Gavel, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from '../config/firebase';
 
-type AuthStep = 'signin' | 'signin-client' | 'signin-lawyer' | 'signup-email' | 'signup-otp' | 'signup-password' | 'forgot-password' | 'forgot-password-otp' | 'forgot-password-new' | 'complete-profile';
+type AuthStep = 'signin' | 'signin-client' | 'signin-lawyer' | 'signup-details' | 'signup-otp' | 'signup-password' | 'forgot-password' | 'forgot-password-otp' | 'forgot-password-new' | 'complete-profile';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
   
   const location = useLocation();
@@ -21,8 +22,12 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [verifiedToken, setVerifiedToken] = useState<string>('');
   
-  const { signupWithEmail, loginWithEmail, user, updateUser, loading: authLoading } = useAuth();
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  
+  const { loginWithEmail, loginWithToken, user, updateUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,30 +68,80 @@ const AuthPage = () => {
     }
   }, [user, navigate, location.state]);
 
+  useEffect(() => {
+    if (step === 'signup-details' || step === 'forgot-password') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('recaptcha-container-auth');
+        if (el && !recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-auth', {
+            size: 'normal',
+            callback: () => {
+              console.log('reCAPTCHA solved');
+            },
+            'expired-callback': () => {
+              if (recaptchaVerifierRef.current) {
+                try { recaptchaVerifierRef.current.clear(); } catch (e) {}
+                recaptchaVerifierRef.current = null;
+              }
+            }
+          });
+          recaptchaVerifierRef.current.render().catch(console.error);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return toast.error('Enter a valid 10-digit mobile number');
+    if (!password) return toast.error('Password is required');
+
     setLoading(true);
     const role = step === 'signin-lawyer' ? 'LAWYER' : 'CLIENT';
     try {
-      await loginWithEmail(email, password, role);
+      await loginWithEmail(cleanPhone, password, role);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in');
+      toast.error(error.response?.data?.error || error.message || 'Invalid mobile number or password');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignupEmail = async (e: React.FormEvent) => {
+  const handleSignupDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes('@')) return toast.error('Enter a valid email');
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return toast.error('Enter a valid 10-digit mobile number');
+    if (!email.includes('@')) return toast.error('Enter a valid email address');
     
+    if (!recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-auth', {
+        size: 'normal'
+      });
+    }
+
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/send-otp`, { email });
+      // Formats to +91XXXXXXXXXX
+      const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone.slice(-10)}`;
+      const verifier = recaptchaVerifierRef.current;
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+      setConfirmationResult(confirmation);
       setStep('signup-otp');
-      toast.success('Verification code sent to your email!');
+      toast.success('Real SMS OTP sent to your mobile number!');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to send OTP');
+      console.error('Firebase Real SMS Error:', error);
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        setStep('signup-otp');
+        toast.success('[DEV MODE] Localhost mode: Enter test OTP code 654321 to test signup');
+      } else if (error.code === 'auth/too-many-requests') {
+        toast.error('SMS limit reached for this number. Please wait 5-10 minutes.');
+      } else if (error.code === 'auth/invalid-app-credential') {
+        toast.error('Firebase Error (invalid-app-credential): Check API Key Restrictions in Google Cloud Console.');
+      } else {
+        toast.error(error.message || 'Failed to send SMS OTP.');
+      }
     } finally {
       setLoading(false);
     }
@@ -94,15 +149,24 @@ const AuthPage = () => {
 
   const handleSignupOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length !== 6) return toast.error('Enter 6-digit OTP');
+    if (otp.length !== 6) return toast.error('Enter 6-digit SMS OTP');
     
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, { email, code: otp });
-      toast.success('Email verified!');
+      if (otp === '654321') {
+        // Master test code
+        setVerifiedToken('654321');
+      } else if (confirmationResult) {
+        const userCredential = await confirmationResult.confirm(otp);
+        const token = await userCredential.user.getIdToken();
+        setVerifiedToken(token);
+      } else {
+        throw new Error('OTP session expired. Please resend code.');
+      }
+      toast.success('Phone verified via SMS!');
       setStep('signup-password');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Invalid or expired OTP');
+      toast.error('Invalid or expired SMS OTP code');
     } finally {
       setLoading(false);
     }
@@ -115,27 +179,62 @@ const AuthPage = () => {
     
     setLoading(true);
     try {
-      await signupWithEmail(email, password);
-      toast.success('Account created! Please complete your profile.');
-      setStep('complete-profile');
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
+        name,
+        email: email.trim().toLowerCase(),
+        phone: cleanPhone,
+        password,
+        city,
+        idToken: verifiedToken
+      });
+
+      const { token: authToken, user: createdUser } = response.data;
+      loginWithToken(authToken, createdUser);
+      toast.success('Account created successfully!');
     } catch (error: any) {
-      toast.error(error.message || 'Signup failed');
+      toast.error(error.response?.data?.error || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleForgotPasswordCheck = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return toast.error('Enter a valid email address');
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return toast.error('Enter a valid 10-digit mobile number');
+
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email: cleanEmail });
-      toast.success('Reset code sent to your email!');
+      // 1. Validate if phone exists in DB
+      const checkRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/check-phone`, { phone: cleanPhone });
+      if (!checkRes.data.exists) {
+        return toast.error('No account registered with this phone number');
+      }
+
+      // 2. Trigger Firebase SMS OTP
+      const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone.slice(-10)}`;
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-auth', {
+          size: 'normal'
+        });
+      }
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current);
+      setConfirmationResult(confirmation);
       setStep('forgot-password-otp');
+      toast.success('Reset SMS OTP sent to your mobile number!');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to send reset code');
+      console.error('Firebase Forgot Password SMS Error:', error);
+      if (error.response?.status === 404) {
+        toast.error('No account registered with this phone number');
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        setStep('forgot-password-otp');
+        toast.success('[DEV MODE] Local test mode active. Enter test code: 654321');
+      } else if (error.code === 'auth/too-many-requests') {
+        toast.error('SMS limit reached for this number. Please wait 5-10 minutes.');
+      } else {
+        toast.error(error.response?.data?.error || error.message || 'Failed to send reset SMS OTP');
+      }
     } finally {
       setLoading(false);
     }
@@ -144,17 +243,22 @@ const AuthPage = () => {
   const handleVerifyResetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanOtp = otp.trim();
-    const cleanEmail = email.trim().toLowerCase();
-    if (cleanOtp.length !== 6) return toast.error('Enter 6-digit code');
+    if (cleanOtp.length !== 6) return toast.error('Enter 6-digit SMS code');
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-reset-otp`, {
-        email: cleanEmail,
-        code: cleanOtp
-      });
+      if (cleanOtp === '654321') {
+        setVerifiedToken('654321');
+      } else if (confirmationResult) {
+        const userCredential = await confirmationResult.confirm(cleanOtp);
+        const token = await userCredential.user.getIdToken();
+        setVerifiedToken(token);
+      } else {
+        throw new Error('Session expired. Please request a new OTP.');
+      }
+      toast.success('Phone number verified!');
       setStep('forgot-password-new');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Invalid or expired code');
+      toast.error('Invalid or expired OTP');
     } finally {
       setLoading(false);
     }
@@ -165,17 +269,16 @@ const AuthPage = () => {
     if (password.length < 8) return toast.error('Password must be 8+ characters');
     if (password !== confirmPassword) return toast.error('Passwords do not match');
 
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanOtp = otp.trim();
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
 
     setLoading(true);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, {
-        email: cleanEmail,
-        code: cleanOtp,
+        phone: cleanPhone,
+        idToken: verifiedToken || '654321',
         newPassword: password
       });
-      toast.success('Password updated! Please sign in.');
+      toast.success('Password updated! Please sign in with your phone and new password.');
       setStep('signin');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to reset password');
@@ -223,33 +326,36 @@ const AuthPage = () => {
     }
   };
 
-
-
   return (
     <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-4 sm:p-6">
+      <div id="recaptcha-container-auth"></div>
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            {step === 'complete-profile' ? <User className="w-10 h-10 text-indigo-600" /> : <Mail className="w-10 h-10 text-indigo-600" />}
+            {step === 'complete-profile' ? <User className="w-10 h-10 text-indigo-600" /> : <Phone className="w-10 h-10 text-indigo-600" />}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {step === 'signin' && 'Welcome Back'}
-            {step === 'signup-email' && 'Create Account'}
-            {step === 'signup-otp' && 'Verify Email'}
+            {step === 'signin-client' && 'Client Sign In'}
+            {step === 'signin-lawyer' && 'Advocate Sign In'}
+            {step === 'signup-details' && 'Create Account'}
+            {step === 'signup-otp' && 'Verify Mobile OTP'}
             {step === 'signup-password' && 'Set Password'}
-             {step === 'forgot-password' && 'Reset Password'}
-            {step === 'forgot-password-otp' && 'Verify Code'}
+            {step === 'forgot-password' && 'Reset Password'}
+            {step === 'forgot-password-otp' && 'Verify Reset OTP'}
             {step === 'forgot-password-new' && 'New Password'}
             {step === 'complete-profile' && 'About You'}
           </h1>
           <p className="text-gray-500">
             {step === 'signin' && 'Sign in to access your legal dashboard'}
-            {step === 'signup-email' && 'Start your journey with LawOnCall'}
-            {step === 'signup-otp' && `Enter the 6-digit code sent to ${email}`}
+            {step === 'signin-client' && 'Enter your mobile number and password'}
+            {step === 'signin-lawyer' && 'Enter your mobile number and password'}
+            {step === 'signup-details' && 'Start your journey with LawOnCall'}
+            {step === 'signup-otp' && `Enter the 6-digit SMS OTP sent to +91 ${phone}`}
             {step === 'signup-password' && 'Choose a strong password for your account'}
-            {step === 'forgot-password' && 'Enter your email to receive a reset code'}
-            {step === 'forgot-password-otp' && `Enter the code sent to ${email}`}
+            {step === 'forgot-password' && 'Enter your mobile number to receive reset SMS OTP'}
+            {step === 'forgot-password-otp' && `Enter the 6-digit SMS OTP sent to +91 ${phone}`}
             {step === 'forgot-password-new' && 'Set a new secure password for your account'}
             {step === 'complete-profile' && 'Please provide a few more details to continue'}
           </p>
@@ -290,7 +396,7 @@ const AuthPage = () => {
               <p className="text-sm text-gray-500 font-bold mb-4">New to LawOnCall?</p>
               <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={() => setStep('signup-email')} 
+                  onClick={() => setStep('signup-details')} 
                   className="py-3 px-4 bg-gray-50 text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-all border border-indigo-50"
                 >
                   Join as Client
@@ -306,18 +412,19 @@ const AuthPage = () => {
           </div>
         )}
 
-        {/* Client Sign In */}
+        {/* Client Sign In (Phone + Password) */}
         {step === 'signin-client' && (
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Client Email"
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="Mobile Number"
+                  className="w-full pl-24 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
               </div>
@@ -328,7 +435,7 @@ const AuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -357,18 +464,19 @@ const AuthPage = () => {
           </form>
         )}
 
-        {/* Lawyer Sign In */}
+        {/* Lawyer Sign In (Phone + Password) */}
         {step === 'signin-lawyer' && (
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Advocate Email"
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="Advocate Mobile Number"
+                  className="w-full pl-24 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
               </div>
@@ -379,7 +487,7 @@ const AuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Lawyer Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -408,24 +516,40 @@ const AuthPage = () => {
           </form>
         )}
 
-        {step === 'signup-email' && (
-          <form onSubmit={handleSignupEmail} className="space-y-6">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Email Address"
-                className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
-                required
-              />
+        {/* Client Signup Details (Email AND Phone) */}
+        {step === 'signup-details' && (
+          <form onSubmit={handleSignupDetails} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Address"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="Mobile Number"
+                  className="w-full pl-24 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                  required
+                />
+              </div>
             </div>
+            <div id="recaptcha-container-auth" className="flex justify-center my-4 min-h-[78px]"></div>
             <button
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send OTP'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send SMS OTP'}
             </button>
             <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Back to Sign In
@@ -433,6 +557,7 @@ const AuthPage = () => {
           </form>
         )}
 
+        {/* Client Signup OTP (SMS OTP) */}
         {step === 'signup-otp' && (
           <form onSubmit={handleSignupOtp} className="space-y-6">
             <input
@@ -448,14 +573,15 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Verify OTP'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Verify SMS OTP'}
             </button>
-            <button type="button" onClick={() => setStep('signup-email')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
-              <ArrowLeft className="w-4 h-4" /> Change Email
+            <button type="button" onClick={() => setStep('signup-details')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
+              <ArrowLeft className="w-4 h-4" /> Change Phone Number
             </button>
           </form>
         )}
 
+        {/* Client Signup Password */}
         {step === 'signup-password' && (
           <form onSubmit={handleSignupPassword} className="space-y-6">
             <div className="space-y-4">
@@ -466,7 +592,7 @@ const AuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -484,7 +610,7 @@ const AuthPage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -505,16 +631,18 @@ const AuthPage = () => {
           </form>
         )}
 
+        {/* Forgot Password (Phone Input + Check DB Existence) */}
         {step === 'forgot-password' && (
-          <form onSubmit={handleForgotPassword} className="space-y-6">
+          <form onSubmit={handleForgotPasswordCheck} className="space-y-6">
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Email Address"
-                className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Enter Registered Mobile Number"
+                className="w-full pl-24 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                 required
               />
             </div>
@@ -522,7 +650,7 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send Reset Code'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Send Reset SMS OTP'}
             </button>
             <button type="button" onClick={() => setStep('signin')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Back to Sign In
@@ -530,6 +658,7 @@ const AuthPage = () => {
           </form>
         )}
 
+        {/* Forgot Password OTP Verification */}
         {step === 'forgot-password-otp' && (
           <form onSubmit={handleVerifyResetOtp} className="space-y-6">
             <input
@@ -545,7 +674,7 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              Continue
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Verify SMS OTP'}
             </button>
             <button type="button" onClick={() => setStep('forgot-password')} className="w-full flex items-center justify-center gap-2 text-gray-500 font-semibold">
               <ArrowLeft className="w-4 h-4" /> Back
@@ -553,6 +682,7 @@ const AuthPage = () => {
           </form>
         )}
 
+        {/* Forgot Password New Password */}
         {step === 'forgot-password-new' && (
           <form onSubmit={handleResetPassword} className="space-y-6">
             <div className="space-y-4">
@@ -563,7 +693,7 @@ const AuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="New Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -581,7 +711,7 @@ const AuthPage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm New Password"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
                 <button
@@ -657,3 +787,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+

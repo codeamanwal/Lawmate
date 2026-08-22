@@ -186,10 +186,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await createUserWithEmailAndPassword(auth, email, pass);
   };
   
-  const loginWithEmail = async (email: string, pass: string, role?: string) => {
+  const loginWithEmail = async (emailOrPhone: string, pass: string, role?: string) => {
     if (role) localStorage.setItem('intendedRole', role);
-    sessionStorage.setItem('showSignInToast', 'true');
-    await signInWithEmailAndPassword(auth, email, pass);
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      phone: emailOrPhone,
+      email: emailOrPhone,
+      password: pass,
+      role
+    });
+    const { token: verifiedToken, user: backendUser } = response.data;
+    localStorage.setItem('token', verifiedToken);
+    setUser(backendUser);
+    toast.success('Signed in successfully!');
   };
 
   const loginWithToken = (token: string, userData: any) => {
