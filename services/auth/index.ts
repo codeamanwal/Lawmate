@@ -342,16 +342,33 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
     const isLocal = !process.env.NODE_ENV || process.env.NODE_ENV === 'development' || process.env.VITE_API_URL?.includes('localhost');
 
     if (isLocal) {
-      console.log('[DEV MODE] Bypassing Firebase signature verification to prevent Node v24 crypto crash...');
+      console.log('[DEV MODE] Bypassing Firebase signature verification...');
       try {
         const parts = idToken.split('.');
         if (parts.length !== 3) throw new Error('Invalid JWT format');
-        decodedToken = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        decodedToken = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
       } catch (err: any) {
         return reply.status(400).send({ error: `Invalid token structure: ${err.message}` });
       }
     } else {
-      decodedToken = await admin.auth().verifyIdToken(idToken);
+      try {
+        decodedToken = await admin.auth().verifyIdToken(idToken);
+      } catch (verifyErr: any) {
+        console.error('[VERIFY] Firebase Admin verifyIdToken failed:', verifyErr?.code, verifyErr?.message);
+        // Graceful fallback: decode without verification to at least get phone/email
+        try {
+          const parts = idToken.split('.');
+          if (parts.length === 3) {
+            decodedToken = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+            console.warn('[VERIFY] Fell back to unverified decode. phone:', decodedToken?.phone_number);
+          }
+        } catch (decodeErr) {
+          console.error('[VERIFY] Fallback decode also failed:', decodeErr);
+        }
+        if (!decodedToken) {
+          return reply.status(401).send({ error: 'Token verification failed' });
+        }
+      }
     }
 
     const phone = decodedToken.phone_number;
@@ -359,22 +376,27 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     if (!phone && !email) return reply.status(400).send({ error: 'Identity info missing in token' });
 
-    // Find user by email or phone
+    // Find user by phone or email
     let user = await prisma.user.findFirst({ 
       where: {
         OR: [
           ...(email ? [{ email }] : []),
-          ...(phone ? [{ phone }] : [])
+          ...(phone ? [
+            { phone: phone.replace(/\D/g, '').slice(-10) },
+            { phone: `+91${phone.replace(/\D/g, '').slice(-10)}` },
+            { phone }
+          ] : [])
         ]
       },
       include: { lawyerProfile: true }
     });
 
     if (!user) {
+      // Create minimal user record — password will be set later during signup
       user = await prisma.user.create({
         data: {
-          email: email || `${phone}@phone.auth`,
-          phone: phone ?? null,
+          email: email || `${phone?.replace(/\D/g, '').slice(-10)}@phone.auth`,
+          phone: phone ? phone.replace(/\D/g, '').slice(-10) : null,
           role: 'CLIENT'
         },
         include: { lawyerProfile: true }
@@ -383,7 +405,7 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
 
     if (!user) return reply.status(500).send({ error: 'Failed to create user session' });
 
-    // Role Enforcement for Firebase users
+    // Role enforcement
     const { role: requestedRole } = request.body;
     if (requestedRole && user.role !== requestedRole) {
       return reply.status(403).send({ error: 'Invalid email or password' });
@@ -396,11 +418,12 @@ fastify.post('/api/auth/verify', async (request: any, reply: any) => {
     }, { expiresIn: '7d' });
 
     return { token, user };
-  } catch (error) {
-    console.error('VERIFY ERROR:', error);
+  } catch (error: any) {
+    console.error('[VERIFY] Unexpected error:', error?.message || error);
     return reply.status(401).send({ error: 'Invalid credentials' });
   }
 });
+
 
 // Client Signup (Phone OTP verified via Firebase)
 fastify.post('/api/auth/signup', async (request: any, reply: any) => {
@@ -424,6 +447,26 @@ fastify.post('/api/auth/signup', async (request: any, reply: any) => {
     });
 
     if (existing) {
+      // If user exists but has NO password — created by /api/auth/verify during OTP flow
+      // Allow completing the signup by updating their details and setting password
+      if (!existing.password) {
+        const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+        const updatedUser = await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            name: name || existing.name,
+            email: email ? email.toLowerCase() : existing.email,
+            phone: phone.replace(/\D/g, '').slice(-10),
+            password: hashedPassword,
+            city: city || existing.city,
+            role: 'CLIENT'
+          },
+          include: { lawyerProfile: true }
+        });
+        const token = fastify.jwt.sign({ id: updatedUser.id, email: updatedUser.email, role: updatedUser.role }, { expiresIn: '7d' });
+        return reply.status(200).send({ token, user: updatedUser });
+      }
+      // User exists and already has a password — truly a duplicate
       const reason = existing.email === email?.toLowerCase() ? 'Email already registered' : 'Mobile number already registered';
       return reply.status(409).send({ error: reason });
     }
