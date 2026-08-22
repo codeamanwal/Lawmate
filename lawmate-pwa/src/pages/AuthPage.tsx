@@ -37,6 +37,9 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user) {
+      // Don't interrupt active signup or forgot-password flow — let user complete password step first
+      if (step === 'signup-otp' || step === 'signup-password' || step === 'forgot-password-otp' || step === 'forgot-password-new') return;
+
       // If user is logged in but missing profile info, show complete-profile
       if (!user.name || !user.phone || !user.city) {
         setStep('complete-profile');
@@ -66,7 +69,8 @@ const AuthPage = () => {
         }
       }
     }
-  }, [user, navigate, location.state]);
+  }, [user, navigate, location.state, step]);
+
 
   useEffect(() => {
     if (step === 'signup-details' || step === 'forgot-password') {
