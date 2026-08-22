@@ -196,6 +196,12 @@ const AuthPage = () => {
       const { token: authToken, user: createdUser } = response.data;
       loginWithToken(authToken, createdUser);
       toast.success('Account created successfully!');
+      // Explicitly navigate — useEffect is blocked during signup-password step
+      if (!createdUser.name || !createdUser.city) {
+        setStep('complete-profile');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Signup failed. Please try again.');
     } finally {
@@ -590,6 +596,17 @@ const AuthPage = () => {
           <form onSubmit={handleSignupPassword} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Full Name"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                  required
+                />
+              </div>
+              <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type={showPassword ? "text" : "password"}
@@ -634,6 +651,7 @@ const AuthPage = () => {
             </button>
           </form>
         )}
+
 
         {/* Forgot Password (Phone Input + Check DB Existence) */}
         {step === 'forgot-password' && (
