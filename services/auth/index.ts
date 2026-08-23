@@ -536,12 +536,14 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
     });
     
     if (existing) {
-      if (existing.role === 'LAWYER' && !existing.password) {
-        // Incomplete registration. Update details and generate a new OTP
+      if (!existing.password) {
+        // Incomplete registration (e.g. created during Firebase SMS OTP verify step). Update details to LAWYER and attach lawyerProfile
         await prisma.user.update({
           where: { id: existing.id },
           data: {
+            role: 'LAWYER',
             phone: data.phone?.toString(),
+            email: data.email,
             name: data.fullName,
             city: data.city,
             lawyerProfile: {
@@ -549,6 +551,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
                 create: {
                   licenseNumber: data.licenseNumber,
                   aadhaarNumber: data.aadhaarNumber,
+                  firmName: data.firmName || 'Independent',
                   experience: data.experience ? parseInt(data.experience.toString()) : 0,
                   categories: data.practiceAreas || [],
                   state: data.state,
@@ -558,6 +561,7 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
                 update: {
                   licenseNumber: data.licenseNumber,
                   aadhaarNumber: data.aadhaarNumber,
+                  firmName: data.firmName || 'Independent',
                   experience: data.experience ? parseInt(data.experience.toString()) : 0,
                   categories: data.practiceAreas || [],
                   state: data.state,
@@ -567,17 +571,6 @@ fastify.post('/api/auth/lawyer/signup', async (request: any, reply: any) => {
             }
           }
         });
-
-        const otp = generateOTP();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        
-        await prisma.otp.upsert({
-          where: { email: data.email },
-          update: { code: otp, expiresAt },
-          create: { email: data.email, code: otp, expiresAt }
-        });
-
-        await sendOTPEmail(data.email, otp, 'Advocate Registration', 'Lawyer Onboarding');
 
         return { success: true, userId: existing.id };
       } else {

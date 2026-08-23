@@ -493,8 +493,8 @@ const LawyerSignup = () => {
               <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
                 <Shield className="w-10 h-10 text-indigo-600" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Verify Email</h2>
-              <p className="text-gray-500 mb-8">Enter the OTP sent to <b>{watch('email')}</b></p>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Verify Mobile Number</h2>
+              <p className="text-gray-500 mb-8">Enter the 6-digit SMS OTP sent to <b>+91 {watch('phone')}</b></p>
               
               <div className="max-w-xs mx-auto mb-8">
                 <input
