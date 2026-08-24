@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, MapPin, ArrowLeft, Loader2, Save, Mail } from 'lucide-react';
+import { User, MapPin, ArrowLeft, Loader2, Save, Mail, Phone } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -9,29 +9,45 @@ const EditProfile = () => {
   const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email && !user.email.endsWith('@phone.auth') ? user.email : '');
   const [city, setCity] = useState(user?.city || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.email && !user.email.endsWith('@phone.auth')) setEmail(user.email);
+      if (user.city) setCity(user.city);
+      if (user.phone) setPhone(user.phone);
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) return toast.error('Full Name is required');
+    if (!email.includes('@')) return toast.error('Enter a valid email address');
+    if (!city) return toast.error('Select your city');
+
     setLoading(true);
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
-        name,
-        city,
-        phone
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: cleanPhone,
+        city
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
       toast.success('Profile updated successfully');
-      updateUser({ name, city, phone });
+      updateUser(res.data || { name: name.trim(), email: email.trim().toLowerCase(), phone: cleanPhone, city });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Update failed', error);
-      toast.error('Failed to update profile');
+      toast.error(error.response?.data?.error || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -63,7 +79,7 @@ const EditProfile = () => {
       <div className="max-w-md w-full">
         <button 
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 mb-6 transition-colors font-medium"
+          className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 mb-6 transition-colors font-medium text-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
@@ -71,7 +87,7 @@ const EditProfile = () => {
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Profile</h1>
-            <p className="text-gray-500">Update your personal information below.</p>
+            <p className="text-gray-500 font-medium text-sm">Update your personal information below.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -83,8 +99,8 @@ const EditProfile = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
-                  placeholder="Enter your name"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all font-medium"
+                  placeholder="Full Name"
                   required
                 />
               </div>
@@ -96,9 +112,11 @@ const EditProfile = () => {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="email"
-                  value={user?.email || ''}
-                  readOnly
-                  className="w-full pl-12 pr-4 py-4 bg-gray-100 border-0 rounded-2xl text-gray-500 cursor-not-allowed outline-none transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all font-medium"
+                  placeholder="Email Address"
+                  required
                 />
               </div>
             </div>
@@ -106,14 +124,14 @@ const EditProfile = () => {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">+91</span>
                 <input
                   type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all"
+                  value={phone ? phone.replace(/\D/g, '').slice(-10) : ''}
+                  disabled
+                  className="w-full pl-24 pr-4 py-4 bg-gray-100 border-0 rounded-2xl text-gray-500 font-medium cursor-not-allowed outline-none select-none"
                   placeholder="Mobile number"
-                  required
                 />
               </div>
             </div>
@@ -125,13 +143,16 @@ const EditProfile = () => {
                 <select
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all appearance-none font-medium text-gray-700"
                   required
                 >
                   <option value="">Select City</option>
                   <option value="Delhi">Delhi</option>
                   <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
                   <option value="Ghaziabad">Ghaziabad</option>
+                  <option value="Prayagraj">Prayagraj</option>
+                  <option value="Allahabad">Allahabad</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
@@ -139,7 +160,7 @@ const EditProfile = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

@@ -40,9 +40,9 @@ const AuthPage = () => {
       // Don't interrupt active signup or forgot-password flow — let user complete password step first
       if (step === 'signup-otp' || step === 'signup-password' || step === 'forgot-password-otp' || step === 'forgot-password-new') return;
 
-      // If user is logged in but missing profile info, show complete-profile
+      // If user is logged in but missing profile info, redirect directly to /edit-profile
       if (!user.name || !user.phone || !user.city) {
-        setStep('complete-profile');
+        navigate('/edit-profile');
       } else {
         const fromLocation = location.state?.from;
         const fromIntake = location.state?.fromIntake;
@@ -201,7 +201,7 @@ const AuthPage = () => {
       const { token: authToken, user: createdUser } = response.data;
       loginWithToken(authToken, createdUser);
       toast.success('Account created successfully!');
-      setStep('complete-profile');
+      navigate('/edit-profile');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Signup failed. Please try again.');
     } finally {
