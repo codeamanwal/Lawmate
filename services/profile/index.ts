@@ -52,14 +52,19 @@ fastify.get('/api/profiles/:id', async (request: any, reply: any) => {
 
 fastify.post('/api/profiles/update', async (request: any, reply: any) => {
   const userId = request.headers['x-user-id'] as string;
-  const { name, city, phone } = request.body as { name: string, city: string, phone?: string };
+  const { name, city, phone, email } = request.body as { name?: string, city?: string, phone?: string, email?: string };
 
   if (!userId) return reply.status(401).send({ error: 'Unauthorized' });
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { name, city, phone }
+      data: {
+        ...(name !== undefined && { name }),
+        ...(city !== undefined && { city }),
+        ...(phone !== undefined && { phone }),
+        ...(email !== undefined && { email: email.toLowerCase() })
+      }
     });
 
     // Sync user details to all client's leads

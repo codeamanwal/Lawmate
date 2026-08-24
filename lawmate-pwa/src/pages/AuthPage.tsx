@@ -123,7 +123,6 @@ const AuthPage = () => {
     e.preventDefault();
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) return toast.error('Enter a valid 10-digit mobile number');
-    if (!email.includes('@')) return toast.error('Enter a valid email address');
     
     if (!recaptchaVerifierRef.current) {
       recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-auth', {
@@ -192,7 +191,7 @@ const AuthPage = () => {
       const cleanPhone = phone.replace(/\D/g, '').slice(-10);
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
         name,
-        email: email.trim().toLowerCase(),
+        email: email ? email.trim().toLowerCase() : '',
         phone: cleanPhone,
         password,
         city,
@@ -202,12 +201,7 @@ const AuthPage = () => {
       const { token: authToken, user: createdUser } = response.data;
       loginWithToken(authToken, createdUser);
       toast.success('Account created successfully!');
-      // Explicitly navigate — useEffect is blocked during signup-password step
-      if (!createdUser.name || !createdUser.city) {
-        setStep('complete-profile');
-      } else {
-        navigate('/dashboard');
-      }
+      setStep('complete-profile');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Signup failed. Please try again.');
     } finally {
@@ -305,18 +299,23 @@ const AuthPage = () => {
 
   const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !city) return toast.error('All fields are required');
-    if (!/^[6-9]\d{9}$/.test(phone)) return toast.error('Enter valid 10-digit phone');
+    if (!name.trim()) return toast.error('Full Name is required');
+    if (!email.includes('@')) return toast.error('Enter a valid email address');
+    if (!city) return toast.error('Select your city');
 
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
-        name, phone, city
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/profiles/update`, {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: cleanPhone,
+        city
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      updateUser({ name, phone, city });
-      toast.success('Profile completed!');
+      updateUser(res.data || { name: name.trim(), email: email.trim().toLowerCase(), phone: cleanPhone, city });
+      toast.success('Profile saved successfully!');
       
       const fromLocation = location.state?.from;
       const fromIntake = location.state?.fromIntake;
@@ -333,10 +332,10 @@ const AuthPage = () => {
           } 
         });
       } else {
-        navigate(user.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
+        navigate(user?.role === 'LAWYER' ? '/lawyer/dashboard' : '/dashboard');
       }
     } catch (error: any) {
-      toast.error('Failed to update profile');
+      toast.error(error.response?.data?.error || 'Failed to save changes');
     } finally {
       setLoading(false);
     }
@@ -360,7 +359,7 @@ const AuthPage = () => {
             {step === 'forgot-password' && 'Reset Password'}
             {step === 'forgot-password-otp' && 'Verify Reset OTP'}
             {step === 'forgot-password-new' && 'New Password'}
-            {step === 'complete-profile' && 'About You'}
+            {step === 'complete-profile' && 'Edit Profile'}
           </h1>
           <p className="text-gray-500">
             {step === 'signin' && 'Sign in to access your legal dashboard'}
@@ -372,7 +371,7 @@ const AuthPage = () => {
             {step === 'forgot-password' && 'Enter your mobile number to receive reset SMS OTP'}
             {step === 'forgot-password-otp' && `Enter the 6-digit SMS OTP sent to +91 ${phone}`}
             {step === 'forgot-password-new' && 'Set a new secure password for your account'}
-            {step === 'complete-profile' && 'Please provide a few more details to continue'}
+            {step === 'complete-profile' && 'Update your personal information below.'}
           </p>
         </div>
 
@@ -531,21 +530,10 @@ const AuthPage = () => {
           </form>
         )}
 
-        {/* Client Signup Details (Email AND Phone) */}
+        {/* Client Signup Details (Phone Only) */}
         {step === 'signup-details' && (
           <form onSubmit={handleSignupDetails} className="space-y-6">
             <div className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email Address"
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
-                  required
-                />
-              </div>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">+91</span>
@@ -596,21 +584,10 @@ const AuthPage = () => {
           </form>
         )}
 
-        {/* Client Signup Password */}
+        {/* Client Signup Password (Password Only) */}
         {step === 'signup-password' && (
           <form onSubmit={handleSignupPassword} className="space-y-6">
             <div className="space-y-4">
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Full Name"
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
-                  required
-                />
-              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -770,20 +747,30 @@ const AuthPage = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name"
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Address"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-medium"
                   required
                 />
               </div>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 font-bold">+91</span>
+                <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">+91</span>
                 <input
                   type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  value={phone ? phone.replace(/\D/g, '').slice(-10) : ''}
+                  disabled
                   placeholder="Mobile Number"
-                  className="w-full pl-24 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all"
-                  required
+                  className="w-full pl-24 pr-5 py-4 bg-gray-100 border-2 border-transparent rounded-2xl outline-none text-gray-500 font-medium cursor-not-allowed select-none"
                 />
               </div>
               <div className="relative">
@@ -791,13 +778,16 @@ const AuthPage = () => {
                 <select
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all appearance-none"
+                  className="w-full pl-12 pr-5 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all appearance-none font-medium text-gray-700"
                   required
                 >
                   <option value="">Select City</option>
                   <option value="Delhi">Delhi</option>
                   <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option>
                   <option value="Ghaziabad">Ghaziabad</option>
+                  <option value="Prayagraj">Prayagraj</option>
+                  <option value="Allahabad">Allahabad</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
@@ -805,7 +795,7 @@ const AuthPage = () => {
               disabled={loading || !user}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : !user ? 'Synchronizing...' : 'Complete Profile'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : !user ? 'Synchronizing...' : 'Save Changes'}
             </button>
           </form>
         )}
