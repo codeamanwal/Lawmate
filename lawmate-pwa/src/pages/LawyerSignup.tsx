@@ -165,6 +165,26 @@ const LawyerSignup = () => {
   const [verifiedToken, setVerifiedToken] = useState<string>('');
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
+  useEffect(() => {
+    if (step === 1) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('recaptcha-container-lawyer');
+        if (el && !recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-lawyer', {
+            size: 'normal'
+          });
+          recaptchaVerifierRef.current.render().catch(console.error);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    } else {
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (e) {}
+        recaptchaVerifierRef.current = null;
+      }
+    }
+  }, [step]);
+
   const initRecaptcha = () => {
     if (recaptchaVerifierRef.current) {
       try {
@@ -194,8 +214,10 @@ const LawyerSignup = () => {
 
       // 2. Send SMS OTP via Firebase
       const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone.slice(-10)}`;
-      const verifier = initRecaptcha();
-      await verifier.render();
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = initRecaptcha();
+      }
+      const verifier = recaptchaVerifierRef.current;
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier);
       setConfirmationResult(confirmation);
       setStep(2);
@@ -275,7 +297,6 @@ const LawyerSignup = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-6">
-      <div id="recaptcha-container-lawyer"></div>
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-10">
@@ -477,6 +498,8 @@ const LawyerSignup = () => {
                 </label>
               </div>
               {errors.agreed && <p className="mt-1 text-xs font-bold text-red-500">{errors.agreed.message}</p>}
+
+              <div id="recaptcha-container-lawyer" className="flex justify-center my-6 min-h-[78px]"></div>
 
               <button
                 type="submit"

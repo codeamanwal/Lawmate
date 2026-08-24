@@ -75,9 +75,10 @@ const AuthPage = () => {
   useEffect(() => {
     if (step === 'signup-details' || step === 'forgot-password') {
       const timer = setTimeout(() => {
-        const el = document.getElementById('recaptcha-container-auth');
+        const containerId = step === 'forgot-password' ? 'recaptcha-container-auth-forgot' : 'recaptcha-container-auth';
+        const el = document.getElementById(containerId);
         if (el && !recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-auth', {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, containerId, {
             size: 'normal',
             callback: () => {
               console.log('reCAPTCHA solved');
@@ -93,6 +94,11 @@ const AuthPage = () => {
         }
       }, 150);
       return () => clearTimeout(timer);
+    } else {
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (e) {}
+        recaptchaVerifierRef.current = null;
+      }
     }
   }, [step]);
 
@@ -338,7 +344,6 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-white flex items-center justify-center p-4 sm:p-6">
-      <div id="recaptcha-container-auth"></div>
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-10">
@@ -668,6 +673,7 @@ const AuthPage = () => {
                 required
               />
             </div>
+            <div id="recaptcha-container-auth-forgot" className="flex justify-center my-4 min-h-[78px]"></div>
             <button
               disabled={loading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 disabled:opacity-50"
